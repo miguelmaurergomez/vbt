@@ -48,7 +48,19 @@ h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform
 .placeholder b{font-family:var(--font-display);font-size:20px;color:#fff;font-weight:600;letter-spacing:.02em}
 .placeholder ol{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
 .alarm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(207,47,43,.82);color:#fff;font-family:var(--font-display);font-weight:700;font-size:clamp(30px,8vw,56px);letter-spacing:.04em;text-align:center;cursor:pointer}
-.alarm span{font-family:var(--font-body);font-weight:500;font-size:15px;letter-spacing:0}
+.alarm span{font-family:var(--font-body);font-weight:500;font-size:15px;letter-spacing:0;max-width:90%}
+.alarm .abtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.alarm .abtns button{font-family:var(--font-body);font-size:16px;letter-spacing:0}
+.alarm .abtns .end{background:#fff;color:#a3201d;border-color:#fff}
+.alarm .abtns .go{background:transparent;color:#fff;border-color:rgba(255,255,255,.8)}
+.setbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+.setbar button{min-height:52px;font-size:17px;padding:12px 20px}
+.setbar button[data-s="running"]{background:var(--alarm);border-color:var(--alarm);color:#fff}
+.setstat{flex:1;min-width:160px;display:flex;flex-direction:column}
+.setstat b{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:.01em}
+.setstat span{font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:1px}
+.dot[data-s="running"]{background:var(--alarm)}
 
 .controls{display:flex;flex-wrap:wrap;gap:8px}
 button,.btn{font:600 15px/1 var(--font-body);padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px}
@@ -117,18 +129,23 @@ tr.after td{color:var(--muted)}
           <li>Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.</li>
           <li>Kamera starten oder ein Video wählen.</li>
           <li>„Platte markieren“: oberen und unteren Rand antippen.</li>
-          <li>Satz drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.</li>
+          <li>„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.</li>
+          <li>Nach dem Ablegen „Satz beenden“ tippen.</li>
         </ol>
       </div>
       <div class="hint" id="hint" hidden></div>
-      <div class="alarm" id="alarm" hidden>SATZ BEENDEN<span id="alarmSub"></span></div>
+      <div class="alarm" id="alarm" hidden>SIGNAL: SATZ BEENDEN<span id="alarmSub"></span>
+        <div class="abtns"><button class="end" id="alarmEnd">Satz beenden</button><button class="go" id="alarmGo">Weiter messen</button></div></div>
     </div>
     <div class="controls">
       <button class="primary" id="btnCam">Kamera starten</button>
       <label class="btn" id="btnFileLbl">Video aufnehmen / wählen<input type="file" id="file" accept="video/*"></label>
       <button id="btnMark" disabled>Platte markieren</button>
       <button id="btnPlay" hidden disabled>▶ Auswerten</button>
-      <button id="btnReset">Neuer Satz</button>
+    </div>
+    <div class="setbar">
+      <button class="primary" id="btnSet" data-s="idle" disabled>Satz starten</button>
+      <div class="setstat"><b id="setTitle"><span class="dot" id="setDot"></span>Kein Satz aktiv</b><span id="setSub">Erst Kamera starten und Platte markieren.</span></div>
     </div>
   </section>
 
@@ -155,6 +172,20 @@ tr.after td{color:var(--muted)}
     <div class="row">
       <span class="muted" id="copyMsg">MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.</span>
       <button id="btnCopy">Satz als CSV kopieren</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Sätze</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Satz</th><th>Zeit</th><th>Wdh.</th><th>Signal bei</th><th>Beste m/s</th><th>Letzte m/s</th><th>Verlust Ende</th></tr></thead>
+        <tbody id="hbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <span class="muted" id="histMsg">„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.</span>
+      <div class="controls"><button id="btnCopyAll">Alle Sätze als CSV</button><button id="btnClear">Liste leeren</button></div>
     </div>
   </section>
 
@@ -296,7 +327,7 @@ $('file').addEventListener('change',e=>{
   e.target.value='';
 });
 function onSourceReady(){
-  $('placeholder').hidden=true; calib=null; tracker=null; trail=[]; resetSet(false);
+  $('placeholder').hidden=true; calib=null; tracker=null; trail=[]; resetSet();
   $('btnMark').disabled=false; $('btnPlay').hidden=(mode!=='file'); $('btnPlay').disabled=true;
   chip('idle','Bereit');
   if(video.videoWidth)sizeViewport(); else video.addEventListener('loadedmetadata',sizeViewport,{once:true});
@@ -304,7 +335,7 @@ function onSourceReady(){
 
 /* ---------- calibration by two taps ---------- */
 $('btnMark').addEventListener('click',()=>{
-  unlockAudio(); tapStage=1; tapA=null; tracker=null; chip('mark','Markieren');
+  unlockAudio(); if(setState==='running')endSet(); tapStage=1; tapA=null; tracker=null; chip('mark','Markieren'); updateSetUI();
   if(mode==='file')video.pause();
   hint('Tippe auf den OBEREN Rand der Platte.');
 });
@@ -319,29 +350,91 @@ overlay.addEventListener('pointerdown',e=>{
   tapStage=0;tapA=null;
   startTracking();
   if(mode==='file'){$('btnPlay').disabled=false;hint('Markiert ('+Math.round(dpx)+' px = '+S.diamMM+' mm). Jetzt „Auswerten“.');}
-  else hint('Markiert. Los geht’s: Satz drücken.');
+  else hint('Markiert. Tippe „Satz starten“, wenn du bereit bist.');
 });
 function startTracking(){
   try{tracker=new Tracker(calib.cx,calib.cy,calib.dpx);}catch(e){tracker=null;hint('Konnte das Bild nicht lesen. Bitte nochmal markieren.');return;}
   trail=[]; kin.reset(); lastT=-1;
-  chip('track','Verfolgt'); drawOverlay();
+  chip('track','Verfolgt'); drawOverlay(); updateSetUI();
 }
 $('btnPlay').addEventListener('click',()=>{
   unlockAudio(); if(!tracker&&calib)startTracking(); if(!tracker)return;
+  if(setState!=='running'){startSet();return;}
   video.playbackRate=+S.rate; video.play().catch(()=>{}); hint(null); startLoop(); keepAwake();
 });
-video.addEventListener('ended',()=>{if(mode==='file'){kin.flush();hint('Video zu Ende. Ergebnis siehe unten.');}});
+video.addEventListener('ended',()=>{if(mode==='file'&&setState==='running'){kin.flush();endSet();hint('Video zu Ende. Satz beendet, Ergebnis siehe unten.');}});
 
-$('btnReset').addEventListener('click',()=>{unlockAudio();resetSet(true);});
-$('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
-function resetSet(reinit){
-  reps=[]; stopAt=null; alarmed=false; $('alarm').hidden=true; kin.reset(); trail=[];
-  renderReadout(); renderTable(); drawReps();
-  if(!reinit||!calib)return;
-  if(mode==='file'){video.pause();try{video.currentTime=calib.time;}catch(e){}
-    video.addEventListener('seeked',()=>{startTracking();hint('Satz zurückgesetzt. „Auswerten“ startet erneut.');},{once:true});}
-  else if(tracker){chip('track','Verfolgt');hint('Neuer Satz. Bereit.');}
+/* ---------- set control: idle -> running -> done ---------- */
+let setState='idle', setStartedAt=null, idleHintShown=false;
+const HKEY='vbt-history';
+let history=store.get(HKEY,[]); if(!Array.isArray(history))history=[];
+function updateSetUI(){
+  const b=$('btnSet'),run=setState==='running';
+  b.disabled=!tracker; b.dataset.s=setState; b.textContent=run?'Satz beenden':'Satz starten';
+  $('setDot').dataset.s=setState;
+  const nr=history.length+1;
+  const title=run?'Satz '+nr+' läuft':(setState==='done'?'Satz '+history.length+' beendet':'Kein Satz aktiv');
+  $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title;
+  let sub;
+  if(!tracker)sub='Erst Kamera starten und Platte markieren.';
+  else if(run)sub=reps.length+' Wdh. gemessen'+(stopAt!=null?' · Signal bei Wdh. '+(stopAt+1):'')+'. Nach dem Ablegen „Satz beenden“.';
+  else if(setState==='done')sub='Es wird nichts gezählt. Für den nächsten Satz „Satz starten“.';
+  else sub='Bereit. Tippe „Satz starten“, bevor du die Hantel aushebst.';
+  $('setSub').textContent=sub;
 }
+function clearReps(){reps=[];stopAt=null;alarmed=false;$('alarm').hidden=true;kin.reset();renderReadout();renderTable();drawReps();}
+function startSet(){
+  if(!tracker)return;
+  unlockAudio(); clearReps(); trail=[]; setState='running'; setStartedAt=new Date(); idleHintShown=false;
+  chip('track','Verfolgt'); hint(null); updateSetUI(); keepAwake();
+  beep(880,0.07,0);beep(1175,0.09,0.1);
+  if(mode==='file'){
+    const go=()=>{startTracking();video.playbackRate=+S.rate;video.play().catch(()=>{});startLoop();};
+    if(Math.abs(video.currentTime-calib.time)>0.2){video.pause();try{video.currentTime=calib.time;}catch(e){}video.addEventListener('seeked',go,{once:true});}
+    else go();
+  }
+}
+function endSet(){
+  if(setState!=='running')return;
+  setState='done'; $('alarm').hidden=true;
+  if(mode==='file')video.pause();
+  if(reps.length){
+    const valid=reps.filter(r=>r.valid), lastV=valid[valid.length-1];
+    const t=setStartedAt||new Date(),pad=n=>String(n).padStart(2,'0');
+    history.push({nr:history.length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
+      thr:S.thresh,reps:valid.length,signal:stopAt!=null?stopAt+1:null,best:valid.length?Math.max(...valid.map(r=>r.mcv)):null,
+      last:lastV?lastV.mcv:null,lossEnd:lastV&&lastV.loss!=null?lastV.loss:null,
+      data:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(3),peak:+r.peak.toFixed(3),rom:+(r.rom*100).toFixed(1),dur:+r.dur.toFixed(3),ref:r.ref?+r.ref.toFixed(3):null,loss:r.loss!=null?+r.loss.toFixed(1):null,valid:r.valid,after:!!r.after}))});
+    if(history.length>200)history=history.slice(-200);
+    store.set(HKEY,history);
+  }
+  chip('track','Verfolgt'); beep(660,0.12,0); updateSetUI(); renderHistory();
+}
+$('btnSet').addEventListener('click',()=>{unlockAudio(); setState==='running'?endSet():startSet();});
+$('alarmEnd').addEventListener('click',e=>{e.stopPropagation();endSet();});
+$('alarmGo').addEventListener('click',e=>{e.stopPropagation();$('alarm').hidden=true;});
+$('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
+function resetSet(){clearReps();setState='idle';updateSetUI();}
+function renderHistory(){
+  const tb=$('hbody');
+  if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr>';return;}
+  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?'Wdh. '+h.signal+' ('+h.thr+' %)':'kein Signal')+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.last)+'</td><td>'+(h.lossEnd!=null?'−'+fmt(h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
+}
+$('btnCopyAll').addEventListener('click',()=>{
+  const m=t=>{$('histMsg').textContent=t;};
+  if(!history.length){m('Noch keine Sätze gespeichert.');return;}
+  const head='satz;datum;zeit;schwelle_prozent;wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;status';
+  const rows=[];history.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.nr,h.date,h.time,h.thr,r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
+  const txt=[head,...rows].join('\n');
+  try{navigator.clipboard.writeText(txt).then(()=>m('Kopiert: '+history.length+' Sätze. In Excel oder Sheets einfügen.'),()=>m('Kopieren nicht erlaubt.'));}catch(e){m('Kopieren nicht erlaubt.');}
+});
+let clearArmed=null;
+$('btnClear').addEventListener('click',()=>{
+  const b=$('btnClear');
+  if(!clearArmed){b.textContent='Wirklich leeren?';clearArmed=setTimeout(()=>{b.textContent='Liste leeren';clearArmed=null;},4000);return;}
+  clearTimeout(clearArmed);clearArmed=null;b.textContent='Liste leeren';
+  history=[];store.set(HKEY,history);renderHistory();updateSetUI();$('histMsg').textContent='Liste geleert.';
+});
 
 /* ---------- template tracker (normalized cross-correlation) ---------- */
 class Tracker{
@@ -486,12 +579,23 @@ function recomputeLoss(){
 }
 function refMcv(){const l=reps[reps.length-1];return l?l.ref:null;}
 function onRep(r){
+  if(setState!=='running'){
+    if(!idleHintShown&&tracker){idleHintShown=true;hint(setState==='done'?'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.':'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.');}
+    return;
+  }
   r.n=reps.length+1; reps.push(r); recomputeLoss();
   const k=reps.length-1,last=reps[k];
-  drawReps();
-  if(stopAt!=null&&k>=stopAt&&last.valid){
-    $('alarmSub').textContent=(k===stopAt?'Wdh. '+last.n+': ':'Wdh. '+last.n+' nach dem Signal: ')+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' % zur Referenz '+fmt(last.ref)+' m/s';
-    $('alarm').hidden=false; chip('alarm','Satz beenden');
+  drawReps(); updateSetUI();
+  if(stopAt!=null&&k>stopAt&&last.valid){
+    $('alarmSub').textContent='Wdh. '+last.n+' nach dem Signal: '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' %';
+    beep(440,0.12,0,0.3);beep(440,0.12,0.18,0.3);
+    try{navigator.vibrate&&navigator.vibrate([150,80,150]);}catch(e){}
+    say(fmt(last.mcv).replace(',',' Komma '));
+    return;
+  }
+  if(stopAt!=null&&k===stopAt&&last.valid){
+    $('alarmSub').textContent='Wdh. '+last.n+': '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' % zur Referenz '+fmt(last.ref)+' m/s. Weitere Wdh. werden markiert, bis du beendest.';
+    $('alarm').hidden=false; chip('alarm','Signal');
     beep(440,0.18,0,0.35);beep(370,0.18,0.24,0.35);beep(300,0.35,0.48,0.35);
     try{navigator.vibrate&&navigator.vibrate([200,80,200,80,400]);}catch(e){}
     say('Stopp. '+fmt(last.mcv).replace(',',' Komma '));
@@ -632,7 +736,7 @@ $('btnCopy').addEventListener('click',()=>{
 });
 
 if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{drawSpark();drawReps();});
-bindSettings(); renderReadout(); renderTable();
+bindSettings(); renderReadout(); renderTable(); renderHistory(); updateSetUI();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
