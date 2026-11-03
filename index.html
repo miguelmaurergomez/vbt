@@ -33,6 +33,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;fl
 h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1.05}
 h1 small{display:block;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--muted);letter-spacing:0}
 h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#lang{font:600 14px var(--font-body);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:36px}
+.alarm .atitle{font:inherit}
 .chip{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface);white-space:nowrap}
 .chip[data-s="track"]{color:var(--ok);border-color:var(--ok)}
 .chip[data-s="lost"]{color:var(--warn);border-color:var(--warn)}
@@ -115,8 +118,11 @@ tr.after td{color:var(--muted)}
 <body>
 <div class="app">
   <header>
-    <h1>VBT Bankdrück-Tracker<small>Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
-    <span class="chip" id="chip" data-s="idle">Bereit</span>
+    <h1><span data-i18n="title">VBT Bankdrück-Tracker</span><small data-i18n="subtitle">Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
+    <div class="hright">
+      <select id="lang" aria-label="Sprache / Idioma / Language"><option value="de">Deutsch</option><option value="es">Español</option><option value="en">English</option></select>
+      <span class="chip" id="chip" data-s="idle">Bereit</span>
+    </div>
   </header>
 
   <section class="stage">
@@ -124,25 +130,25 @@ tr.after td{color:var(--muted)}
       <video id="video" playsinline muted></video>
       <canvas id="overlay"></canvas>
       <div class="placeholder" id="placeholder">
-        <b>So geht's</b>
+        <b data-i18n="howTitle">So geht's</b>
         <ol>
-          <li>Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.</li>
-          <li>Kamera starten oder ein Video wählen.</li>
-          <li>„Platte markieren“: oberen und unteren Rand antippen.</li>
-          <li>„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.</li>
-          <li>Nach dem Ablegen „Satz beenden“ tippen.</li>
+          <li data-i18n="how1">Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.</li>
+          <li data-i18n="how2">Kamera starten oder ein Video wählen.</li>
+          <li data-i18n="how3">„Platte markieren“: oberen und unteren Rand antippen.</li>
+          <li data-i18n="how4">„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.</li>
+          <li data-i18n="how5">Nach dem Ablegen „Satz beenden“ tippen.</li>
         </ol>
       </div>
       <div class="hint" id="hint" hidden></div>
-      <div class="alarm" id="alarm" hidden>SIGNAL: SATZ BEENDEN<span id="alarmSub"></span>
-        <div class="abtns"><button class="end" id="alarmEnd">Satz beenden</button><button class="go" id="alarmGo">Weiter messen</button></div></div>
+      <div class="alarm" id="alarm" hidden><b class="atitle" data-i18n="alarmTitle">SIGNAL: SATZ BEENDEN</b><span id="alarmSub"></span>
+        <div class="abtns"><button class="end" id="alarmEnd" data-i18n="endSet">Satz beenden</button><button class="go" id="alarmGo" data-i18n="goOn">Weiter messen</button></div></div>
     </div>
     <div class="controls">
-      <button class="primary" id="btnCam">Kamera starten</button>
+      <button class="primary" id="btnCam" data-i18n="startCam">Kamera starten</button>
       <button id="btnFlip" hidden>Zur Selfie-Kamera</button>
-      <label class="btn" id="btnFileLbl">Video aufnehmen / wählen<input type="file" id="file" accept="video/*"></label>
-      <button id="btnMark" disabled>Platte markieren</button>
-      <button id="btnPlay" hidden disabled>▶ Auswerten</button>
+      <label class="btn" id="btnFileLbl"><span data-i18n="video">Video aufnehmen / wählen</span><input type="file" id="file" accept="video/*"></label>
+      <button id="btnMark" disabled data-i18n="mark">Platte markieren</button>
+      <button id="btnPlay" hidden disabled data-i18n="play">▶ Auswerten</button>
     </div>
     <div class="setbar">
       <button class="primary" id="btnSet" data-s="idle" disabled>Satz starten</button>
@@ -151,77 +157,77 @@ tr.after td{color:var(--muted)}
   </section>
 
   <section class="readout" aria-live="polite">
-    <div class="cell main"><div class="lab">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
-    <div class="cell"><div class="lab">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
-    <div class="cell"><div class="lab">Wdh.</div><div class="val" id="repVal">0</div><div class="sub" id="romVal">ROM: –</div></div>
+    <div class="cell main"><div class="lab" data-i18n="lastRep">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
+    <div class="cell"><div class="lab" data-i18n="loss">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
+    <div class="cell"><div class="lab" data-i18n="repsShort">Wdh.</div><div class="val" id="repVal">0</div><div class="sub" id="romVal">ROM: –</div></div>
   </section>
 
   <section class="panel">
-    <h2>Geschwindigkeit live</h2>
+    <h2 data-i18n="liveSpeed">Geschwindigkeit live</h2>
     <canvas class="chart" id="spark"></canvas>
   </section>
 
   <section class="panel">
-    <h2>Wiederholungen</h2>
+    <h2 data-i18n="repsTitle">Wiederholungen</h2>
     <canvas class="chart" id="repChart"></canvas>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Ref. m/s</th><th>Verlust</th></tr></thead>
+        <thead id="thReps"><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Ref. m/s</th><th>Verlust</th></tr></thead>
         <tbody id="tbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
       </table>
     </div>
     <div class="row">
-      <span class="muted" id="copyMsg">MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.</span>
-      <button id="btnCopy">Satz als CSV kopieren</button>
+      <span class="muted" id="copyMsg" data-i18n="note">MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.</span>
+      <button id="btnCopy" data-i18n="copySet">Satz als CSV kopieren</button>
     </div>
   </section>
 
   <section class="panel">
-    <h2>Sätze</h2>
+    <h2 data-i18n="setsTitle">Sätze</h2>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Satz</th><th>Zeit</th><th>Wdh.</th><th>Signal bei</th><th>Beste m/s</th><th>Letzte m/s</th><th>Verlust Ende</th></tr></thead>
+        <thead id="thSets"><tr><th>Satz</th><th>Zeit</th><th>Wdh.</th><th>Signal bei</th><th>Beste m/s</th><th>Letzte m/s</th><th>Verlust Ende</th></tr></thead>
         <tbody id="hbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr></tbody>
       </table>
     </div>
     <div class="row">
-      <span class="muted" id="histMsg">„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.</span>
-      <div class="controls"><button id="btnCopyAll">Alle Sätze als CSV</button><button id="btnClear">Liste leeren</button></div>
+      <span class="muted" id="histMsg" data-i18n="histNote">„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.</span>
+      <div class="controls"><button id="btnCopyAll" data-i18n="copyAll">Alle Sätze als CSV</button><button id="btnClear" data-i18n="clear">Liste leeren</button></div>
     </div>
   </section>
 
   <section class="panel">
-    <h2>Einstellungen</h2>
+    <h2 data-i18n="settings">Einstellungen</h2>
     <div class="settings">
       <div class="field">
-        <label for="diam">Referenzgröße (mm)</label>
+        <label for="diam" data-i18n="diamLabel">Referenzgröße (mm)</label>
         <input type="number" id="diam" min="20" max="2000" step="1">
-        <div class="presets"><button type="button" data-d="450">450 · Olympia-Scheibe</button><button type="button" data-d="120">120 · CD</button><button type="button" data-d="297">297 · A4 lange Seite</button></div>
-        <div class="help">Durchmesser deiner Scheibe. Kein Gewicht da? Nimm ein Objekt bekannter Größe und markiere seine senkrechte Ausdehnung (oben und unten).</div>
+        <div class="presets"><button type="button" data-d="450" data-i18n="presetOly">450 · Olympia-Scheibe</button><button type="button" data-d="120" data-i18n="presetCD">120 · CD</button><button type="button" data-d="297" data-i18n="presetA4">297 · A4 lange Seite</button></div>
+        <div class="help" data-i18n="diamHelp">Durchmesser deiner Scheibe. Kein Gewicht da? Nimm ein Objekt bekannter Größe und markiere seine senkrechte Ausdehnung (oben und unten).</div>
       </div>
       <div class="field">
-        <label for="thresh">Signal bei Geschwindigkeitsverlust</label>
+        <label for="thresh" data-i18n="threshLabel">Signal bei Geschwindigkeitsverlust</label>
         <div class="inline"><input type="range" id="thresh" min="5" max="40" step="1"><output id="threshOut">10 %</output></div>
-        <div class="help">Signal, sobald eine Wiederholung so viel langsamer ist als die Referenz.</div>
+        <div class="help" data-i18n="threshHelp">Signal, sobald eine Wiederholung so viel langsamer ist als die Referenz.</div>
       </div>
       <div class="field">
-        <label for="ref">Referenz-Wiederholung</label>
-        <select id="ref"><option value="best">Schnellste bisher (Standard)</option><option value="first">Erste im Satz</option></select>
-        <div class="help">So wird es in der VBT-Forschung gemacht. Die Referenz ist die schnellste Wdh. bis zu diesem Zeitpunkt, meist die erste oder zweite.</div>
+        <label for="ref" data-i18n="refLabel">Referenz-Wiederholung</label>
+        <select id="ref"><option value="best" data-i18n="refBest">Schnellste bisher (Standard)</option><option value="first" data-i18n="refFirst">Erste im Satz</option></select>
+        <div class="help" data-i18n="refHelp">So wird es in der VBT-Forschung gemacht. Die Referenz ist die schnellste Wdh. bis zu diesem Zeitpunkt, meist die erste oder zweite.</div>
       </div>
       <div class="field">
-        <label for="minRom">Mindest-Bewegungsweg (cm)</label>
+        <label for="minRom" data-i18n="romLabel">Mindest-Bewegungsweg (cm)</label>
         <input type="number" id="minRom" min="3" max="80" step="1">
-        <div class="help">Kürzere Bewegungen zählen nicht als Wiederholung. Bankdrücken: ca. 15 cm. Zum Testen mit kleinen Bewegungen niedriger stellen.</div>
+        <div class="help" data-i18n="romHelp">Kürzere Bewegungen zählen nicht als Wiederholung. Bankdrücken: ca. 15 cm. Zum Testen mit kleinen Bewegungen niedriger stellen.</div>
       </div>
       <div class="field">
-        <label for="rate">Video-Auswertung</label>
-        <select id="rate"><option value="1">Echtzeit</option><option value="0.5">Halbe Geschwindigkeit (genauer)</option><option value="0.25">Viertel (am genauesten)</option></select>
-        <div class="help">Nur für Videos. Langsamer abspielen erfasst jedes Bild.</div>
+        <label for="rate" data-i18n="rateLabel">Video-Auswertung</label>
+        <select id="rate"><option value="1" data-i18n="rate1">Echtzeit</option><option value="0.5" data-i18n="rate05">Halbe Geschwindigkeit (genauer)</option><option value="0.25" data-i18n="rate025">Viertel (am genauesten)</option></select>
+        <div class="help" data-i18n="rateHelp">Nur für Videos. Langsamer abspielen erfasst jedes Bild.</div>
       </div>
       <div class="field">
-        <label class="check"><input type="checkbox" id="sound"> Töne (Piep pro Wdh., Alarm)</label>
-        <label class="check"><input type="checkbox" id="voice"> Werte ansagen</label>
+        <label class="check"><input type="checkbox" id="sound"> <span data-i18n="sound">Töne (Piep pro Wdh., Alarm)</span></label>
+        <label class="check"><input type="checkbox" id="voice"> <span data-i18n="voice">Werte ansagen</span></label>
       </div>
     </div>
   </section>
@@ -233,7 +239,84 @@ const $ = id => document.getElementById(id);
 const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const S=Object.assign({facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,rate:'1'},store.get('vbt-settings',{}));
-const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':v.toFixed(d).replace('.',',');
+const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':(L==='en'?v.toFixed(d):v.toFixed(d).replace('.',','));
+/* ---------- languages ---------- */
+const I18N={
+de:{doc:'VBT Bankdrück-Tracker',title:'VBT Bankdrück-Tracker',subtitle:'Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust',langLabel:'Sprache',
+chip_idle:'Bereit',chip_track:'Verfolgt',chip_lost:'Verloren',chip_mark:'Markieren',chip_alarm:'Signal',
+howTitle:"So geht's",how1:'Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.',how2:'Kamera starten oder ein Video wählen.',how3:'„Platte markieren“: oberen und unteren Rand antippen.',how4:'„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.',how5:'Nach dem Ablegen „Satz beenden“ tippen.',
+alarmTitle:'SIGNAL: SATZ BEENDEN',endSet:'Satz beenden',goOn:'Weiter messen',startCam:'Kamera starten',toSelfie:'Zur Selfie-Kamera',toBack:'Zur Rückkamera',camSelfie:'Selfie-Kamera',camBack:'Rückkamera',
+video:'Video aufnehmen / wählen',mark:'Platte markieren',play:'▶ Auswerten',startSet:'Satz starten',setRunning:'Satz {0} läuft',setDone:'Satz {0} beendet',noSet:'Kein Satz aktiv',
+subNoTracker:'Erst Kamera starten und Platte markieren.',subRunning:'{0} Wdh. gemessen{1}. Nach dem Ablegen „Satz beenden“.',subSignalAt:' · Signal bei Wdh. {0}',subDone:'Es wird nichts gezählt. Für den nächsten Satz „Satz starten“.',subIdle:'Bereit. Tippe „Satz starten“, bevor du die Hantel aushebst.',
+lastRep:'Letzte Wiederholung · MCV',current:'Aktuell: {0} m/s',loss:'Verlust',reference:'Referenz: {0}',repsShort:'Wdh.',liveSpeed:'Geschwindigkeit live',sparkLabel:'m/s · letzte 6 s',repsTitle:'Wiederholungen',
+th:['Wdh.','MCV m/s','Peak m/s','ROM cm','Dauer s','Ref. m/s','Verlust'],noReps:'Noch keine Wiederholungen in diesem Satz.',
+note:'MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.',copySet:'Satz als CSV kopieren',partial:'unvollständig',tagSignal:'Signal',exampleNote:'Beispielsatz. Deine Wiederholungen ersetzen ihn.',refChart:'Referenz',
+setsTitle:'Sätze',hth:['Satz','Zeit','Wdh.','Signal bei','Beste m/s','Letzte m/s','Verlust Ende'],noSets:'Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.',histNote:'„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.',
+signalAt:'Wdh. {0} ({1} %)',noSignal:'kein Signal',copyAll:'Alle Sätze als CSV',clear:'Liste leeren',clearConfirm:'Wirklich leeren?',cleared:'Liste geleert.',noSetsSaved:'Noch keine Sätze gespeichert.',
+copiedSets:'Kopiert: {0} Sätze. In Excel oder Sheets einfügen.',copyDenied:'Kopieren nicht erlaubt.',copyDeniedTable:'Kopieren nicht erlaubt. Werte stehen in der Tabelle.',nothingToCopy:'Noch nichts zu kopieren.',copiedReps:'Kopiert: {0} Wiederholungen. In Excel oder Sheets einfügen.',
+settings:'Einstellungen',diamLabel:'Referenzgröße (mm)',presetOly:'450 · Olympia-Scheibe',presetCD:'120 · CD',presetA4:'297 · A4 lange Seite',diamHelp:'Durchmesser deiner Scheibe. Kein Gewicht da? Nimm ein Objekt bekannter Größe und markiere seine senkrechte Ausdehnung (oben und unten).',
+threshLabel:'Signal bei Geschwindigkeitsverlust',threshHelp:'Signal, sobald eine Wiederholung so viel langsamer ist als die Referenz.',refLabel:'Referenz-Wiederholung',refBest:'Schnellste bisher (Standard)',refFirst:'Erste im Satz',
+refHelp:'So wird es in der VBT-Forschung gemacht. Die Referenz ist die schnellste Wdh. bis zu diesem Zeitpunkt, meist die erste oder zweite.',romLabel:'Mindest-Bewegungsweg (cm)',romHelp:'Kürzere Bewegungen zählen nicht als Wiederholung. Bankdrücken: ca. 15 cm. Zum Testen mit kleinen Bewegungen niedriger stellen.',
+rateLabel:'Video-Auswertung',rate1:'Echtzeit',rate05:'Halbe Geschwindigkeit (genauer)',rate025:'Viertel (am genauesten)',rateHelp:'Nur für Videos. Langsamer abspielen erfasst jedes Bild.',sound:'Töne (Piep pro Wdh., Alarm)',voice:'Werte ansagen',
+h_camRun:'{0} läuft{1}. Tippe auf „Platte markieren“.',h_camFail:'Kamera nicht verfügbar. Erlaube den Kamerazugriff im Browser und öffne die Seite über https. Alternativ „Video aufnehmen / wählen“ nutzen.',
+h_videoLoaded:'Video geladen. Spule zur Startposition, markiere die Platte, dann „Auswerten“.',h_tapTop:'Tippe auf den OBEREN Rand der Platte.',h_tapBottom:'Jetzt auf den UNTEREN Rand tippen.',h_tooClose:'Die Punkte liegen zu nah beieinander. Nochmal: oberen Rand antippen.',
+h_markedFile:'Markiert ({0} px = {1} mm). Jetzt „Auswerten“.',h_markedLive:'Markiert. Tippe „Satz starten“, wenn du bereit bist.',h_readFail:'Konnte das Bild nicht lesen. Bitte nochmal markieren.',h_videoEnd:'Video zu Ende. Satz beendet, Ergebnis siehe unten.',
+h_doneMove:'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.',h_idleMove:'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.',h_lost:'Platte verloren. Kurz ruhig halten oder neu markieren.',
+a_after:'Wdh. {0} nach dem Signal: {1} m/s · −{2} %',a_first:'Wdh. {0}: {1} m/s · −{2} % zur Referenz {3} m/s. Weitere Wdh. werden markiert, bis du beendest.',v_stop:'Stopp',v_dec:' Komma ',speech:'de-DE'},
+es:{doc:'VBT Tracker · Press de banca',title:'VBT Tracker · Press de banca',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
+chip_idle:'Listo',chip_track:'Siguiendo',chip_lost:'Perdido',chip_mark:'Marcando',chip_alarm:'Aviso',
+howTitle:'Cómo funciona',how1:'Coloca el celular de lado, fijo y a la altura del disco.',how2:'Inicia la cámara o elige un video.',how3:'«Marcar disco»: toca el borde superior y el inferior.',how4:'Toca «Iniciar serie» y empuja. Si pierdes demasiada velocidad, suena un aviso.',how5:'Después de dejar la barra, toca «Terminar serie».',
+alarmTitle:'AVISO: TERMINA LA SERIE',endSet:'Terminar serie',goOn:'Seguir midiendo',startCam:'Iniciar cámara',toSelfie:'Cambiar a cámara frontal',toBack:'Cambiar a cámara trasera',camSelfie:'Cámara frontal',camBack:'Cámara trasera',
+video:'Grabar / elegir video',mark:'Marcar disco',play:'▶ Analizar',startSet:'Iniciar serie',setRunning:'Serie {0} en curso',setDone:'Serie {0} terminada',noSet:'Ninguna serie activa',
+subNoTracker:'Primero inicia la cámara y marca el disco.',subRunning:'{0} rep. medidas{1}. Al dejar la barra, «Terminar serie».',subSignalAt:' · aviso en la rep. {0}',subDone:'No se cuenta nada. Para la siguiente serie, «Iniciar serie».',subIdle:'Listo. Toca «Iniciar serie» antes de sacar la barra.',
+lastRep:'Última repetición · VM',current:'Ahora: {0} m/s',loss:'Pérdida',reference:'Referencia: {0}',repsShort:'Rep.',liveSpeed:'Velocidad en vivo',sparkLabel:'m/s · últimos 6 s',repsTitle:'Repeticiones',
+th:['Rep.','VM m/s','Pico m/s','ROM cm','Duración s','Ref. m/s','Pérdida'],noReps:'Todavía no hay repeticiones en esta serie.',
+note:'VM = velocidad media concéntrica. Pérdida = diferencia con la rep. más rápida hasta ese momento, fijada al sonar el aviso.',copySet:'Copiar serie como CSV',partial:'incompleta',tagSignal:'Aviso',exampleNote:'Serie de ejemplo. Tus repeticiones la reemplazan.',refChart:'Referencia',
+setsTitle:'Series',hth:['Serie','Hora','Rep.','Aviso en','Mejor m/s','Última m/s','Pérdida final'],noSets:'Aún no hay series terminadas. Se guardan en este celular.',histNote:'«Rep.» cuenta todas las repeticiones completas, también las posteriores al aviso.',
+signalAt:'Rep. {0} ({1} %)',noSignal:'sin aviso',copyAll:'Todas las series como CSV',clear:'Vaciar lista',clearConfirm:'¿Vaciar de verdad?',cleared:'Lista vaciada.',noSetsSaved:'Aún no hay series guardadas.',
+copiedSets:'Copiado: {0} series. Pégalo en Excel o Sheets.',copyDenied:'No se permite copiar.',copyDeniedTable:'No se permite copiar. Los valores están en la tabla.',nothingToCopy:'Todavía no hay nada que copiar.',copiedReps:'Copiado: {0} repeticiones. Pégalo en Excel o Sheets.',
+settings:'Ajustes',diamLabel:'Tamaño de referencia (mm)',presetOly:'450 · Disco olímpico',presetCD:'120 · CD',presetA4:'297 · A4 lado largo',diamHelp:'Diámetro de tu disco. ¿No tienes pesas a mano? Usa un objeto de tamaño conocido y marca su altura (arriba y abajo).',
+threshLabel:'Aviso por pérdida de velocidad',threshHelp:'Suena el aviso en cuanto una repetición es así de más lenta que la referencia.',refLabel:'Repetición de referencia',refBest:'La más rápida hasta ahora (estándar)',refFirst:'La primera de la serie',
+refHelp:'Así se hace en la investigación sobre VBT. La referencia es la rep. más rápida hasta ese momento, casi siempre la primera o la segunda.',romLabel:'Recorrido mínimo (cm)',romHelp:'Los movimientos más cortos no cuentan como repetición. Press de banca: unos 15 cm. Para probar con movimientos pequeños, bájalo.',
+rateLabel:'Análisis de video',rate1:'Tiempo real',rate05:'Mitad de velocidad (más preciso)',rate025:'Un cuarto (lo más preciso)',rateHelp:'Solo para videos. Reproducir más lento capta cada fotograma.',sound:'Sonidos (pitido por rep., alarma)',voice:'Decir los valores en voz alta',
+h_camRun:'{0} activa{1}. Toca «Marcar disco».',h_camFail:'Cámara no disponible. Permite el acceso a la cámara en el navegador y abre la página por https. También puedes usar «Grabar / elegir video».',
+h_videoLoaded:'Video cargado. Ve a la posición inicial, marca el disco y luego «Analizar».',h_tapTop:'Toca el borde SUPERIOR del disco.',h_tapBottom:'Ahora toca el borde INFERIOR.',h_tooClose:'Los puntos están demasiado cerca. Otra vez: toca el borde superior.',
+h_markedFile:'Marcado ({0} px = {1} mm). Ahora «Analizar».',h_markedLive:'Marcado. Toca «Iniciar serie» cuando estés listo.',h_readFail:'No se pudo leer la imagen. Marca otra vez.',h_videoEnd:'Fin del video. Serie terminada, resultado abajo.',
+h_doneMove:'La serie terminó, no se cuenta nada. Para una nueva serie, «Iniciar serie».',h_idleMove:'Se detectó movimiento, pero no hay serie activa. Toca «Iniciar serie».',h_lost:'Disco perdido. Quédate quieto un momento o vuelve a marcar.',
+a_after:'Rep. {0} después del aviso: {1} m/s · −{2} %',a_first:'Rep. {0}: {1} m/s · −{2} % respecto a la referencia de {3} m/s. Las siguientes se marcan hasta que termines.',v_stop:'Para',v_dec:' coma ',speech:'es-ES'},
+en:{doc:'VBT Bench Press Tracker',title:'VBT Bench Press Tracker',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
+chip_idle:'Ready',chip_track:'Tracking',chip_lost:'Lost',chip_mark:'Marking',chip_alarm:'Signal',
+howTitle:'How it works',how1:'Set the phone up to the side, steady, at plate height.',how2:'Start the camera or choose a video.',how3:'“Mark plate”: tap the top and bottom edge.',how4:'Tap “Start set” and lift. If you lose too much speed, you get a signal.',how5:'After racking the bar, tap “End set”.',
+alarmTitle:'SIGNAL: END THE SET',endSet:'End set',goOn:'Keep measuring',startCam:'Start camera',toSelfie:'Switch to selfie camera',toBack:'Switch to rear camera',camSelfie:'Selfie camera',camBack:'Rear camera',
+video:'Record / choose video',mark:'Mark plate',play:'▶ Analyze',startSet:'Start set',setRunning:'Set {0} running',setDone:'Set {0} finished',noSet:'No set active',
+subNoTracker:'First start the camera and mark the plate.',subRunning:'{0} reps measured{1}. After racking, tap “End set”.',subSignalAt:' · signal at rep {0}',subDone:'Nothing is counted. For the next set, tap “Start set”.',subIdle:'Ready. Tap “Start set” before you unrack the bar.',
+lastRep:'Last rep · MCV',current:'Now: {0} m/s',loss:'Loss',reference:'Reference: {0}',repsShort:'Reps',liveSpeed:'Live velocity',sparkLabel:'m/s · last 6 s',repsTitle:'Reps',
+th:['Rep','MCV m/s','Peak m/s','ROM cm','Time s','Ref. m/s','Loss'],noReps:'No reps in this set yet.',
+note:'MCV = mean concentric velocity. Loss = gap to the fastest rep so far, frozen at the signal.',copySet:'Copy set as CSV',partial:'partial',tagSignal:'Signal',exampleNote:'Example set. Your reps will replace it.',refChart:'Reference',
+setsTitle:'Sets',hth:['Set','Time','Reps','Signal at','Best m/s','Last m/s','Final loss'],noSets:'No finished sets yet. They stay saved on this phone.',histNote:'“Reps” counts all complete reps, including those after the signal.',
+signalAt:'Rep {0} ({1} %)',noSignal:'no signal',copyAll:'All sets as CSV',clear:'Clear list',clearConfirm:'Really clear?',cleared:'List cleared.',noSetsSaved:'No sets saved yet.',
+copiedSets:'Copied: {0} sets. Paste into Excel or Sheets.',copyDenied:'Copying is not allowed.',copyDeniedTable:'Copying is not allowed. The values are in the table.',nothingToCopy:'Nothing to copy yet.',copiedReps:'Copied: {0} reps. Paste into Excel or Sheets.',
+settings:'Settings',diamLabel:'Reference size (mm)',presetOly:'450 · Olympic plate',presetCD:'120 · CD',presetA4:'297 · A4 long side',diamHelp:'Diameter of your plate. No weights around? Use an object of known size and mark its vertical extent (top and bottom).',
+threshLabel:'Signal at velocity loss',threshHelp:'Signal as soon as a rep is this much slower than the reference.',refLabel:'Reference rep',refBest:'Fastest so far (standard)',refFirst:'First in the set',
+refHelp:'This is how VBT research does it. The reference is the fastest rep so far, usually the first or second.',romLabel:'Minimum range of motion (cm)',romHelp:'Shorter movements don’t count as a rep. Bench press: about 15 cm. Lower it to test with small movements.',
+rateLabel:'Video analysis',rate1:'Real time',rate05:'Half speed (more accurate)',rate025:'Quarter speed (most accurate)',rateHelp:'Videos only. Slower playback captures every frame.',sound:'Sounds (beep per rep, alarm)',voice:'Announce values',
+h_camRun:'{0} running{1}. Tap “Mark plate”.',h_camFail:'Camera not available. Allow camera access in your browser and open the page over https. Or use “Record / choose video”.',
+h_videoLoaded:'Video loaded. Go to the starting position, mark the plate, then “Analyze”.',h_tapTop:'Tap the TOP edge of the plate.',h_tapBottom:'Now tap the BOTTOM edge.',h_tooClose:'The points are too close together. Again: tap the top edge.',
+h_markedFile:'Marked ({0} px = {1} mm). Now “Analyze”.',h_markedLive:'Marked. Tap “Start set” when you’re ready.',h_readFail:'Could not read the image. Please mark again.',h_videoEnd:'Video finished. Set ended, see results below.',
+h_doneMove:'The set has ended, nothing is counted. For a new set, tap “Start set”.',h_idleMove:'Movement detected, but no set is active. Tap “Start set”.',h_lost:'Plate lost. Hold still for a moment or mark again.',
+a_after:'Rep {0} after the signal: {1} m/s · −{2} %',a_first:'Rep {0}: {1} m/s · −{2} % vs. the {3} m/s reference. Further reps are marked until you end the set.',v_stop:'Stop',v_dec:'',speech:'en-US'}
+};
+let L=S.lang;
+if(!I18N[L]){const nl=((navigator.language||'de')+'').slice(0,2).toLowerCase();L=I18N[nl]?nl:'de';}
+function t(k,...a){let v=(I18N[L]&&I18N[L][k]!=null)?I18N[L][k]:(I18N.de[k]!=null?I18N.de[k]:k);if(typeof v!=='string')return v;return v.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:'');}
+function applyStatic(){
+  document.documentElement.lang=L; document.title=t('doc');
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.dataset.i18n);});
+  const fill=(id,arr)=>{const ths=document.querySelectorAll('#'+id+' th');arr.forEach((s,i)=>{if(ths[i])ths[i].textContent=s;});};
+  fill('thReps',t('th'));fill('thSets',t('hth'));
+  $('lang').value=L;
+}
+
 
 /* ---------- state ---------- */
 let mode=null;            // 'live' | 'file'
@@ -266,8 +349,9 @@ function bindSettings(){
 }
 
 /* ---------- UI helpers ---------- */
-function chip(s,txt){const c=$('chip');c.dataset.s=s;c.textContent=txt;}
-function hint(txt){const h=$('hint');if(!txt){h.hidden=true;return;}h.textContent=txt;h.hidden=false;}
+function chip(s){const c=$('chip');c.dataset.s=s;c.textContent=t('chip_'+s);}
+let lastHint=null;
+function hint(k,...a){const h=$('hint');if(!k){lastHint=null;h.hidden=true;return;}lastHint=[k,a];h.textContent=t(k,...a);h.hidden=false;}
 function unlockAudio(){
   try{if(!audio){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audio=new AC();} if(audio&&audio.state==='suspended')audio.resume();}catch(e){}
 }
@@ -277,7 +361,8 @@ function beep(freq,dur,when=0,vol=0.25){
     o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.01);g.gain.setValueAtTime(vol,t+dur-0.02);g.gain.linearRampToValueAtTime(0,t+dur);
     o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+dur+0.02);}catch(e){}
 }
-function say(txt){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(txt);u.lang='de-DE';u.rate=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+function spoken(v){const s=fmt(v);return L==='en'?s:s.replace(',',t('v_dec'));}
+function say(txt){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(txt);u.lang=t('speech');u.rate=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 async function keepAwake(){try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null;});}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&mode)keepAwake();});
 
@@ -298,8 +383,8 @@ window.addEventListener('resize',()=>{sizeOverlay();drawSpark();drawReps();});
 
 /* ---------- sources ---------- */
 function stopStream(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
-const camName=f=>f==='user'?'Selfie-Kamera':'Rückkamera';
-function flipLabel(){$('btnFlip').textContent=S.facing==='user'?'Zur Rückkamera':'Zur Selfie-Kamera';}
+const camName=f=>t(f==='user'?'camSelfie':'camBack');
+function flipLabel(){$('btnFlip').textContent=t(S.facing==='user'?'toBack':'toSelfie');}
 async function openCam(facing){
   unlockAudio();
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail();return;}
@@ -316,14 +401,14 @@ async function openCam(facing){
   const st=s.getVideoTracks()[0].getSettings()||{};
   const got=st.facingMode||facing;
   $('btnFlip').hidden=false; flipLabel();
-  hint(camName(got)+' läuft'+(st.frameRate?' ('+Math.round(st.frameRate)+' fps)':'')+'. Tippe auf „Platte markieren“.');
+  hint('h_camRun',camName(got),st.frameRate?' ('+Math.round(st.frameRate)+' fps)':'');
   keepAwake(); startLoop();
 }
 $('btnCam').addEventListener('click',()=>openCam(S.facing));
 $('btnFlip').addEventListener('click',()=>{S.facing=S.facing==='user'?'environment':'user';store.set('vbt-settings',S);openCam(S.facing);});
 function camFail(){
   $('placeholder').hidden=true;
-  hint('Kamera nicht verfügbar. Erlaube den Kamerazugriff in den Browser-Einstellungen und öffne die Seite über https. Alternativ „Video aufnehmen / wählen“ nutzen.');
+  hint('h_camFail');
 }
 $('file').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0]; if(!f)return;
@@ -331,7 +416,7 @@ $('file').addEventListener('change',e=>{
   video.srcObject=null; video.src=URL.createObjectURL(f); video.muted=true; video.playbackRate=+S.rate;
   video.addEventListener('loadeddata',function once(){video.removeEventListener('loadeddata',once);
     try{video.currentTime=0.05;}catch(err){}
-    onSourceReady(); hint('Video geladen. Spule zur Startposition, markiere die Platte, dann „Auswerten“.');
+    onSourceReady(); hint('h_videoLoaded');
     video.controls=false;
   });
   e.target.value='';
@@ -339,40 +424,40 @@ $('file').addEventListener('change',e=>{
 function onSourceReady(){
   $('placeholder').hidden=true; calib=null; tracker=null; trail=[]; resetSet();
   $('btnMark').disabled=false; $('btnPlay').hidden=(mode!=='file'); $('btnPlay').disabled=true;
-  chip('idle','Bereit');
+  chip('idle');
   if(video.videoWidth)sizeViewport(); else video.addEventListener('loadedmetadata',sizeViewport,{once:true});
 }
 
 /* ---------- calibration by two taps ---------- */
 $('btnMark').addEventListener('click',()=>{
-  unlockAudio(); if(setState==='running')endSet(); tapStage=1; tapA=null; tracker=null; chip('mark','Markieren'); updateSetUI();
+  unlockAudio(); if(setState==='running')endSet(); tapStage=1; tapA=null; tracker=null; chip('mark'); updateSetUI();
   if(mode==='file')video.pause();
-  hint('Tippe auf den OBEREN Rand der Platte.');
+  hint('h_tapTop');
 });
 overlay.addEventListener('pointerdown',e=>{
   if(!tapStage||!video.videoWidth)return;
   const r=overlay.getBoundingClientRect();
   const x=(e.clientX-r.left)/r.width*video.videoWidth, y=(e.clientY-r.top)/r.height*video.videoHeight;
-  if(tapStage===1){tapA={x,y};tapStage=2;hint('Jetzt auf den UNTEREN Rand tippen.');drawOverlay();return;}
+  if(tapStage===1){tapA={x,y};tapStage=2;hint('h_tapBottom');drawOverlay();return;}
   const dpx=Math.hypot(x-tapA.x,y-tapA.y);
-  if(dpx<12){hint('Die Punkte liegen zu nah beieinander. Nochmal: oberen Rand antippen.');tapStage=1;tapA=null;drawOverlay();return;}
+  if(dpx<12){hint('h_tooClose');tapStage=1;tapA=null;drawOverlay();return;}
   calib={cx:(x+tapA.x)/2,cy:(y+tapA.y)/2,dpx,time:mode==='file'?video.currentTime:0};
   tapStage=0;tapA=null;
   startTracking();
-  if(mode==='file'){$('btnPlay').disabled=false;hint('Markiert ('+Math.round(dpx)+' px = '+S.diamMM+' mm). Jetzt „Auswerten“.');}
-  else hint('Markiert. Tippe „Satz starten“, wenn du bereit bist.');
+  if(mode==='file'){$('btnPlay').disabled=false;hint('h_markedFile',Math.round(dpx),S.diamMM);}
+  else hint('h_markedLive');
 });
 function startTracking(){
-  try{tracker=new Tracker(calib.cx,calib.cy,calib.dpx);}catch(e){tracker=null;hint('Konnte das Bild nicht lesen. Bitte nochmal markieren.');return;}
+  try{tracker=new Tracker(calib.cx,calib.cy,calib.dpx);}catch(e){tracker=null;hint('h_readFail');return;}
   trail=[]; kin.reset(); lastT=-1;
-  chip('track','Verfolgt'); drawOverlay(); updateSetUI();
+  chip('track'); drawOverlay(); updateSetUI();
 }
 $('btnPlay').addEventListener('click',()=>{
   unlockAudio(); if(!tracker&&calib)startTracking(); if(!tracker)return;
   if(setState!=='running'){startSet();return;}
   video.playbackRate=+S.rate; video.play().catch(()=>{}); hint(null); startLoop(); keepAwake();
 });
-video.addEventListener('ended',()=>{if(mode==='file'&&setState==='running'){kin.flush();endSet();hint('Video zu Ende. Satz beendet, Ergebnis siehe unten.');}});
+video.addEventListener('ended',()=>{if(mode==='file'&&setState==='running'){kin.flush();endSet();hint('h_videoEnd');}});
 
 /* ---------- set control: idle -> running -> done ---------- */
 let setState='idle', setStartedAt=null, idleHintShown=false;
@@ -380,23 +465,23 @@ const HKEY='vbt-history';
 let history=store.get(HKEY,[]); if(!Array.isArray(history))history=[];
 function updateSetUI(){
   const b=$('btnSet'),run=setState==='running';
-  b.disabled=!tracker; b.dataset.s=setState; b.textContent=run?'Satz beenden':'Satz starten';
+  b.disabled=!tracker; b.dataset.s=setState; b.textContent=t(run?'endSet':'startSet');
   $('setDot').dataset.s=setState;
   const nr=history.length+1;
-  const title=run?'Satz '+nr+' läuft':(setState==='done'?'Satz '+history.length+' beendet':'Kein Satz aktiv');
+  const title=run?t('setRunning',nr):(setState==='done'?t('setDone',history.length):t('noSet'));
   $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title;
   let sub;
-  if(!tracker)sub='Erst Kamera starten und Platte markieren.';
-  else if(run)sub=reps.length+' Wdh. gemessen'+(stopAt!=null?' · Signal bei Wdh. '+(stopAt+1):'')+'. Nach dem Ablegen „Satz beenden“.';
-  else if(setState==='done')sub='Es wird nichts gezählt. Für den nächsten Satz „Satz starten“.';
-  else sub='Bereit. Tippe „Satz starten“, bevor du die Hantel aushebst.';
+  if(!tracker)sub=t('subNoTracker');
+  else if(run)sub=t('subRunning',reps.length,stopAt!=null?t('subSignalAt',stopAt+1):'');
+  else if(setState==='done')sub=t('subDone');
+  else sub=t('subIdle');
   $('setSub').textContent=sub;
 }
 function clearReps(){reps=[];stopAt=null;alarmed=false;$('alarm').hidden=true;kin.reset();renderReadout();renderTable();drawReps();}
 function startSet(){
   if(!tracker)return;
   unlockAudio(); clearReps(); trail=[]; setState='running'; setStartedAt=new Date(); idleHintShown=false;
-  chip('track','Verfolgt'); hint(null); updateSetUI(); keepAwake();
+  chip('track'); hint(null); updateSetUI(); keepAwake();
   beep(880,0.07,0);beep(1175,0.09,0.1);
   if(mode==='file'){
     const go=()=>{startTracking();video.playbackRate=+S.rate;video.play().catch(()=>{});startLoop();};
@@ -418,7 +503,7 @@ function endSet(){
     if(history.length>200)history=history.slice(-200);
     store.set(HKEY,history);
   }
-  chip('track','Verfolgt'); beep(660,0.12,0); updateSetUI(); renderHistory();
+  chip('track'); beep(660,0.12,0); updateSetUI(); renderHistory();
 }
 $('btnSet').addEventListener('click',()=>{unlockAudio(); setState==='running'?endSet():startSet();});
 $('alarmEnd').addEventListener('click',e=>{e.stopPropagation();endSet();});
@@ -427,23 +512,23 @@ $('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
 function resetSet(){clearReps();setState='idle';updateSetUI();}
 function renderHistory(){
   const tb=$('hbody');
-  if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr>';return;}
-  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?'Wdh. '+h.signal+' ('+h.thr+' %)':'kein Signal')+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.last)+'</td><td>'+(h.lossEnd!=null?'−'+fmt(h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
+  if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
+  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.last)+'</td><td>'+(h.lossEnd!=null?'−'+fmt(h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
 }
 $('btnCopyAll').addEventListener('click',()=>{
   const m=t=>{$('histMsg').textContent=t;};
-  if(!history.length){m('Noch keine Sätze gespeichert.');return;}
+  if(!history.length){m(t('noSetsSaved'));return;}
   const head='satz;datum;zeit;schwelle_prozent;wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;status';
   const rows=[];history.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.nr,h.date,h.time,h.thr,r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
   const txt=[head,...rows].join('\n');
-  try{navigator.clipboard.writeText(txt).then(()=>m('Kopiert: '+history.length+' Sätze. In Excel oder Sheets einfügen.'),()=>m('Kopieren nicht erlaubt.'));}catch(e){m('Kopieren nicht erlaubt.');}
+  try{navigator.clipboard.writeText(txt).then(()=>m(t('copiedSets',history.length)),()=>m(t('copyDenied')));}catch(e){m(t('copyDenied'));}
 });
 let clearArmed=null;
 $('btnClear').addEventListener('click',()=>{
   const b=$('btnClear');
-  if(!clearArmed){b.textContent='Wirklich leeren?';clearArmed=setTimeout(()=>{b.textContent='Liste leeren';clearArmed=null;},4000);return;}
-  clearTimeout(clearArmed);clearArmed=null;b.textContent='Liste leeren';
-  history=[];store.set(HKEY,history);renderHistory();updateSetUI();$('histMsg').textContent='Liste geleert.';
+  if(!clearArmed){b.textContent=t('clearConfirm');clearArmed=setTimeout(()=>{b.textContent=t('clear');clearArmed=null;},4000);return;}
+  clearTimeout(clearArmed);clearArmed=null;b.textContent=t('clear');
+  history=[];store.set(HKEY,history);renderHistory();updateSetUI();$('histMsg').textContent=t('cleared');
 });
 
 /* ---------- template tracker (normalized cross-correlation) ---------- */
@@ -590,28 +675,28 @@ function recomputeLoss(){
 function refMcv(){const l=reps[reps.length-1];return l?l.ref:null;}
 function onRep(r){
   if(setState!=='running'){
-    if(!idleHintShown&&tracker){idleHintShown=true;hint(setState==='done'?'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.':'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.');}
+    if(!idleHintShown&&tracker){idleHintShown=true;hint(setState==='done'?'h_doneMove':'h_idleMove');}
     return;
   }
   r.n=reps.length+1; reps.push(r); recomputeLoss();
   const k=reps.length-1,last=reps[k];
   drawReps(); updateSetUI();
   if(stopAt!=null&&k>stopAt&&last.valid){
-    $('alarmSub').textContent='Wdh. '+last.n+' nach dem Signal: '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' %';
+    $('alarmSub').textContent=t('a_after',last.n,fmt(last.mcv),fmt(last.loss,0));
     beep(440,0.12,0,0.3);beep(440,0.12,0.18,0.3);
     try{navigator.vibrate&&navigator.vibrate([150,80,150]);}catch(e){}
-    say(fmt(last.mcv).replace(',',' Komma '));
+    say(spoken(last.mcv));
     return;
   }
   if(stopAt!=null&&k===stopAt&&last.valid){
-    $('alarmSub').textContent='Wdh. '+last.n+': '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' % zur Referenz '+fmt(last.ref)+' m/s. Weitere Wdh. werden markiert, bis du beendest.';
-    $('alarm').hidden=false; chip('alarm','Signal');
+    $('alarmSub').textContent=t('a_first',last.n,fmt(last.mcv),fmt(last.loss,0),fmt(last.ref));
+    $('alarm').hidden=false; chip('alarm');
     beep(440,0.18,0,0.35);beep(370,0.18,0.24,0.35);beep(300,0.35,0.48,0.35);
     try{navigator.vibrate&&navigator.vibrate([200,80,200,80,400]);}catch(e){}
-    say('Stopp. '+fmt(last.mcv).replace(',',' Komma '));
+    say(t('v_stop')+'. '+spoken(last.mcv));
   }else{
     beep(last.valid?1046:620,0.08);
-    say(fmt(last.mcv).replace(',',' Komma '));
+    say(spoken(last.mcv));
   }
 }
 
@@ -624,17 +709,17 @@ function schedule(){
 let lastDraw=0;
 function onFrame(now,meta){
   if(!mode){loopOn=false;return;}
-  let t;
-  if(mode==='file')t=meta?meta.mediaTime:video.currentTime;
-  else t=(meta&&meta.captureTime?meta.captureTime:now)/1000;
-  if(t!==lastT&&tracker&&!tapStage&&(mode==='live'||!video.paused)){
-    lastT=t;
+  let tm;
+  if(mode==='file')tm=meta?meta.mediaTime:video.currentTime;
+  else tm=(meta&&meta.captureTime?meta.captureTime:now)/1000;
+  if(tm!==lastT&&tracker&&!tapStage&&(mode==='live'||!video.paused)){
+    lastT=tm;
     const r=tracker.update();
-    if(r.ok){trail.push({x:r.x,y:r.y,t});while(trail.length&&t-trail[0].t>3)trail.shift();kin.push(t,r.y);
-      if($('chip').dataset.s!=='alarm')chip('track','Verfolgt');}
-    else if($('chip').dataset.s!=='alarm'){chip('lost','Verloren');hint('Platte verloren. Kurz ruhig halten oder neu markieren.');}
-    if(r.ok&&!$('hint').hidden&&$('hint').textContent.startsWith('Platte verloren'))hint(null);
-    $('liveV').textContent='Aktuell: '+fmt(kin.v)+' m/s';
+    if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();kin.push(tm,r.y);
+      if($('chip').dataset.s!=='alarm')chip('track');}
+    else if($('chip').dataset.s!=='alarm'){chip('lost');hint('h_lost');}
+    if(r.ok&&lastHint&&lastHint[0]==='h_lost')hint(null);
+    $('liveV').textContent=t('current',fmt(kin.v));
   }
   drawOverlay();
   if(now-lastDraw>60){drawSpark();lastDraw=now;}
@@ -671,8 +756,8 @@ function drawSpark(){
   const hs=kin.hist;const lo=-1,hi=Math.max(1.2,...hs.map(p=>p.v));
   const L=34,Y=v=>4+(h-20)*(1-(v-lo)/(hi-lo));
   x.font='11px '+tok('--font-body');x.fillStyle=ink;x.strokeStyle=line;x.lineWidth=1;
-  [lo,0,1].forEach(v=>{x.beginPath();x.moveTo(L,Y(v));x.lineTo(w,Y(v));x.stroke();x.fillText((v>0?'+':'')+String(v).replace('.',','),2,Y(v)+4);});
-  x.fillText('m/s · letzte 6 s',L+4,h-3);
+  [lo,0,1].forEach(v=>{x.beginPath();x.moveTo(L,Y(v));x.lineTo(w,Y(v));x.stroke();x.fillText((v>0?'+':'')+String(v),2,Y(v)+4);});
+  x.fillText(t('sparkLabel'),34+4,h-3);
   if(hs.length<2)return;
   const t1=hs[hs.length-1].t,X=t=>L+(w-L)*(1-(t1-t)/6);
   x.beginPath();hs.forEach((p,i)=>i?x.lineTo(X(p.t),Y(p.v)):x.moveTo(X(p.t),Y(p.v)));
@@ -712,27 +797,27 @@ function drawReps(){
   });
   const last=data[data.length-1];
   x.textAlign='left';x.font='12px '+tok('--font-body');
-  if(last&&last.ref){x.fillStyle=mut;x.fillText('Referenz',w-Rp+8,Y(last.ref)+4);
+  if(last&&last.ref){x.fillStyle=mut;x.fillText(t('refChart'),w-Rp+8,Y(last.ref)+4);
     x.fillStyle=bad;x.fillText('−'+S.thresh+' %',w-Rp+8,Y(last.ref*(1-S.thresh/100))+12);}
   x.globalAlpha=1;
-  if(example){x.fillStyle=mut;x.font='italic 13px '+tok('--font-body');x.fillText('Beispielsatz. Deine Wiederholungen ersetzen ihn.',Lp+4,T+12);}
+  if(example){x.fillStyle=mut;x.font='italic 13px '+tok('--font-body');x.fillText(t('exampleNote'),Lp+4,T+12);}
 }
 function renderReadout(){
   const last=reps[reps.length-1];
   $('mcvVal').innerHTML=(last?fmt(last.mcv):'–')+'<small>m/s</small>';
   const lv=$('lossVal');lv.innerHTML=(last&&reps.length>1&&last.loss!=null?'−'+fmt(last.loss,0):'–')+'<small>%</small>';
   lv.dataset.bad=(stopAt!=null)?'1':'0';
-  $('refVal').textContent='Referenz: '+(last&&last.ref?fmt(last.ref)+' m/s':'–');
+  $('refVal').textContent=t('reference',last&&last.ref?fmt(last.ref)+' m/s':'–');
   $('repVal').textContent=reps.length;
   $('romVal').textContent='ROM: '+(last?fmt(last.rom*100,0)+' cm':'–');
 }
 function renderTable(){
   const tb=$('tbody');
-  if(!reps.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr>';return;}
+  if(!reps.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noReps')+'</td></tr>';return;}
   tb.innerHTML=reps.map((r,i)=>{
     const isStop=i===stopAt;
-    let v=!r.valid?'<span class="muted">unvollständig</span>':(i===0?'–':'−'+fmt(r.loss,1)+' %');
-    if(isStop)v+=' <span class="tag">Signal</span>';
+    let v=!r.valid?'<span class="muted">'+t('partial')+'</span>':(i===0?'–':'−'+fmt(r.loss,1)+' %');
+    if(isStop)v+=' <span class="tag">'+t('tagSignal')+'</span>';
     return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td></tr>';}).join('');
 }
 $('btnCopy').addEventListener('click',()=>{
@@ -740,13 +825,22 @@ $('btnCopy').addEventListener('click',()=>{
   const rows=reps.map((r,i)=>[r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
   const txt=[head,...rows].join('\n');
   const done=m=>{$('copyMsg').textContent=m;};
-  if(!reps.length){done('Noch nichts zu kopieren.');return;}
-  try{navigator.clipboard.writeText(txt).then(()=>done('Kopiert: '+reps.length+' Wiederholungen. In Excel oder Sheets einfügen.'),()=>done('Kopieren nicht erlaubt. Werte stehen in der Tabelle.'));}
-  catch(e){done('Kopieren nicht erlaubt. Werte stehen in der Tabelle.');}
+  if(!reps.length){done(t('nothingToCopy'));return;}
+  try{navigator.clipboard.writeText(txt).then(()=>done(t('copiedReps',reps.length)),()=>done(t('copyDeniedTable')));}
+  catch(e){done(t('copyDeniedTable'));}
 });
 
 if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{drawSpark();drawReps();});
-bindSettings(); renderReadout(); renderTable(); renderHistory(); updateSetUI();
+function setLang(l){
+  if(!I18N[l])return; L=l; S.lang=l; store.set('vbt-settings',S);
+  applyStatic(); updateSetUI(); renderReadout(); renderTable(); renderHistory(); flipLabel();
+  chip($('chip').dataset.s||'idle');
+  if(lastHint)hint(lastHint[0],...lastHint[1]);
+  if(stopAt!=null&&reps[stopAt]){const k=reps.length-1,r=reps[k];$('alarmSub').textContent=k>stopAt?t('a_after',r.n,fmt(r.mcv),fmt(r.loss,0)):t('a_first',r.n,fmt(r.mcv),fmt(r.loss,0),fmt(r.ref));}
+  drawSpark(); drawReps();
+}
+$('lang').addEventListener('change',e=>setLang(e.target.value));
+bindSettings(); applyStatic(); chip('idle'); renderReadout(); renderTable(); renderHistory(); updateSetUI();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
