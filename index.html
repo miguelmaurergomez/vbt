@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f5fbf">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>*,*::before,*::after{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}</style>
+<title>VBT Bankdrück-Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-column instrument panel — camera view on top, live readout, rep chart, settings. Colors borrow IWF plate coding (20 kg blue, 10 kg green, 15 kg yellow, 25 kg red). */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --ink:#141922; --muted:#5a6474; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent-soft:#dbe6f7; --ok:#2e8a4b; --warn:#b38800; --alarm:#cf2f2b;
+  --font-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --font-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1015; --surface:#161a21; --ink:#e7ebf1; --muted:#8d97a7; --line:#29303b;
+  --accent:#5c94ec; --accent-soft:#1b2a42; --ok:#4cb86c; --warn:#e0b22a; --alarm:#ef5350; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1015; --surface:#161a21; --ink:#e7ebf1; --muted:#8d97a7; --line:#29303b;
+  --accent:#5c94ec; --accent-soft:#1b2a42; --ok:#4cb86c; --warn:#e0b22a; --alarm:#ef5350; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:auto}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45}
+.app{max-width:760px;margin:0 auto;padding-block:14px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1.05}
+h1 small{display:block;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--muted);letter-spacing:0}
+h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.chip{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface);white-space:nowrap}
+.chip[data-s="track"]{color:var(--ok);border-color:var(--ok)}
+.chip[data-s="lost"]{color:var(--warn);border-color:var(--warn)}
+.chip[data-s="mark"]{color:var(--accent);border-color:var(--accent)}
+.chip[data-s="alarm"]{color:#fff;background:var(--alarm);border-color:var(--alarm)}
+
+.stage{display:flex;flex-direction:column;gap:10px}
+.viewport{position:relative;width:100%;margin:0 auto;background:#000;border-radius:var(--radius);overflow:hidden;aspect-ratio:16/9;max-width:100%;touch-action:manipulation}
+.viewport video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.viewport video{object-fit:fill}
+.hint{position:absolute;left:10px;right:10px;bottom:10px;padding:8px 12px;border-radius:8px;background:rgba(10,12,16,.72);color:#f3f5f8;font-size:14px;line-height:1.35;pointer-events:none}
+.placeholder{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:18px 20px;color:#cfd6e0;font-size:14px}
+.placeholder b{font-family:var(--font-display);font-size:20px;color:#fff;font-weight:600;letter-spacing:.02em}
+.placeholder ol{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
+.alarm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(207,47,43,.82);color:#fff;font-family:var(--font-display);font-weight:700;font-size:clamp(30px,8vw,56px);letter-spacing:.04em;text-align:center;cursor:pointer}
+.alarm span{font-family:var(--font-body);font-weight:500;font-size:15px;letter-spacing:0}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:600 15px/1 var(--font-body);padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,.btn:focus-within,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.btn{position:relative}
+
+.readout{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cell{background:var(--surface);padding:12px 14px;min-width:0}
+.cell .lab{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.cell .val{font-family:var(--font-display);font-weight:700;font-size:44px;line-height:1;font-variant-numeric:tabular-nums;margin-top:4px}
+.cell .val small{font-size:18px;font-weight:600;color:var(--muted);margin-left:3px}
+.cell.main .val{font-size:58px}
+.cell .sub{font-size:13px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+#lossVal[data-bad="1"]{color:var(--alarm)}
+@media (max-width:480px){.readout{grid-template-columns:1fr 1fr}.cell.main{grid-column:1/-1}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+canvas.chart{width:100%;display:block}
+#spark{height:90px}
+#repChart{height:190px}
+.tablewrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+td.bad{color:var(--alarm);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px}
+.muted{color:var(--muted);font-size:13px}
+
+.settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+@media (max-width:520px){.settings{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-weight:600;font-size:14px}
+.field .help{font-size:12.5px;color:var(--muted)}
+.field input[type=number],.field select{font:500 16px var(--font-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.inline{display:flex;gap:8px;align-items:center}
+.inline input[type=range]{flex:1;accent-color:var(--accent)}
+.inline output{font-family:var(--font-display);font-weight:700;font-size:20px;min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.check{flex-direction:row;align-items:center;gap:10px}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{min-height:32px;padding:6px 10px;font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>VBT Bankdrück-Tracker<small>Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
+    <span class="chip" id="chip" data-s="idle">Bereit</span>
+  </header>
+
+  <section class="stage">
+    <div class="viewport" id="viewport">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div class="placeholder" id="placeholder">
+        <b>So geht's</b>
+        <ol>
+          <li>Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.</li>
+          <li>Kamera starten oder ein Video wählen.</li>
+          <li>„Platte markieren“: oberen und unteren Rand antippen.</li>
+          <li>Satz drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.</li>
+        </ol>
+      </div>
+      <div class="hint" id="hint" hidden></div>
+      <div class="alarm" id="alarm" hidden>SATZ BEENDEN<span id="alarmSub"></span></div>
+    </div>
+    <div class="controls">
+      <button class="primary" id="btnCam">Kamera starten</button>
+      <label class="btn" id="btnFileLbl">Video aufnehmen / wählen<input type="file" id="file" accept="video/*"></label>
+      <button id="btnMark" disabled>Platte markieren</button>
+      <button id="btnPlay" hidden disabled>▶ Auswerten</button>
+      <button id="btnReset">Neuer Satz</button>
+    </div>
+  </section>
+
+  <section class="readout" aria-live="polite">
+    <div class="cell main"><div class="lab">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
+    <div class="cell"><div class="lab">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
+    <div class="cell"><div class="lab">Wdh.</div><div class="val" id="repVal">0</div><div class="sub" id="romVal">ROM: –</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Geschwindigkeit live</h2>
+    <canvas class="chart" id="spark"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>Wiederholungen</h2>
+    <canvas class="chart" id="repChart"></canvas>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Verlust</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="6" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="row">
+      <span class="muted" id="copyMsg">MCV = mittlere konzentrische Geschwindigkeit (nur Aufwärtsphase, vertikal).</span>
+      <button id="btnCopy">Satz als CSV kopieren</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Einstellungen</h2>
+    <div class="settings">
+      <div class="field">
+        <label for="diam">Referenzgröße (mm)</label>
+        <input type="number" id="diam" min="20" max="2000" step="1">
+        <div class="presets"><button type="button" data-d="450">450 · Olympia-Scheibe</button><button type="button" data-d="120">120 · CD</button><button type="button" data-d="297">297 · A4 lange Seite</button></div>
+        <div class="help">Durchmesser deiner Scheibe. Kein Gewicht da? Nimm ein Objekt bekannter Größe und markiere seine senkrechte Ausdehnung (oben und unten).</div>
+      </div>
+      <div class="field">
+        <label for="thresh">Signal bei Geschwindigkeitsverlust</label>
+        <div class="inline"><input type="range" id="thresh" min="5" max="40" step="1"><output id="threshOut">10 %</output></div>
+        <div class="help">Signal, sobald eine Wiederholung so viel langsamer ist als die Referenz.</div>
+      </div>
+      <div class="field">
+        <label for="ref">Referenz-Wiederholung</label>
+        <select id="ref"><option value="best">Schnellste im Satz</option><option value="first">Erste im Satz</option></select>
+        <div class="help">Die schnellste ist robuster, weil die erste oft nicht die schnellste ist.</div>
+      </div>
+      <div class="field">
+        <label for="minRom">Mindest-Bewegungsweg (cm)</label>
+        <input type="number" id="minRom" min="3" max="80" step="1">
+        <div class="help">Kürzere Bewegungen zählen nicht als Wiederholung. Bankdrücken: ca. 15 cm. Zum Testen mit kleinen Bewegungen niedriger stellen.</div>
+      </div>
+      <div class="field">
+        <label for="rate">Video-Auswertung</label>
+        <select id="rate"><option value="1">Echtzeit</option><option value="0.5">Halbe Geschwindigkeit (genauer)</option><option value="0.25">Viertel (am genauesten)</option></select>
+        <div class="help">Nur für Videos. Langsamer abspielen erfasst jedes Bild.</div>
+      </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="sound"> Töne (Piep pro Wdh., Alarm)</label>
+        <label class="check"><input type="checkbox" id="voice"> Werte ansagen</label>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,rate:'1'},store.get('vbt-settings',{}));
+const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':v.toFixed(d).replace('.',',');
+
+/* ---------- state ---------- */
+let mode=null;            // 'live' | 'file'
+let stream=null;
+let calib=null;           // {cx,cy,dpx,time}
+let tapStage=0, tapA=null;
+let tracker=null;
+let lastT=-1;
+let trail=[];
+let reps=[];
+let alarmed=false;
+let loopOn=false;
+let audio=null;
+let wake=null;
+
+/* ---------- settings UI ---------- */
+function bindSettings(){
+  $('diam').value=S.diamMM; $('thresh').value=S.thresh; $('threshOut').textContent=S.thresh+' %';
+  $('ref').value=S.ref; $('minRom').value=S.minROM; $('rate').value=S.rate;
+  $('sound').checked=S.sound; $('voice').checked=S.voice;
+  const save=()=>{store.set('vbt-settings',S);recomputeLoss();drawReps();};
+  $('diam').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(v>0){S.diamMM=v;save();}});
+  document.querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>{S.diamMM=+b.dataset.d;$('diam').value=S.diamMM;save();}));
+  $('thresh').addEventListener('input',e=>{S.thresh=+e.target.value;$('threshOut').textContent=S.thresh+' %';save();});
+  $('ref').addEventListener('change',e=>{S.ref=e.target.value;save();});
+  $('minRom').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(v>0){S.minROM=v;save();}});
+  $('rate').addEventListener('change',e=>{S.rate=e.target.value;video.playbackRate=+S.rate;save();});
+  $('sound').addEventListener('change',e=>{S.sound=e.target.checked;save();});
+  $('voice').addEventListener('change',e=>{S.voice=e.target.checked;save();});
+}
+
+/* ---------- UI helpers ---------- */
+function chip(s,txt){const c=$('chip');c.dataset.s=s;c.textContent=txt;}
+function hint(txt){const h=$('hint');if(!txt){h.hidden=true;return;}h.textContent=txt;h.hidden=false;}
+function unlockAudio(){
+  try{if(!audio){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audio=new AC();} if(audio&&audio.state==='suspended')audio.resume();}catch(e){}
+}
+function beep(freq,dur,when=0,vol=0.25){
+  if(!S.sound||!audio)return;
+  try{const t=audio.currentTime+when,o=audio.createOscillator(),g=audio.createGain();
+    o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.01);g.gain.setValueAtTime(vol,t+dur-0.02);g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+dur+0.02);}catch(e){}
+}
+function say(txt){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(txt);u.lang='de-DE';u.rate=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+async function keepAwake(){try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null;});}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&mode)keepAwake();});
+
+/* ---------- viewport sizing ---------- */
+function sizeViewport(){
+  const vw=video.videoWidth,vh=video.videoHeight; if(!vw||!vh)return;
+  const vp=$('viewport'); const ar=vw/vh;
+  vp.style.aspectRatio=vw+' / '+vh;
+  vp.style.width='min(100%, '+(62*ar).toFixed(2)+'vh)';
+  sizeOverlay();
+}
+function sizeOverlay(){
+  const dpr=window.devicePixelRatio||1, r=overlay.getBoundingClientRect();
+  overlay.width=Math.max(1,Math.round(r.width*dpr)); overlay.height=Math.max(1,Math.round(r.height*dpr));
+  drawOverlay();
+}
+window.addEventListener('resize',()=>{sizeOverlay();drawSpark();drawReps();});
+
+/* ---------- sources ---------- */
+function stopStream(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+$('btnCam').addEventListener('click',async()=>{
+  unlockAudio();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail();return;}
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60}}});
+    stopStream(); stream=s; mode='live';
+    video.removeAttribute('src'); video.srcObject=s; video.muted=true;
+    await video.play().catch(()=>{});
+    onSourceReady();
+    const fr=(s.getVideoTracks()[0].getSettings()||{}).frameRate;
+    hint('Kamera läuft'+(fr?' ('+Math.round(fr)+' fps)':'')+'. Tippe auf „Platte markieren“.');
+    keepAwake(); startLoop();
+  }catch(e){camFail();}
+});
+function camFail(){
+  $('placeholder').hidden=true;
+  hint('Kamera nicht verfügbar. Erlaube den Kamerazugriff in den Browser-Einstellungen und öffne die Seite über https. Alternativ „Video aufnehmen / wählen“ nutzen.');
+}
+$('file').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  unlockAudio(); stopStream(); mode='file';
+  video.srcObject=null; video.src=URL.createObjectURL(f); video.muted=true; video.playbackRate=+S.rate;
+  video.addEventListener('loadeddata',function once(){video.removeEventListener('loadeddata',once);
+    try{video.currentTime=0.05;}catch(err){}
+    onSourceReady(); hint('Video geladen. Spule zur Startposition, markiere die Platte, dann „Auswerten“.');
+    video.controls=false;
+  });
+  e.target.value='';
+});
+function onSourceReady(){
+  $('placeholder').hidden=true; calib=null; tracker=null; trail=[]; resetSet(false);
+  $('btnMark').disabled=false; $('btnPlay').hidden=(mode!=='file'); $('btnPlay').disabled=true;
+  chip('idle','Bereit');
+  if(video.videoWidth)sizeViewport(); else video.addEventListener('loadedmetadata',sizeViewport,{once:true});
+}
+
+/* ---------- calibration by two taps ---------- */
+$('btnMark').addEventListener('click',()=>{
+  unlockAudio(); tapStage=1; tapA=null; tracker=null; chip('mark','Markieren');
+  if(mode==='file')video.pause();
+  hint('Tippe auf den OBEREN Rand der Platte.');
+});
+overlay.addEventListener('pointerdown',e=>{
+  if(!tapStage||!video.videoWidth)return;
+  const r=overlay.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*video.videoWidth, y=(e.clientY-r.top)/r.height*video.videoHeight;
+  if(tapStage===1){tapA={x,y};tapStage=2;hint('Jetzt auf den UNTEREN Rand tippen.');drawOverlay();return;}
+  const dpx=Math.hypot(x-tapA.x,y-tapA.y);
+  if(dpx<12){hint('Die Punkte liegen zu nah beieinander. Nochmal: oberen Rand antippen.');tapStage=1;tapA=null;drawOverlay();return;}
+  calib={cx:(x+tapA.x)/2,cy:(y+tapA.y)/2,dpx,time:mode==='file'?video.currentTime:0};
+  tapStage=0;tapA=null;
+  startTracking();
+  if(mode==='file'){$('btnPlay').disabled=false;hint('Markiert ('+Math.round(dpx)+' px = '+S.diamMM+' mm). Jetzt „Auswerten“.');}
+  else hint('Markiert. Los geht’s: Satz drücken.');
+});
+function startTracking(){
+  try{tracker=new Tracker(calib.cx,calib.cy,calib.dpx);}catch(e){tracker=null;hint('Konnte das Bild nicht lesen. Bitte nochmal markieren.');return;}
+  trail=[]; kin.reset(); lastT=-1;
+  chip('track','Verfolgt'); drawOverlay();
+}
+$('btnPlay').addEventListener('click',()=>{
+  unlockAudio(); if(!tracker&&calib)startTracking(); if(!tracker)return;
+  video.playbackRate=+S.rate; video.play().catch(()=>{}); hint(null); startLoop(); keepAwake();
+});
+video.addEventListener('ended',()=>{if(mode==='file'){kin.flush();hint('Video zu Ende. Ergebnis siehe unten.');}});
+
+$('btnReset').addEventListener('click',()=>{unlockAudio();resetSet(true);});
+$('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
+function resetSet(reinit){
+  reps=[]; alarmed=false; $('alarm').hidden=true; kin.reset(); trail=[];
+  renderReadout(); renderTable(); drawReps();
+  if(!reinit||!calib)return;
+  if(mode==='file'){video.pause();try{video.currentTime=calib.time;}catch(e){}
+    video.addEventListener('seeked',()=>{startTracking();hint('Satz zurückgesetzt. „Auswerten“ startet erneut.');},{once:true});}
+  else if(tracker){chip('track','Verfolgt');hint('Neuer Satz. Bereit.');}
+}
+
+/* ---------- template tracker (normalized cross-correlation) ---------- */
+class Tracker{
+  constructor(cx,cy,dpx){
+    const vw=video.videoWidth,vh=video.videoHeight;
+    this.s=Math.min(1,Math.max(0.03,48/dpx));
+    this.W=Math.max(24,Math.round(vw*this.s)); this.H=Math.max(24,Math.round(vh*this.s));
+    this.cv=document.createElement('canvas'); this.cv.width=this.W; this.cv.height=this.H;
+    this.ctx=this.cv.getContext('2d',{willReadFrequently:true});
+    this.g=new Float32Array(this.W*this.H);
+    this.half=Math.max(6,Math.round(dpx*this.s*0.45)); this.N=2*this.half+1;
+    this.t=new Float32Array(this.N*this.N); this.raw=null;
+    this.x=cx*this.s; this.y=cy*this.s; this.vx=0; this.vy=0; this.score=1; this.lost=false;
+    this.grab(); this.setTemplate(this.patch(Math.round(this.x),Math.round(this.y)),1);
+  }
+  grab(){
+    this.ctx.drawImage(video,0,0,this.W,this.H);
+    const d=this.ctx.getImageData(0,0,this.W,this.H).data,g=this.g;
+    for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.299*d[j]+0.587*d[j+1]+0.114*d[j+2];
+  }
+  patch(cx,cy){
+    const N=this.N,h=this.half,W=this.W,H=this.H,p=new Float32Array(N*N);
+    for(let r=0;r<N;r++){const yy=Math.min(H-1,Math.max(0,cy-h+r));
+      for(let c=0;c<N;c++){const xx=Math.min(W-1,Math.max(0,cx-h+c));p[r*N+c]=this.g[yy*W+xx];}}
+    return p;
+  }
+  setTemplate(p,a){
+    if(!this.raw||a>=1)this.raw=Float32Array.from(p); else for(let i=0;i<p.length;i++)this.raw[i]=this.raw[i]*(1-a)+p[i]*a;
+    let m=0;for(let i=0;i<p.length;i++)m+=this.raw[i]; m/=p.length;
+    let n=0;for(let i=0;i<p.length;i++){const v=this.raw[i]-m;this.t[i]=v;n+=v*v;}
+    this.tn=Math.max(n,1e-6);
+  }
+  ncc(ox,oy){
+    const N=this.N,W=this.W,g=this.g,t=this.t;let s=0,s2=0,st=0;
+    for(let r=0;r<N;r++){let gi=(oy+r)*W+ox,ti=r*N;
+      for(let c=0;c<N;c++){const v=g[gi+c];s+=v;s2+=v*v;st+=v*t[ti+c];}}
+    const n=N*N,varI=s2-s*s/n; if(varI<1)return -1;
+    return st/Math.sqrt(varI*this.tn);
+  }
+  update(){
+    this.grab();
+    const R=this.lost?Math.round(this.N*0.9):Math.max(4,Math.round(this.N*0.35));
+    const cx0=Math.round(this.x+this.vx),cy0=Math.round(this.y+this.vy),h=this.half,size=2*R+1;
+    const grid=new Float32Array(size*size).fill(-2);
+    let best=-2,bx=cx0,by=cy0;
+    for(let dy=-R;dy<=R;dy++){const cy=cy0+dy;if(cy-h<0||cy+h>=this.H)continue;
+      for(let dx=-R;dx<=R;dx++){const cx=cx0+dx;if(cx-h<0||cx+h>=this.W)continue;
+        const v=this.ncc(cx-h,cy-h);grid[(dy+R)*size+dx+R]=v;if(v>best){best=v;bx=cx;by=cy;}}}
+    this.score=best;
+    if(best<0.45){this.lost=true;this.vx*=0.5;this.vy*=0.5;return {ok:false,score:best};}
+    const gx=bx-cx0+R,gy=by-cy0+R;let sx=0,sy=0;
+    const sub=(l,c,r)=>{if(l<-1.5||r<-1.5)return 0;const den=l-2*c+r;if(den>=0)return 0;return Math.max(-0.5,Math.min(0.5,(l-r)/(2*den)));};
+    if(gx>0&&gx<size-1)sx=sub(grid[gy*size+gx-1],best,grid[gy*size+gx+1]);
+    if(gy>0&&gy<size-1)sy=sub(grid[(gy-1)*size+gx],best,grid[(gy+1)*size+gx]);
+    const nx=bx+sx,ny=by+sy;
+    this.lost=false;
+    this.vx=0.5*this.vx+0.5*(nx-this.x);this.vy=0.5*this.vy+0.5*(ny-this.y);
+    this.x=nx;this.y=ny;
+    if(best>0.8)this.setTemplate(this.patch(bx,by),0.04);
+    return {ok:true,x:nx/this.s,y:ny/this.s,score:best};
+  }
+}
+
+/* ---------- kinematics + rep detection ---------- */
+const VON=0.06, VEND=0.025;
+const kin={
+  buf:[],hist:[],seg:[],state:'idle',minY:0,minT:0,maxY:0,maxT:0,peak:0,lowSince:null,v:0,
+  reset(){this.buf=[];this.hist=[];this.seg=[];this.state='idle';this.lowSince=null;this.v=0;},
+  push(t,yPx){
+    if(!calib)return;
+    const mpp=S.diamMM/1000/calib.dpx, y=(calib.cy-yPx)*mpp; // meters, up = positive
+    const b=this.buf; b.push({t,y}); while(b.length&&t-b[0].t>0.6)b.shift();
+    const n=b.length,k=Math.min(3,n);let ys=0,ts=0;for(let i=n-k;i<n;i++){ys+=b[i].y;ts+=b[i].t;}ys/=k;ts/=k;
+    let m=0,sx=0,sy=0,sxx=0,sxy=0;
+    for(let i=n-1;i>=0&&t-b[i].t<=0.15;i--){const x=b[i].t-t;sx+=x;sy+=b[i].y;sxx+=x*x;sxy+=x*b[i].y;m++;}
+    let v=0;if(m>=3){const den=m*sxx-sx*sx;if(den>1e-12)v=(m*sxy-sx*sy)/den;}
+    this.v=v; this.hist.push({t,v,ph:this.state}); while(this.hist.length&&t-this.hist[0].t>6)this.hist.shift();
+    if(this.state!=='idle'){this.seg.push({t:ts,y:ys});if(this.seg.length>900)this.seg.shift();}
+    this.step(ts,ys,v);
+  },
+  step(ts,y,v){
+    switch(this.state){
+      case 'idle': if(v<-VON){this.state='down';this.minY=y;this.minT=ts;this.seg=[{t:ts,y}];} break;
+      case 'down':
+        if(y<this.minY){this.minY=y;this.minT=ts;}
+        if(v>VON&&y>this.minY+0.01){this.state='up';this.maxY=y;this.maxT=ts;this.peak=v;this.lowSince=null;}
+        break;
+      case 'up':{
+        if(y>this.maxY){this.maxY=y;this.maxT=ts;}
+        if(v>this.peak)this.peak=v;
+        if(v<VEND){if(this.lowSince==null)this.lowSince=ts;}else this.lowSince=null;
+        const end=(this.lowSince!=null&&ts-this.lowSince>=0.25)||v<-VON;
+        if(!end)break;
+        this.finish();
+        if(v<-VON){this.state='down';this.minY=y;this.minT=ts;this.seg=[{t:ts,y}];} else this.state='idle';
+        break;}
+    }
+  },
+  flush(){
+    if(this.state!=='up')return;
+    this.finish(); this.state='idle';
+  },
+  /* Concentric phase = from leaving the bottom to arriving at the top. Edges are cut at a small
+     tolerance so that noise in the pause at the chest or at lockout does not stretch the duration. */
+  finish(){
+    const rom=this.maxY-this.minY; if(rom<S.minROM/100)return;
+    const eps=Math.max(0.004,0.01*rom),lo=this.minY+eps,hi=this.maxY-eps,g=this.seg;
+    let iM=g.length-1;while(iM>0&&g[iM].t>this.maxT)iM--;
+    let i=iM;while(i>0&&g[i].y>lo)i--;
+    if(i>=iM)return;
+    const a=g[i],b=g[i+1],tS=a.t+(b.t-a.t)*((lo-a.y)/((b.y-a.y)||1e-9));
+    let j=i+1;while(j<iM&&g[j].y<hi)j++;
+    const c=g[j-1],d=g[j],tE=c.t+(d.t-c.t)*((hi-c.y)/((d.y-c.y)||1e-9));
+    /* edge correction: add back the time spent inside the tolerance band, extrapolated from the local slope */
+    const slope=(i0,i1)=>{i0=Math.max(0,i0);i1=Math.min(g.length-1,i1);const dt=g[i1].t-g[i0].t;return dt>0?(g[i1].y-g[i0].y)/dt:0;};
+    const vS=slope(i,i+4),vE=slope(j-4,j);
+    const cS=vS>0.05?Math.min(0.12,eps/vS):0, cE=vE>0.05?Math.min(0.12,eps/vE):0;
+    const dur=(tE+cE)-(tS-cS); if(!(dur>0.08))return;
+    onRep({mcv:rom/dur,peak:this.peak,rom,dur});
+  }
+};
+
+function refMcv(){if(!reps.length)return null;return S.ref==='first'?reps[0].mcv:Math.max(...reps.map(r=>r.mcv));}
+function recomputeLoss(){const ref=refMcv();reps.forEach(r=>{r.loss=ref?(1-r.mcv/ref)*100:0;});renderReadout();renderTable();}
+function onRep(r){
+  r.n=reps.length+1; reps.push(r); recomputeLoss();
+  const last=reps[reps.length-1];
+  const bad=reps.length>1&&last.loss>=S.thresh;
+  drawReps();
+  if(bad){
+    if(!alarmed){alarmed=true;}
+    $('alarmSub').textContent='Wdh. '+last.n+': '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' %';
+    $('alarm').hidden=false; chip('alarm','Satz beenden');
+    beep(440,0.18,0,0.35);beep(370,0.18,0.24,0.35);beep(300,0.35,0.48,0.35);
+    try{navigator.vibrate&&navigator.vibrate([200,80,200,80,400]);}catch(e){}
+    say('Stopp. '+fmt(last.mcv).replace(',',' Komma '));
+  }else{
+    beep(1046,0.08);
+    say(fmt(last.mcv).replace(',',' Komma '));
+  }
+}
+
+/* ---------- frame loop ---------- */
+function startLoop(){if(loopOn)return;loopOn=true;schedule();}
+function schedule(){
+  if(video.requestVideoFrameCallback)video.requestVideoFrameCallback(onFrame);
+  else requestAnimationFrame(now=>onFrame(now,null));
+}
+let lastDraw=0;
+function onFrame(now,meta){
+  if(!mode){loopOn=false;return;}
+  let t;
+  if(mode==='file')t=meta?meta.mediaTime:video.currentTime;
+  else t=(meta&&meta.captureTime?meta.captureTime:now)/1000;
+  if(t!==lastT&&tracker&&!tapStage&&(mode==='live'||!video.paused)){
+    lastT=t;
+    const r=tracker.update();
+    if(r.ok){trail.push({x:r.x,y:r.y,t});while(trail.length&&t-trail[0].t>3)trail.shift();kin.push(t,r.y);
+      if($('chip').dataset.s!=='alarm')chip('track','Verfolgt');}
+    else if($('chip').dataset.s!=='alarm'){chip('lost','Verloren');hint('Platte verloren. Kurz ruhig halten oder neu markieren.');}
+    if(r.ok&&!$('hint').hidden&&$('hint').textContent.startsWith('Platte verloren'))hint(null);
+    $('liveV').textContent='Aktuell: '+fmt(kin.v)+' m/s';
+  }
+  drawOverlay();
+  if(now-lastDraw>60){drawSpark();lastDraw=now;}
+  if(mode==='file'&&(video.paused||video.ended)&&!video.requestVideoFrameCallback){loopOn=false;return;}
+  if(mode==='file'&&(video.paused||video.ended)){loopOn=false;return;}
+  schedule();
+}
+video.addEventListener('play',()=>{if(mode==='file')startLoop();});
+
+/* ---------- drawing ---------- */
+function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function drawOverlay(){
+  const W=overlay.width,H=overlay.height;octx.clearRect(0,0,W,H);
+  if(!video.videoWidth)return;
+  const k=W/video.videoWidth;
+  if(tapA){octx.fillStyle='#ffd400';octx.beginPath();octx.arc(tapA.x*k,tapA.y*k,7*(window.devicePixelRatio||1),0,7);octx.fill();}
+  if(trail.length>1){
+    octx.lineWidth=2.5*(window.devicePixelRatio||1);octx.strokeStyle='rgba(255,212,0,.85)';octx.beginPath();
+    trail.forEach((p,i)=>i?octx.lineTo(p.x*k,p.y*k):octx.moveTo(p.x*k,p.y*k));octx.stroke();
+  }
+  if(calib){
+    let cx=calib.cx,cy=calib.cy;
+    if(tracker){cx=tracker.x/tracker.s;cy=tracker.y/tracker.s;}
+    const rr=calib.dpx/2*k,lw=3*(window.devicePixelRatio||1);
+    octx.lineWidth=lw;octx.strokeStyle=tracker&&tracker.lost?'#ffb020':'#4ade80';
+    octx.beginPath();octx.arc(cx*k,cy*k,rr,0,Math.PI*2);octx.stroke();
+    octx.beginPath();octx.moveTo(cx*k-10*lw/3,cy*k);octx.lineTo(cx*k+10*lw/3,cy*k);octx.moveTo(cx*k,cy*k-10*lw/3);octx.lineTo(cx*k,cy*k+10*lw/3);octx.stroke();
+  }
+}
+function prepCanvas(c){const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return {x,w:r.width,h:r.height};}
+function drawSpark(){
+  const {x,w,h}=prepCanvas($('spark'));
+  const ink=tok('--muted'),line=tok('--line'),acc=tok('--accent');
+  const hs=kin.hist;const lo=-1,hi=Math.max(1.2,...hs.map(p=>p.v));
+  const L=34,Y=v=>4+(h-20)*(1-(v-lo)/(hi-lo));
+  x.font='11px '+tok('--font-body');x.fillStyle=ink;x.strokeStyle=line;x.lineWidth=1;
+  [lo,0,1].forEach(v=>{x.beginPath();x.moveTo(L,Y(v));x.lineTo(w,Y(v));x.stroke();x.fillText((v>0?'+':'')+String(v).replace('.',','),2,Y(v)+4);});
+  x.fillText('m/s · letzte 6 s',L+4,h-3);
+  if(hs.length<2)return;
+  const t1=hs[hs.length-1].t,X=t=>L+(w-L)*(1-(t1-t)/6);
+  x.beginPath();hs.forEach((p,i)=>i?x.lineTo(X(p.t),Y(p.v)):x.moveTo(X(p.t),Y(p.v)));
+  x.strokeStyle=acc;x.lineWidth=2;x.stroke();
+  x.lineTo(X(t1),Y(0));x.lineTo(X(hs[0].t),Y(0));x.closePath();x.globalAlpha=.15;x.fillStyle=acc;x.fill();x.globalAlpha=1;
+}
+const EXAMPLE=[0.64,0.66,0.63,0.62,0.6,0.58];
+function drawReps(){
+  const {x,w,h}=prepCanvas($('repChart'));
+  const ink=tok('--ink'),mut=tok('--muted'),line=tok('--line'),acc=tok('--accent'),bad=tok('--alarm'),font=tok('--font-display');
+  const example=!reps.length;
+  const data=example?EXAMPLE.map((m,i)=>({n:i+1,mcv:m})):reps.slice(-12);
+  const ref=example?Math.max(...EXAMPLE):refMcv();
+  const losses=data.map(d=>(1-d.mcv/ref)*100);
+  const top=Math.max(0.4,...data.map(d=>d.mcv))*1.22;
+  const B=22,T=8,Lp=4,Rp=58,Y=v=>T+(h-T-B)*(1-v/top);
+  const slot=(w-Lp-Rp)/Math.max(data.length,6),bw=Math.min(46,slot*0.62);
+  x.globalAlpha=example?.38:1;
+  x.font='600 14px '+font;x.textAlign='center';
+  data.forEach((d,i)=>{
+    const cx=Lp+slot*(i+.5),isBad=i>0&&losses[i]>=S.thresh;
+    x.fillStyle=isBad?bad:acc;x.fillRect(cx-bw/2,Y(d.mcv),bw,Y(0)-Y(d.mcv));
+    x.fillStyle=ink;x.fillText(fmt(d.mcv),cx,Y(d.mcv)-5);
+    x.fillStyle=mut;x.fillText(String(d.n),cx,h-5);
+  });
+  x.textAlign='left';x.font='12px '+tok('--font-body');
+  x.strokeStyle=mut;x.setLineDash([]);x.lineWidth=1;x.beginPath();x.moveTo(Lp,Y(ref));x.lineTo(w-Rp+4,Y(ref));x.stroke();
+  x.fillStyle=mut;x.fillText('Referenz',w-Rp+8,Y(ref)+4);
+  const thr=ref*(1-S.thresh/100);
+  x.strokeStyle=bad;x.setLineDash([5,4]);x.beginPath();x.moveTo(Lp,Y(thr));x.lineTo(w-Rp+4,Y(thr));x.stroke();x.setLineDash([]);
+  x.fillStyle=bad;x.fillText('−'+S.thresh+' %',w-Rp+8,Y(thr)+12);
+  x.strokeStyle=line;x.beginPath();x.moveTo(Lp,Y(0));x.lineTo(w-Rp+4,Y(0));x.stroke();
+  x.globalAlpha=1;
+  if(example){x.fillStyle=mut;x.font='italic 13px '+tok('--font-body');x.fillText('Beispielsatz. Deine Wiederholungen ersetzen ihn.',Lp+4,T+12);}
+}
+function renderReadout(){
+  const last=reps[reps.length-1];
+  $('mcvVal').innerHTML=(last?fmt(last.mcv):'–')+'<small>m/s</small>';
+  const lv=$('lossVal');lv.innerHTML=(last&&reps.length>1?'−'+fmt(Math.max(0,last.loss),0):'–')+'<small>%</small>';
+  lv.dataset.bad=(last&&reps.length>1&&last.loss>=S.thresh)?'1':'0';
+  $('refVal').textContent='Referenz: '+(reps.length?fmt(refMcv())+' m/s':'–');
+  $('repVal').textContent=reps.length;
+  $('romVal').textContent='ROM: '+(last?fmt(last.rom*100,0)+' cm':'–');
+}
+function renderTable(){
+  const tb=$('tbody');
+  if(!reps.length){tb.innerHTML='<tr><td colspan="6" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr>';return;}
+  tb.innerHTML=reps.map((r,i)=>{const bad=i>0&&r.loss>=S.thresh;
+    return '<tr><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td class="'+(bad?'bad':'')+'">'+(i?'−'+fmt(Math.max(0,r.loss),1)+' %':'–')+'</td></tr>';}).join('');
+}
+$('btnCopy').addEventListener('click',()=>{
+  const head='wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;verlust_prozent';
+  const rows=reps.map(r=>[r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.loss,1)].join(';'));
+  const txt=[head,...rows].join('\n');
+  const done=m=>{$('copyMsg').textContent=m;};
+  if(!reps.length){done('Noch nichts zu kopieren.');return;}
+  try{navigator.clipboard.writeText(txt).then(()=>done('Kopiert: '+reps.length+' Wiederholungen. In Excel oder Sheets einfügen.'),()=>done('Kopieren nicht erlaubt. Werte stehen in der Tabelle.'));}
+  catch(e){done('Kopieren nicht erlaubt. Werte stehen in der Tabelle.');}
+});
+
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{drawSpark();drawReps();});
+bindSettings(); renderReadout(); renderTable();
+requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
+})();
+</script>
+
+</body>
+</html>
