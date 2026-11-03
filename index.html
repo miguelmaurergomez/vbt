@@ -78,6 +78,8 @@ th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white
 th:first-child,td:first-child{text-align:left}
 th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 td.bad{color:var(--alarm);font-weight:600}
+tr.after td{color:var(--muted)}
+.tag{display:inline-block;font:600 11px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--alarm);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px}
 .muted{color:var(--muted);font-size:13px}
 
@@ -146,12 +148,12 @@ td.bad{color:var(--alarm);font-weight:600}
     <canvas class="chart" id="repChart"></canvas>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Verlust</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="6" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
+        <thead><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Ref. m/s</th><th>Verlust</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
       </table>
     </div>
     <div class="row">
-      <span class="muted" id="copyMsg">MCV = mittlere konzentrische Geschwindigkeit (nur Aufwärtsphase, vertikal).</span>
+      <span class="muted" id="copyMsg">MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.</span>
       <button id="btnCopy">Satz als CSV kopieren</button>
     </div>
   </section>
@@ -172,8 +174,8 @@ td.bad{color:var(--alarm);font-weight:600}
       </div>
       <div class="field">
         <label for="ref">Referenz-Wiederholung</label>
-        <select id="ref"><option value="best">Schnellste im Satz</option><option value="first">Erste im Satz</option></select>
-        <div class="help">Die schnellste ist robuster, weil die erste oft nicht die schnellste ist.</div>
+        <select id="ref"><option value="best">Schnellste bisher (Standard)</option><option value="first">Erste im Satz</option></select>
+        <div class="help">So wird es in der VBT-Forschung gemacht. Die Referenz ist die schnellste Wdh. bis zu diesem Zeitpunkt, meist die erste oder zweite.</div>
       </div>
       <div class="field">
         <label for="minRom">Mindest-Bewegungsweg (cm)</label>
@@ -333,7 +335,7 @@ video.addEventListener('ended',()=>{if(mode==='file'){kin.flush();hint('Video zu
 $('btnReset').addEventListener('click',()=>{unlockAudio();resetSet(true);});
 $('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
 function resetSet(reinit){
-  reps=[]; alarmed=false; $('alarm').hidden=true; kin.reset(); trail=[];
+  reps=[]; stopAt=null; alarmed=false; $('alarm').hidden=true; kin.reset(); trail=[];
   renderReadout(); renderTable(); drawReps();
   if(!reinit||!calib)return;
   if(mode==='file'){video.pause();try{video.currentTime=calib.time;}catch(e){}
@@ -462,22 +464,39 @@ const kin={
   }
 };
 
-function refMcv(){if(!reps.length)return null;return S.ref==='first'?reps[0].mcv:Math.max(...reps.map(r=>r.mcv));}
-function recomputeLoss(){const ref=refMcv();reps.forEach(r=>{r.loss=ref?(1-r.mcv/ref)*100:0;});renderReadout();renderTable();}
+/* Velocity loss as in Pareja-Blanco et al.: each rep is compared with the fastest rep performed SO FAR
+   (or the first, if chosen). The value is frozen at the moment the rep happens, so later reps never
+   change earlier verdicts. The first rep whose loss reaches the threshold is the stop signal (stopAt).
+   Reps with a clearly shorter range of motion (< 70 % of the set's median) are flagged as partial
+   and are neither used as reference nor scored. */
+let stopAt=null;
+const median=a=>{const s=[...a].sort((p,q)=>p-q),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+function recomputeLoss(){
+  stopAt=null;let best=null,first=null,frozen=null;const roms=[];
+  reps.forEach((r,k)=>{
+    r.valid=roms.length<2||r.rom>=0.7*median(roms);
+    if(r.valid){roms.push(r.rom);if(first==null)first=r.mcv;if(best==null||r.mcv>best)best=r.mcv;}
+    const cur=S.ref==='first'?first:best;
+    r.ref=frozen!=null?frozen:cur;
+    r.loss=(r.valid&&r.ref)?Math.max(0,(1-r.mcv/r.ref)*100):null;
+    r.after=stopAt!=null&&k>stopAt;
+    if(stopAt==null&&r.valid&&r.loss!=null&&r.loss>=S.thresh&&k>0){stopAt=k;frozen=r.ref;}
+  });
+  renderReadout();renderTable();
+}
+function refMcv(){const l=reps[reps.length-1];return l?l.ref:null;}
 function onRep(r){
   r.n=reps.length+1; reps.push(r); recomputeLoss();
-  const last=reps[reps.length-1];
-  const bad=reps.length>1&&last.loss>=S.thresh;
+  const k=reps.length-1,last=reps[k];
   drawReps();
-  if(bad){
-    if(!alarmed){alarmed=true;}
-    $('alarmSub').textContent='Wdh. '+last.n+': '+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' %';
+  if(stopAt!=null&&k>=stopAt&&last.valid){
+    $('alarmSub').textContent=(k===stopAt?'Wdh. '+last.n+': ':'Wdh. '+last.n+' nach dem Signal: ')+fmt(last.mcv)+' m/s · −'+fmt(last.loss,0)+' % zur Referenz '+fmt(last.ref)+' m/s';
     $('alarm').hidden=false; chip('alarm','Satz beenden');
     beep(440,0.18,0,0.35);beep(370,0.18,0.24,0.35);beep(300,0.35,0.48,0.35);
     try{navigator.vibrate&&navigator.vibrate([200,80,200,80,400]);}catch(e){}
     say('Stopp. '+fmt(last.mcv).replace(',',' Komma '));
   }else{
-    beep(1046,0.08);
+    beep(last.valid?1046:620,0.08);
     say(fmt(last.mcv).replace(',',' Komma '));
   }
 }
@@ -547,52 +566,64 @@ function drawSpark(){
   x.lineTo(X(t1),Y(0));x.lineTo(X(hs[0].t),Y(0));x.closePath();x.globalAlpha=.15;x.fillStyle=acc;x.fill();x.globalAlpha=1;
 }
 const EXAMPLE=[0.64,0.66,0.63,0.62,0.6,0.58];
+function exampleReps(){let best=0;return EXAMPLE.map((m,i)=>{best=Math.max(best,m);return {n:i+1,mcv:m,ref:best,valid:true,loss:(1-m/best)*100};});}
 function drawReps(){
   const {x,w,h}=prepCanvas($('repChart'));
   const ink=tok('--ink'),mut=tok('--muted'),line=tok('--line'),acc=tok('--accent'),bad=tok('--alarm'),font=tok('--font-display');
   const example=!reps.length;
-  const data=example?EXAMPLE.map((m,i)=>({n:i+1,mcv:m})):reps.slice(-12);
-  const ref=example?Math.max(...EXAMPLE):refMcv();
-  const losses=data.map(d=>(1-d.mcv/ref)*100);
-  const top=Math.max(0.4,...data.map(d=>d.mcv))*1.22;
+  const all=example?exampleReps():reps;
+  const off=Math.max(0,all.length-12),data=all.slice(off);
+  let exStop=null;if(example)data.forEach((d,i)=>{if(exStop==null&&i>0&&d.loss>=S.thresh)exStop=i;});
+  const sAt=example?exStop:stopAt;
+  const top=Math.max(0.4,...data.map(d=>Math.max(d.mcv,d.ref||0)))*1.22;
   const B=22,T=8,Lp=4,Rp=58,Y=v=>T+(h-T-B)*(1-v/top);
   const slot=(w-Lp-Rp)/Math.max(data.length,6),bw=Math.min(46,slot*0.62);
   x.globalAlpha=example?.38:1;
-  x.font='600 14px '+font;x.textAlign='center';
+  x.strokeStyle=line;x.lineWidth=1;x.beginPath();x.moveTo(Lp,Y(0));x.lineTo(w-Rp+4,Y(0));x.stroke();
   data.forEach((d,i)=>{
-    const cx=Lp+slot*(i+.5),isBad=i>0&&losses[i]>=S.thresh;
-    x.fillStyle=isBad?bad:acc;x.fillRect(cx-bw/2,Y(d.mcv),bw,Y(0)-Y(d.mcv));
-    x.fillStyle=ink;x.fillText(fmt(d.mcv),cx,Y(d.mcv)-5);
-    x.fillStyle=mut;x.fillText(String(d.n),cx,h-5);
+    const k=i+off,cx=Lp+slot*(i+.5);
+    const isStop=sAt!=null&&k===sAt,isAfter=sAt!=null&&k>sAt;
+    x.fillStyle=!d.valid?line:(isStop?bad:acc);
+    x.globalAlpha=(example?.38:1)*(isAfter?0.35:1);
+    x.fillRect(cx-bw/2,Y(d.mcv),bw,Y(0)-Y(d.mcv));
+    x.globalAlpha=example?.38:1;
+    if(d.ref){ /* reference and threshold valid at the moment of this rep */
+      x.strokeStyle=mut;x.setLineDash([]);x.beginPath();x.moveTo(cx-slot/2,Y(d.ref));x.lineTo(cx+slot/2,Y(d.ref));x.stroke();
+      const thr=d.ref*(1-S.thresh/100);
+      x.strokeStyle=bad;x.setLineDash([4,3]);x.beginPath();x.moveTo(cx-slot/2,Y(thr));x.lineTo(cx+slot/2,Y(thr));x.stroke();x.setLineDash([]);
+    }
+    x.font='600 14px '+font;x.textAlign='center';
+    x.fillStyle=ink;x.fillText(fmt(d.mcv),cx,Math.min(Y(d.mcv),d.ref?Y(d.ref):1e9)-5);
+    x.fillStyle=isStop?bad:mut;x.fillText(isStop?d.n+' ■':String(d.n),cx,h-5);
   });
+  const last=data[data.length-1];
   x.textAlign='left';x.font='12px '+tok('--font-body');
-  x.strokeStyle=mut;x.setLineDash([]);x.lineWidth=1;x.beginPath();x.moveTo(Lp,Y(ref));x.lineTo(w-Rp+4,Y(ref));x.stroke();
-  x.fillStyle=mut;x.fillText('Referenz',w-Rp+8,Y(ref)+4);
-  const thr=ref*(1-S.thresh/100);
-  x.strokeStyle=bad;x.setLineDash([5,4]);x.beginPath();x.moveTo(Lp,Y(thr));x.lineTo(w-Rp+4,Y(thr));x.stroke();x.setLineDash([]);
-  x.fillStyle=bad;x.fillText('−'+S.thresh+' %',w-Rp+8,Y(thr)+12);
-  x.strokeStyle=line;x.beginPath();x.moveTo(Lp,Y(0));x.lineTo(w-Rp+4,Y(0));x.stroke();
+  if(last&&last.ref){x.fillStyle=mut;x.fillText('Referenz',w-Rp+8,Y(last.ref)+4);
+    x.fillStyle=bad;x.fillText('−'+S.thresh+' %',w-Rp+8,Y(last.ref*(1-S.thresh/100))+12);}
   x.globalAlpha=1;
   if(example){x.fillStyle=mut;x.font='italic 13px '+tok('--font-body');x.fillText('Beispielsatz. Deine Wiederholungen ersetzen ihn.',Lp+4,T+12);}
 }
 function renderReadout(){
   const last=reps[reps.length-1];
   $('mcvVal').innerHTML=(last?fmt(last.mcv):'–')+'<small>m/s</small>';
-  const lv=$('lossVal');lv.innerHTML=(last&&reps.length>1?'−'+fmt(Math.max(0,last.loss),0):'–')+'<small>%</small>';
-  lv.dataset.bad=(last&&reps.length>1&&last.loss>=S.thresh)?'1':'0';
-  $('refVal').textContent='Referenz: '+(reps.length?fmt(refMcv())+' m/s':'–');
+  const lv=$('lossVal');lv.innerHTML=(last&&reps.length>1&&last.loss!=null?'−'+fmt(last.loss,0):'–')+'<small>%</small>';
+  lv.dataset.bad=(stopAt!=null)?'1':'0';
+  $('refVal').textContent='Referenz: '+(last&&last.ref?fmt(last.ref)+' m/s':'–');
   $('repVal').textContent=reps.length;
   $('romVal').textContent='ROM: '+(last?fmt(last.rom*100,0)+' cm':'–');
 }
 function renderTable(){
   const tb=$('tbody');
-  if(!reps.length){tb.innerHTML='<tr><td colspan="6" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr>';return;}
-  tb.innerHTML=reps.map((r,i)=>{const bad=i>0&&r.loss>=S.thresh;
-    return '<tr><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td class="'+(bad?'bad':'')+'">'+(i?'−'+fmt(Math.max(0,r.loss),1)+' %':'–')+'</td></tr>';}).join('');
+  if(!reps.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr>';return;}
+  tb.innerHTML=reps.map((r,i)=>{
+    const isStop=i===stopAt;
+    let v=!r.valid?'<span class="muted">unvollständig</span>':(i===0?'–':'−'+fmt(r.loss,1)+' %');
+    if(isStop)v+=' <span class="tag">Signal</span>';
+    return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td></tr>';}).join('');
 }
 $('btnCopy').addEventListener('click',()=>{
-  const head='wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;verlust_prozent';
-  const rows=reps.map(r=>[r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.loss,1)].join(';'));
+  const head='wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;status';
+  const rows=reps.map((r,i)=>[r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
   const txt=[head,...rows].join('\n');
   const done=m=>{$('copyMsg').textContent=m;};
   if(!reps.length){done('Noch nichts zu kopieren.');return;}
