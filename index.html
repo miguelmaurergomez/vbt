@@ -139,6 +139,7 @@ tr.after td{color:var(--muted)}
     </div>
     <div class="controls">
       <button class="primary" id="btnCam">Kamera starten</button>
+      <button id="btnFlip" hidden>Zur Selfie-Kamera</button>
       <label class="btn" id="btnFileLbl">Video aufnehmen / wählen<input type="file" id="file" accept="video/*"></label>
       <button id="btnMark" disabled>Platte markieren</button>
       <button id="btnPlay" hidden disabled>▶ Auswerten</button>
@@ -231,7 +232,7 @@ tr.after td{color:var(--muted)}
 const $ = id => document.getElementById(id);
 const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const S=Object.assign({diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,rate:'1'},store.get('vbt-settings',{}));
+const S=Object.assign({facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,rate:'1'},store.get('vbt-settings',{}));
 const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':v.toFixed(d).replace('.',',');
 
 /* ---------- state ---------- */
@@ -297,27 +298,36 @@ window.addEventListener('resize',()=>{sizeOverlay();drawSpark();drawReps();});
 
 /* ---------- sources ---------- */
 function stopStream(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
-$('btnCam').addEventListener('click',async()=>{
+const camName=f=>f==='user'?'Selfie-Kamera':'Rückkamera';
+function flipLabel(){$('btnFlip').textContent=S.facing==='user'?'Zur Rückkamera':'Zur Selfie-Kamera';}
+async function openCam(facing){
   unlockAudio();
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail();return;}
-  try{
-    const s=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60}}});
-    stopStream(); stream=s; mode='live';
-    video.removeAttribute('src'); video.srcObject=s; video.muted=true;
-    await video.play().catch(()=>{});
-    onSourceReady();
-    const fr=(s.getVideoTracks()[0].getSettings()||{}).frameRate;
-    hint('Kamera läuft'+(fr?' ('+Math.round(fr)+' fps)':'')+'. Tippe auf „Platte markieren“.');
-    keepAwake(); startLoop();
-  }catch(e){camFail();}
-});
+  if(setState==='running')endSet();
+  stopStream(); /* many phones cannot open two cameras at once */
+  const base={width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60}};
+  let s=null;
+  try{s=await navigator.mediaDevices.getUserMedia({audio:false,video:Object.assign({facingMode:{exact:facing}},base)});}
+  catch(e){try{s=await navigator.mediaDevices.getUserMedia({audio:false,video:Object.assign({facingMode:{ideal:facing}},base)});}catch(e2){camFail();return;}}
+  stream=s; mode='live';
+  video.removeAttribute('src'); video.srcObject=s; video.muted=true;
+  await video.play().catch(()=>{});
+  onSourceReady();
+  const st=s.getVideoTracks()[0].getSettings()||{};
+  const got=st.facingMode||facing;
+  $('btnFlip').hidden=false; flipLabel();
+  hint(camName(got)+' läuft'+(st.frameRate?' ('+Math.round(st.frameRate)+' fps)':'')+'. Tippe auf „Platte markieren“.');
+  keepAwake(); startLoop();
+}
+$('btnCam').addEventListener('click',()=>openCam(S.facing));
+$('btnFlip').addEventListener('click',()=>{S.facing=S.facing==='user'?'environment':'user';store.set('vbt-settings',S);openCam(S.facing);});
 function camFail(){
   $('placeholder').hidden=true;
   hint('Kamera nicht verfügbar. Erlaube den Kamerazugriff in den Browser-Einstellungen und öffne die Seite über https. Alternativ „Video aufnehmen / wählen“ nutzen.');
 }
 $('file').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0]; if(!f)return;
-  unlockAudio(); stopStream(); mode='file';
+  unlockAudio(); stopStream(); $('btnFlip').hidden=true; mode='file';
   video.srcObject=null; video.src=URL.createObjectURL(f); video.muted=true; video.playbackRate=+S.rate;
   video.addEventListener('loadeddata',function once(){video.removeEventListener('loadeddata',once);
     try{video.currentTime=0.05;}catch(err){}
