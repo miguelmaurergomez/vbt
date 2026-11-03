@@ -173,8 +173,8 @@ tr.after td{color:var(--muted)}
   </section>
 
   <section class="readout" aria-live="polite">
-    <div class="cell main"><div class="lab" data-i18n="lastRep">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
-    <div class="cell"><div class="lab" data-i18n="loss">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
+    <div class="cell main"><div class="lab" id="mainLab">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
+    <div class="cell"><div class="lab" id="lossLab">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
     <div class="cell"><div class="lab" data-i18n="repsShort">Wdh.</div><div class="val" id="repVal">0</div><div class="sub" id="romVal">ROM: –</div></div>
   </section>
 
@@ -274,7 +274,7 @@ subNoTracker:'Erst Kamera starten und Platte markieren.',subRunning:'{0} Wdh. ge
 lastRep:'Letzte Wiederholung · MCV',current:'Aktuell: {0} m/s',loss:'Verlust',reference:'Referenz: {0}',repsShort:'Wdh.',liveSpeed:'Geschwindigkeit live',sparkLabel:'m/s · letzte 6 s',repsTitle:'Wiederholungen',
 th:['Wdh.','MCV m/s','Peak m/s','ROM cm','Dauer s','Ref. m/s','Verlust'],noReps:'Noch keine Wiederholungen in diesem Satz.',
 note:'MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.',copySet:'Satz als CSV kopieren',partial:'unvollständig',tagSignal:'Signal',exampleNote:'Beispielsatz. Deine Wiederholungen ersetzen ihn.',refChart:'Referenz',
-setsTitle:'Sätze',hth:['Satz','Zeit','Wdh.','Signal bei','Beste m/s','Letzte m/s','Verlust Ende'],noSets:'Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.',histNote:'„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.',
+setsTitle:'Sätze',hth:['Satz','Zeit','Wdh.','Signal bei','Beste m/s','Abbruch-Wdh. m/s','Verlust Abbruch'],sigRep:'Abbruch-Wdh. {0} · MCV',lossAtSig:'Verlust beim Signal',afterSig:'davon {0} nach dem Signal',noSets:'Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.',histNote:'„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.',
 signalAt:'Wdh. {0} ({1} %)',noSignal:'kein Signal',copyAll:'Alle Sätze als CSV',clear:'Liste leeren',clearConfirm:'Wirklich leeren?',cleared:'Liste geleert.',noSetsSaved:'Noch keine Sätze gespeichert.',
 copiedSets:'Kopiert: {0} Sätze. In Excel oder Sheets einfügen.',copyDenied:'Kopieren nicht erlaubt.',copyDeniedTable:'Kopieren nicht erlaubt. Werte stehen in der Tabelle.',nothingToCopy:'Noch nichts zu kopieren.',copiedReps:'Kopiert: {0} Wiederholungen. In Excel oder Sheets einfügen.',
 settings:'Einstellungen',diamLabel:'Referenzgröße (mm)',presetOly:'450 · Olympia-Scheibe',addPreset:'+ Eigene Größe',pNamePh:'Name, z. B. 10-kg-Scheibe Studio',pMMPh:'Durchmesser in mm',pSave:'Speichern',pCancel:'Abbrechen',pErr:'Bitte einen Namen und einen Durchmesser zwischen 20 und 2000 mm eingeben.',pDel:'{0} löschen',pDelConfirm:'Löschen?',diamHelp:'Wähle deine Scheibe oder leg mit „+ Eigene Größe“ eine andere mit Namen an. Miss den Durchmesser am besten mit dem Maßband nach.',
@@ -295,7 +295,7 @@ subNoTracker:'Primero inicia la cámara y marca el disco.',subRunning:'{0} rep. 
 lastRep:'Última repetición · VM',current:'Ahora: {0} m/s',loss:'Pérdida',reference:'Referencia: {0}',repsShort:'Rep.',liveSpeed:'Velocidad en vivo',sparkLabel:'m/s · últimos 6 s',repsTitle:'Repeticiones',
 th:['Rep.','VM m/s','Pico m/s','ROM cm','Duración s','Ref. m/s','Pérdida'],noReps:'Todavía no hay repeticiones en esta serie.',
 note:'VM = velocidad media concéntrica. Pérdida = diferencia con la rep. más rápida hasta ese momento, fijada al sonar el aviso.',copySet:'Copiar serie como CSV',partial:'incompleta',tagSignal:'Aviso',exampleNote:'Serie de ejemplo. Tus repeticiones la reemplazan.',refChart:'Referencia',
-setsTitle:'Series',hth:['Serie','Hora','Rep.','Aviso en','Mejor m/s','Última m/s','Pérdida final'],noSets:'Aún no hay series terminadas. Se guardan en este celular.',histNote:'«Rep.» cuenta todas las repeticiones completas, también las posteriores al aviso.',
+setsTitle:'Series',hth:['Serie','Hora','Rep.','Aviso en','Mejor m/s','Rep. de corte m/s','Pérdida en el corte'],sigRep:'Rep. de corte {0} · VM',lossAtSig:'Pérdida en el aviso',afterSig:'{0} después del aviso',noSets:'Aún no hay series terminadas. Se guardan en este celular.',histNote:'«Rep.» cuenta todas las repeticiones completas, también las posteriores al aviso.',
 signalAt:'Rep. {0} ({1} %)',noSignal:'sin aviso',copyAll:'Todas las series como CSV',clear:'Vaciar lista',clearConfirm:'¿Vaciar de verdad?',cleared:'Lista vaciada.',noSetsSaved:'Aún no hay series guardadas.',
 copiedSets:'Copiado: {0} series. Pégalo en Excel o Sheets.',copyDenied:'No se permite copiar.',copyDeniedTable:'No se permite copiar. Los valores están en la tabla.',nothingToCopy:'Todavía no hay nada que copiar.',copiedReps:'Copiado: {0} repeticiones. Pégalo en Excel o Sheets.',
 settings:'Ajustes',diamLabel:'Tamaño de referencia (mm)',presetOly:'450 · Disco olímpico',addPreset:'+ Tamaño propio',pNamePh:'Nombre, p. ej. disco de 10 kg del gym',pMMPh:'Diámetro en mm',pSave:'Guardar',pCancel:'Cancelar',pErr:'Escribe un nombre y un diámetro entre 20 y 2000 mm.',pDel:'Eliminar {0}',pDelConfirm:'¿Eliminar?',diamHelp:'Elige tu disco o crea otro con nombre en «+ Tamaño propio». Lo ideal es medir el diámetro con una cinta métrica.',
@@ -316,7 +316,7 @@ subNoTracker:'First start the camera and mark the plate.',subRunning:'{0} reps m
 lastRep:'Last rep · MCV',current:'Now: {0} m/s',loss:'Loss',reference:'Reference: {0}',repsShort:'Reps',liveSpeed:'Live velocity',sparkLabel:'m/s · last 6 s',repsTitle:'Reps',
 th:['Rep','MCV m/s','Peak m/s','ROM cm','Time s','Ref. m/s','Loss'],noReps:'No reps in this set yet.',
 note:'MCV = mean concentric velocity. Loss = gap to the fastest rep so far, frozen at the signal.',copySet:'Copy set as CSV',partial:'partial',tagSignal:'Signal',exampleNote:'Example set. Your reps will replace it.',refChart:'Reference',
-setsTitle:'Sets',hth:['Set','Time','Reps','Signal at','Best m/s','Last m/s','Final loss'],noSets:'No finished sets yet. They stay saved on this phone.',histNote:'“Reps” counts all complete reps, including those after the signal.',
+setsTitle:'Sets',hth:['Set','Time','Reps','Signal at','Best m/s','Stop rep m/s','Loss at stop'],sigRep:'Stop rep {0} · MCV',lossAtSig:'Loss at signal',afterSig:'{0} after the signal',noSets:'No finished sets yet. They stay saved on this phone.',histNote:'“Reps” counts all complete reps, including those after the signal.',
 signalAt:'Rep {0} ({1} %)',noSignal:'no signal',copyAll:'All sets as CSV',clear:'Clear list',clearConfirm:'Really clear?',cleared:'List cleared.',noSetsSaved:'No sets saved yet.',
 copiedSets:'Copied: {0} sets. Paste into Excel or Sheets.',copyDenied:'Copying is not allowed.',copyDeniedTable:'Copying is not allowed. The values are in the table.',nothingToCopy:'Nothing to copy yet.',copiedReps:'Copied: {0} reps. Paste into Excel or Sheets.',
 settings:'Settings',diamLabel:'Reference size (mm)',presetOly:'450 · Olympic plate',addPreset:'+ Custom size',pNamePh:'Name, e.g. 10 kg plate at my gym',pMMPh:'Diameter in mm',pSave:'Save',pCancel:'Cancel',pErr:'Enter a name and a diameter between 20 and 2000 mm.',pDel:'Delete {0}',pDelConfirm:'Delete?',diamHelp:'Pick your plate or add another one with a name under “+ Custom size”. Ideally, measure the diameter with a tape measure.',
@@ -555,6 +555,7 @@ function endSet(){
     history.push({nr:history.length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
       thr:S.thresh,reps:valid.length,signal:stopAt!=null?stopAt+1:null,best:valid.length?Math.max(...valid.map(r=>r.mcv)):null,
       last:lastV?lastV.mcv:null,lossEnd:lastV&&lastV.loss!=null?lastV.loss:null,
+      stopMcv:stopAt!=null?reps[stopAt].mcv:(lastV?lastV.mcv:null),stopLoss:stopAt!=null?reps[stopAt].loss:(lastV&&lastV.loss!=null?lastV.loss:null),
       data:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(3),peak:+r.peak.toFixed(3),rom:+(r.rom*100).toFixed(1),dur:+r.dur.toFixed(3),ref:r.ref?+r.ref.toFixed(3):null,loss:r.loss!=null?+r.loss.toFixed(1):null,valid:r.valid,after:!!r.after}))});
     if(history.length>200)history=history.slice(-200);
     store.set(HKEY,history);
@@ -569,7 +570,7 @@ function resetSet(){clearReps();setState='idle';updateSetUI();}
 function renderHistory(){
   const tb=$('hbody');
   if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
-  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.last)+'</td><td>'+(h.lossEnd!=null?'−'+fmt(h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
+  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.stopMcv!==undefined?h.stopMcv:h.last)+'</td><td>'+((h.stopLoss!==undefined?h.stopLoss:h.lossEnd)!=null?'−'+fmt(h.stopLoss!==undefined?h.stopLoss:h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
 }
 $('btnCopyAll').addEventListener('click',()=>{
   const m=t=>{$('histMsg').textContent=t;};
@@ -859,13 +860,17 @@ function drawReps(){
   if(example){x.fillStyle=mut;x.font='italic 13px '+tok('--font-body');x.fillText(t('exampleNote'),Lp+4,T+12);}
 }
 function renderReadout(){
-  const last=reps[reps.length-1];
-  $('mcvVal').innerHTML=(last?fmt(last.mcv):'–')+'<small>m/s</small>';
-  const lv=$('lossVal');lv.innerHTML=(last&&reps.length>1&&last.loss!=null?'−'+fmt(last.loss,0):'–')+'<small>%</small>';
-  lv.dataset.bad=(stopAt!=null)?'1':'0';
-  $('refVal').textContent=t('reference',last&&last.ref?fmt(last.ref)+' m/s':'–');
+  /* Before the signal the newest rep is shown; once the signal has fired, the stop rep is what counts. */
+  const sig=stopAt!=null&&reps[stopAt]?reps[stopAt]:null;
+  const f=sig||reps[reps.length-1];
+  $('mainLab').textContent=sig?t('sigRep',sig.n):t('lastRep');
+  $('lossLab').textContent=sig?t('lossAtSig'):t('loss');
+  $('mcvVal').innerHTML=(f?fmt(f.mcv):'–')+'<small>m/s</small>';
+  const lv=$('lossVal');lv.innerHTML=(f&&f.loss!=null&&reps.indexOf(f)>0?'−'+fmt(f.loss,0):'–')+'<small>%</small>';
+  lv.dataset.bad=sig?'1':'0';
+  $('refVal').textContent=t('reference',f&&f.ref?fmt(f.ref)+' m/s':'–');
   $('repVal').textContent=reps.length;
-  $('romVal').textContent='ROM: '+(last?fmt(last.rom*100,0)+' cm':'–');
+  $('romVal').textContent=sig?t('afterSig',reps.length-1-stopAt):'ROM: '+(f?fmt(f.rom*100,0)+' cm':'–');
 }
 function renderTable(){
   const tb=$('tbody');
