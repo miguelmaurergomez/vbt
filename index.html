@@ -567,10 +567,19 @@ $('alarmEnd').addEventListener('click',e=>{e.stopPropagation();endSet();});
 $('alarmGo').addEventListener('click',e=>{e.stopPropagation();$('alarm').hidden=true;});
 $('alarm').addEventListener('click',()=>{$('alarm').hidden=true;});
 function resetSet(){clearReps();setState='idle';updateSetUI();}
+/* The stop rep of a saved set: the signal rep if there was one, otherwise the last complete rep.
+   Read from the stored per-rep data, so sets saved by older versions show the right values too. */
+function stopOf(h){
+  const d=Array.isArray(h.data)?h.data:[];
+  let r=h.signal?d.find(x=>x.n===h.signal):null;
+  if(!r){const v=d.filter(x=>x.valid!==false);r=v[v.length-1]||null;}
+  if(r)return {mcv:r.mcv,loss:r.loss};
+  return {mcv:h.stopMcv!==undefined?h.stopMcv:h.last,loss:h.stopLoss!==undefined?h.stopLoss:h.lossEnd};
+}
 function renderHistory(){
   const tb=$('hbody');
   if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
-  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(h.stopMcv!==undefined?h.stopMcv:h.last)+'</td><td>'+((h.stopLoss!==undefined?h.stopLoss:h.lossEnd)!=null?'−'+fmt(h.stopLoss!==undefined?h.stopLoss:h.lossEnd,1)+' %':'–')+'</td></tr>').join('');
+  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(stopOf(h).mcv)+'</td><td>'+(stopOf(h).loss!=null?'−'+fmt(stopOf(h).loss,1)+' %':'–')+'</td></tr>').join('');
 }
 $('btnCopyAll').addEventListener('click',()=>{
   const m=t=>{$('histMsg').textContent=t;};
