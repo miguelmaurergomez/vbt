@@ -38,6 +38,16 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;fl
 h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1.05}
 h1 small{display:block;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--muted);letter-spacing:0}
 h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.reclist{display:flex;flex-direction:column}
+.recrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.recrow:last-child{border-bottom:0}
+.recrow .rmeta{flex:1;min-width:170px;display:flex;flex-direction:column}
+.recrow .rmeta b{font-family:var(--font-display);font-size:18px;font-weight:600}
+.recrow .rmeta span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.recrow .rbtns{display:flex;gap:6px;flex-wrap:wrap}
+.recrow .rbtns button{min-height:40px;padding:8px 12px;font-size:14px}
+.recrow .rbtns .del[data-armed="1"]{background:var(--alarm);border-color:var(--alarm);color:#fff}
+.recdot{display:inline-block;margin-left:8px;font:700 12px var(--font-body);letter-spacing:.06em;color:#fff;background:var(--alarm);border-radius:4px;padding:2px 6px;vertical-align:3px}
 .hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #lang{font:600 14px var(--font-body);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:36px}
 .alarm .atitle{font:inherit}
@@ -212,6 +222,12 @@ tr.after td{color:var(--muted)}
     </div>
   </section>
 
+  <section class="panel" id="recPanel">
+    <h2 data-i18n="recTitle">Aufnahmen</h2>
+    <div class="reclist" id="recList"></div>
+    <p class="muted" id="recMsg" data-i18n="recNote">Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.</p>
+  </section>
+
   <section class="panel">
     <h2 data-i18n="settings">Einstellungen</h2>
     <div class="settings">
@@ -251,6 +267,8 @@ tr.after td{color:var(--muted)}
       <div class="field">
         <label class="check"><input type="checkbox" id="sound"> <span data-i18n="sound">Töne (Piep pro Wdh., Alarm)</span></label>
         <label class="check"><input type="checkbox" id="voice"> <span data-i18n="voice">Werte ansagen</span></label>
+        <label class="check"><input type="checkbox" id="record"> <span data-i18n="recLabel">Video und Rohdaten aufnehmen</span></label>
+        <div class="help" data-i18n="recHelp">Für Validierung und spätere Neuauswertung. Jeder Satz wird unter „Aufnahmen“ gespeichert.</div>
       </div>
     </div>
   </section>
@@ -261,7 +279,7 @@ tr.after td{color:var(--muted)}
 const $ = id => document.getElementById(id);
 const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const S=Object.assign({facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,rate:'1'},store.get('vbt-settings',{}));
+const S=Object.assign({facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,record:false,rate:'1'},store.get('vbt-settings',{}));
 const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':(L==='en'?v.toFixed(d):v.toFixed(d).replace('.',','));
 /* ---------- languages ---------- */
 const I18N={
@@ -285,7 +303,7 @@ h_camRun:'{0} läuft{1}. Tippe auf „Platte markieren“.',h_camFail:'Kamera ni
 h_videoLoaded:'Video geladen. Spule zur Startposition, markiere die Platte, dann „Auswerten“.',h_tapTop:'Tippe auf den OBEREN Rand der Platte.',h_tapBottom:'Jetzt auf den UNTEREN Rand tippen.',h_tooClose:'Die Punkte liegen zu nah beieinander. Nochmal: oberen Rand antippen.',
 h_markedFile:'Markiert ({0} px = {1} mm). Jetzt „Auswerten“.',h_markedLive:'Markiert. Tippe „Satz starten“, wenn du bereit bist.',h_readFail:'Konnte das Bild nicht lesen. Bitte nochmal markieren.',h_videoEnd:'Video zu Ende. Satz beendet, Ergebnis siehe unten.',
 h_doneMove:'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.',h_idleMove:'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.',h_lost:'Platte verloren. Kurz ruhig halten oder neu markieren.',
-a_after:'Wdh. {0} nach dem Signal: {1} m/s · −{2} %',a_first:'Wdh. {0}: {1} m/s · −{2} % zur Referenz {3} m/s. Weitere Wdh. werden markiert, bis du beendest.',v_stop:'Stopp',v_dec:' Komma ',speech:'de-DE'},
+a_after:'Wdh. {0} nach dem Signal: {1} m/s · −{2} %',a_first:'Wdh. {0}: {1} m/s · −{2} % zur Referenz {3} m/s. Weitere Wdh. werden markiert, bis du beendest.',v_stop:'Stopp',v_dec:' Komma ',speech:'de-DE',recLabel:'Video und Rohdaten aufnehmen',recHelp:'Für Validierung und spätere Neuauswertung. Jeder Satz wird unter „Aufnahmen“ gespeichert.',recTitle:'Aufnahmen',recNote:'Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.',recEmpty:'Noch keine Aufnahmen. Schalte unter Einstellungen „Video und Rohdaten aufnehmen“ ein.',recRow:'Satz {0}',recInfo:'{0} · {1} Wdh. · {2}',recDataOnly:'nur Rohdaten',recSave:'Speichern (ZIP)',recShare:'Teilen',recDel:'×',recDelConfirm:'Löschen?',recSaved:'Gespeichert: {0}',recShareFail:'Teilen geht auf diesem Gerät nicht. Nimm „Speichern“.',recBusy:'Wird vorbereitet …',recNoVideo:'Video-Aufnahme wird von diesem Browser nicht unterstützt. Es werden nur Rohdaten gespeichert.',recStoreFail:'Aufnahme konnte nicht gespeichert werden (Speicher voll?).',recOn:'REC',h_slow:'Achtung: Das Handy wertet nur {0} Bilder/s aus, die Messung kann ungenau werden. Andere Apps schließen oder die Aufnahme ausschalten.'},
 es:{doc:'VBT Tracker · Press de banca',title:'VBT Tracker · Press de banca',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
 chip_idle:'Listo',chip_track:'Siguiendo',chip_lost:'Perdido',chip_mark:'Marcando',chip_alarm:'Aviso',
 howTitle:'Cómo funciona',how1:'Coloca el celular de lado, fijo y a la altura del disco.',how2:'Inicia la cámara o elige un video.',how3:'«Marcar disco»: toca el borde superior y el inferior.',how4:'Toca «Iniciar serie» y empuja. Si pierdes demasiada velocidad, suena un aviso.',how5:'Después de dejar la barra, toca «Terminar serie».',
@@ -306,7 +324,7 @@ h_camRun:'{0} activa{1}. Toca «Marcar disco».',h_camFail:'Cámara no disponibl
 h_videoLoaded:'Video cargado. Ve a la posición inicial, marca el disco y luego «Analizar».',h_tapTop:'Toca el borde SUPERIOR del disco.',h_tapBottom:'Ahora toca el borde INFERIOR.',h_tooClose:'Los puntos están demasiado cerca. Otra vez: toca el borde superior.',
 h_markedFile:'Marcado ({0} px = {1} mm). Ahora «Analizar».',h_markedLive:'Marcado. Toca «Iniciar serie» cuando estés listo.',h_readFail:'No se pudo leer la imagen. Marca otra vez.',h_videoEnd:'Fin del video. Serie terminada, resultado abajo.',
 h_doneMove:'La serie terminó, no se cuenta nada. Para una nueva serie, «Iniciar serie».',h_idleMove:'Se detectó movimiento, pero no hay serie activa. Toca «Iniciar serie».',h_lost:'Disco perdido. Quédate quieto un momento o vuelve a marcar.',
-a_after:'Rep. {0} después del aviso: {1} m/s · −{2} %',a_first:'Rep. {0}: {1} m/s · −{2} % respecto a la referencia de {3} m/s. Las siguientes se marcan hasta que termines.',v_stop:'Para',v_dec:' coma ',speech:'es-ES'},
+a_after:'Rep. {0} después del aviso: {1} m/s · −{2} %',a_first:'Rep. {0}: {1} m/s · −{2} % respecto a la referencia de {3} m/s. Las siguientes se marcan hasta que termines.',v_stop:'Para',v_dec:' coma ',speech:'es-ES',recLabel:'Grabar video y datos brutos',recHelp:'Para validar y volver a analizar después. Cada serie se guarda en «Grabaciones».',recTitle:'Grabaciones',recNote:'Las grabaciones solo están en este celular. Después de guardarlas, bórralas para liberar espacio.',recEmpty:'Aún no hay grabaciones. Activa «Grabar video y datos brutos» en Ajustes.',recRow:'Serie {0}',recInfo:'{0} · {1} rep. · {2}',recDataOnly:'solo datos brutos',recSave:'Guardar (ZIP)',recShare:'Compartir',recDel:'×',recDelConfirm:'¿Eliminar?',recSaved:'Guardado: {0}',recShareFail:'Compartir no funciona en este dispositivo. Usa «Guardar».',recBusy:'Preparando …',recNoVideo:'Este navegador no puede grabar video. Solo se guardan los datos brutos.',recStoreFail:'No se pudo guardar la grabación (¿memoria llena?).',recOn:'REC',h_slow:'Atención: el celular solo analiza {0} imágenes/s, la medición puede ser imprecisa. Cierra otras apps o desactiva la grabación.'},
 en:{doc:'VBT Bench Press Tracker',title:'VBT Bench Press Tracker',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
 chip_idle:'Ready',chip_track:'Tracking',chip_lost:'Lost',chip_mark:'Marking',chip_alarm:'Signal',
 howTitle:'How it works',how1:'Set the phone up to the side, steady, at plate height.',how2:'Start the camera or choose a video.',how3:'“Mark plate”: tap the top and bottom edge.',how4:'Tap “Start set” and lift. If you lose too much speed, you get a signal.',how5:'After racking the bar, tap “End set”.',
@@ -327,7 +345,7 @@ h_camRun:'{0} running{1}. Tap “Mark plate”.',h_camFail:'Camera not available
 h_videoLoaded:'Video loaded. Go to the starting position, mark the plate, then “Analyze”.',h_tapTop:'Tap the TOP edge of the plate.',h_tapBottom:'Now tap the BOTTOM edge.',h_tooClose:'The points are too close together. Again: tap the top edge.',
 h_markedFile:'Marked ({0} px = {1} mm). Now “Analyze”.',h_markedLive:'Marked. Tap “Start set” when you’re ready.',h_readFail:'Could not read the image. Please mark again.',h_videoEnd:'Video finished. Set ended, see results below.',
 h_doneMove:'The set has ended, nothing is counted. For a new set, tap “Start set”.',h_idleMove:'Movement detected, but no set is active. Tap “Start set”.',h_lost:'Plate lost. Hold still for a moment or mark again.',
-a_after:'Rep {0} after the signal: {1} m/s · −{2} %',a_first:'Rep {0}: {1} m/s · −{2} % vs. the {3} m/s reference. Further reps are marked until you end the set.',v_stop:'Stop',v_dec:'',speech:'en-US'}
+a_after:'Rep {0} after the signal: {1} m/s · −{2} %',a_first:'Rep {0}: {1} m/s · −{2} % vs. the {3} m/s reference. Further reps are marked until you end the set.',v_stop:'Stop',v_dec:'',speech:'en-US',recLabel:'Record video and raw data',recHelp:'For validation and re-analysis later. Each set is saved under “Recordings”.',recTitle:'Recordings',recNote:'Recordings stay on this phone only. Delete them after saving to free up space.',recEmpty:'No recordings yet. Turn on “Record video and raw data” in Settings.',recRow:'Set {0}',recInfo:'{0} · {1} reps · {2}',recDataOnly:'raw data only',recSave:'Save (ZIP)',recShare:'Share',recDel:'×',recDelConfirm:'Delete?',recSaved:'Saved: {0}',recShareFail:'Sharing doesn’t work on this device. Use “Save”.',recBusy:'Preparing …',recNoVideo:'This browser can’t record video. Only raw data is saved.',recStoreFail:'Could not save the recording (storage full?).',recOn:'REC',h_slow:'Warning: the phone only analyses {0} frames/s, so the measurement may be inaccurate. Close other apps or turn off recording.'}
 };
 let L=S.lang;
 if(!I18N[L]){const nl=((navigator.language||'de')+'').slice(0,2).toLowerCase();L=I18N[nl]?nl:'de';}
@@ -383,6 +401,8 @@ function bindSettings(){
   $('rate').addEventListener('change',e=>{S.rate=e.target.value;video.playbackRate=+S.rate;save();});
   $('sound').addEventListener('change',e=>{S.sound=e.target.checked;save();});
   $('voice').addEventListener('change',e=>{S.voice=e.target.checked;save();});
+  $('record').checked=!!S.record;
+  $('record').addEventListener('change',e=>{S.record=e.target.checked;save();updateSetUI();});
 }
 
 function renderPresets(){
@@ -515,6 +535,150 @@ $('btnPlay').addEventListener('click',()=>{
 });
 video.addEventListener('ended',()=>{if(mode==='file'&&setState==='running'){kin.flush();endSet();hint('h_videoEnd');}});
 
+/* ---------- processing-rate monitor: warns when the phone analyses too few frames ---------- */
+let fpsWin=[],slowCount=0,lastFps=null;
+function fpsMon(tm){
+  if(mode!=='live'||setState!=='running'){fpsWin=[];slowCount=0;return;}
+  fpsWin.push(tm);while(fpsWin.length&&tm-fpsWin[0]>1)fpsWin.shift();
+  if(fpsWin.length<2)return;
+  const span=fpsWin[fpsWin.length-1]-fpsWin[0];if(span<0.9)return;
+  lastFps=(fpsWin.length-1)/span;
+  if(lastFps<24){slowCount++;if(slowCount===45)hint('h_slow',Math.round(lastFps));}else slowCount=0;
+}
+
+/* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
+const APP_VERSION='10';
+let rec=null;
+function pickMime(){
+  if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+  for(const m of ['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'])if(MediaRecorder.isTypeSupported(m))return m;
+  return '';
+}
+function recStart(){
+  rec=null; if(!S.record)return;
+  rec={frames:[],t0:null,startedAt:new Date(),mime:'',chunks:[],mr:null,mode,
+    trackSettings:stream?(stream.getVideoTracks()[0].getSettings()||{}):null};
+  if(mode==='live'&&stream){
+    const mime=pickMime();
+    if(mime){try{
+      rec.mr=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:3000000});rec.mime=mime;
+      rec.mr.ondataavailable=e=>{if(e.data&&e.data.size)rec&&rec.chunks.push(e.data);};
+      rec.mr.start(1000); rec.t0=performance.now()/1000;
+    }catch(e){rec.mr=null;}}
+    if(!rec.mr)hint('recNoVideo');
+  }
+}
+function recFrame(tm,r){
+  if(!rec||setState!=='running')return;
+  if(rec.t0==null)rec.t0=mode==='live'?tm:0;
+  const mpp=calib?S.diamMM/1000/calib.dpx:null;
+  rec.frames.push([+(tm-(mode==='live'?rec.t0:0)).toFixed(4),r.ok?+r.x.toFixed(2):'',r.ok?+r.y.toFixed(2):'',r.ok&&mpp?+((calib.cy-r.y)*mpp).toFixed(4):'',r.ok?+kin.v.toFixed(4):'',+(r.score||0).toFixed(3),r.ok?1:0]);
+}
+function recStop(nr){
+  const R=rec; rec=null; if(!R)return;
+  const finish=video=>{
+    const meta={app:'VBT-Tracker',version:APP_VERSION,set:nr,started:R.startedAt.toISOString(),mode:R.mode,
+      userAgent:navigator.userAgent,videoMime:video?R.mime:null,
+      camera:R.trackSettings,frameSize:[videoEl().videoWidth,videoEl().videoHeight],
+      calibration:calib?{centerPx:[+calib.cx.toFixed(2),+calib.cy.toFixed(2)],diameterPx:+calib.dpx.toFixed(2),diameterMm:S.diamMM,metersPerPixel:+(S.diamMM/1000/calib.dpx).toFixed(6)}:null,
+      settings:{thresholdPct:S.thresh,reference:S.ref,minRomCm:S.minROM,lang:L},
+      signalRep:stopAt!=null?stopAt+1:null,
+      processedFps:R.frames.length>1?+((R.frames.length-1)/Math.max(1e-6,R.frames[R.frames.length-1][0]-R.frames[0][0])).toFixed(1):null,
+      reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
+      framesColumns:['t_s','x_px','y_px','y_m','v_m_s','match_score','tracked']};
+    const item={id:R.startedAt.getTime(),nr,started:R.startedAt.toISOString(),reps:reps.filter(r=>r.valid).length,mime:video?R.mime:'',size:video?video.size:0,meta,frames:R.frames,video:video||null};
+    dbPut(item).then(renderRecs).catch(()=>{$('recMsg').textContent=t('recStoreFail');});
+  };
+  if(R.mr&&R.mr.state!=='inactive'){
+    R.mr.onstop=()=>finish(new Blob(R.chunks,{type:(R.mime||'video/webm').split(';')[0]}));
+    try{R.mr.stop();}catch(e){finish(null);}
+  } else finish(null);
+}
+function videoEl(){return video;}
+/* tiny IndexedDB wrapper */
+let dbp=null;
+function db(){if(!dbp)dbp=new Promise((res,rej)=>{try{const q=indexedDB.open('vbt',1);q.onupgradeneeded=()=>{q.result.createObjectStore('recs',{keyPath:'id'});};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}catch(e){rej(e);}});return dbp;}
+function tx(mode,fn){return db().then(d=>new Promise((res,rej)=>{const x=d.transaction('recs',mode),st=x.objectStore('recs');const r=fn(st);x.oncomplete=()=>res(r&&r.result);x.onerror=()=>rej(x.error);}));}
+const dbPut=item=>tx('readwrite',st=>st.put(item));
+const dbDel=id=>tx('readwrite',st=>st.delete(id));
+const dbGet=id=>tx('readonly',st=>st.get(id));
+function dbList(){return db().then(d=>new Promise((res,rej)=>{const out=[];const x=d.transaction('recs','readonly');const c=x.objectStore('recs').openCursor();
+  c.onsuccess=()=>{const cur=c.result;if(cur){const v=cur.value;out.push({id:v.id,nr:v.nr,started:v.started,reps:v.reps,mime:v.mime,size:v.size});cur.continue();}};
+  x.oncomplete=()=>res(out);x.onerror=()=>rej(x.error);}));}
+/* minimal ZIP writer (stored, no compression) */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  files.forEach(f=>{
+    const name=enc.encode(f.name),data=f.data,crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);
+    parts.push(h.buffer,name,data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(c.buffer,name);off+=30+name.length+data.length;
+  });
+  const csize=central.reduce((a,b)=>a+(b.byteLength||b.length),0);
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csize,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,e.buffer],{type:'application/zip'});
+}
+function stamp(iso){const d=new Date(iso),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds());}
+function recFiles(it){
+  const base='vbt_satz'+it.nr+'_'+stamp(it.started);
+  const enc=new TextEncoder();
+  const frames=[it.meta.framesColumns.join(','),...it.frames.map(r=>r.join(','))].join('\n');
+  const repsCsv=['n,mcv_m_s,peak_m_s,rom_m,dur_s,ref_m_s,loss_pct,valid,after_signal',...it.meta.reps.map(r=>[r.n,r.mcv,r.peak,r.romM,r.durS,r.ref??'',r.lossPct??'',r.valid?1:0,r.afterSignal?1:0].join(','))].join('\n');
+  const readme=['VBT-Tracker '+it.meta.version+' – '+it.started,'',
+    'frames.csv: one row per analysed camera frame.',' t_s = seconds since set start (live: since recording start; video file: media time).',
+    ' x_px,y_px = plate centre in video pixels (y grows downward). y_m = height above calibration point in metres (up = positive).',
+    ' v_m_s = smoothed vertical velocity used by the app. match_score = tracker confidence (0..1). tracked = 1 if the plate was found.',
+    'reps.csv: one row per detected rep, values as shown in the app.','meta.json: camera, calibration, settings, reps.',
+    '','Sync with a reference system (Qualisys, accelerometer, transducer): match reps by order, or align a distinct',
+    'movement (e.g. a quick bar lift at the start) in both recordings. Phone and reference clocks are not synchronised.'].join('\n');
+  const out=[{name:base+'/frames.csv',data:enc.encode(frames)},{name:base+'/reps.csv',data:enc.encode(repsCsv)},{name:base+'/meta.json',data:enc.encode(JSON.stringify(it.meta,null,1))},{name:base+'/README.txt',data:enc.encode(readme)}];
+  return {base,out};
+}
+function extOf(m){return (m||'').indexOf('mp4')>=0?'mp4':'webm';}
+async function recZip(id){
+  const it=await dbGet(id);const {base,out}=recFiles(it);
+  if(it.video)out.unshift({name:base+'/video.'+extOf(it.mime),data:new Uint8Array(await it.video.arrayBuffer())});
+  return {blob:zip(out),name:base+'.zip',it,base};
+}
+function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+function fmtMB(b){return b?(b/1048576).toFixed(1).replace('.',L==='en'?'.':',')+' MB':t('recDataOnly');}
+function renderRecs(){
+  const box=$('recList');if(!box)return;
+  dbList().then(list=>{
+    box.textContent='';
+    if(!list.length){const p=document.createElement('p');p.className='muted';p.textContent=t('recEmpty');box.appendChild(p);return;}
+    list.sort((a,b)=>b.id-a.id).forEach(it=>{
+      const row=document.createElement('div');row.className='recrow';
+      const m=document.createElement('div');m.className='rmeta';const b=document.createElement('b');b.textContent=t('recRow',it.nr);
+      const d=new Date(it.started),p=n=>String(n).padStart(2,'0');
+      const sp=document.createElement('span');sp.textContent=t('recInfo',p(d.getDate())+'.'+p(d.getMonth()+1)+'. '+p(d.getHours())+':'+p(d.getMinutes()),it.reps,fmtMB(it.size));m.append(b,sp);
+      const bt=document.createElement('div');bt.className='rbtns';
+      const sv=document.createElement('button');sv.textContent=t('recSave');
+      sv.addEventListener('click',async()=>{sv.disabled=true;sv.textContent=t('recBusy');try{const z=await recZip(it.id);saveBlob(z.blob,z.name);$('recMsg').textContent=t('recSaved',z.name);}catch(e){$('recMsg').textContent=t('recStoreFail');}sv.disabled=false;sv.textContent=t('recSave');});
+      const sh=document.createElement('button');sh.textContent=t('recShare');
+      sh.addEventListener('click',async()=>{
+        try{const z=await recZip(it.id);const zf=new File([z.blob],z.name,{type:'application/zip'});
+          let files=[zf];
+          if(!(navigator.canShare&&navigator.canShare({files}))){const {base,out}=recFiles(z.it);files=[];
+            if(z.it.video)files.push(new File([z.it.video],base+'.'+extOf(z.it.mime),{type:z.it.video.type}));
+            out.filter(f=>f.name.endsWith('.csv')).forEach(f=>files.push(new File([f.data],f.name.split('/').pop().replace('.csv','_'+base+'.csv'),{type:'text/csv'})));
+            out.filter(f=>f.name.endsWith('.txt')||f.name.endsWith('.json')).forEach(f=>files.push(new File([f.data],f.name.split('/').pop().replace(/\.(txt|json)$/,'_'+base+'.txt'),{type:'text/plain'})));}
+          if(navigator.canShare&&navigator.canShare({files}))await navigator.share({files,title:z.name});
+          else $('recMsg').textContent=t('recShareFail');
+        }catch(e){if(e&&e.name!=='AbortError')$('recMsg').textContent=t('recShareFail');}
+      });
+      const dl=document.createElement('button');dl.className='del';dl.textContent=t('recDel');dl.setAttribute('aria-label',t('recDelConfirm'));
+      dl.addEventListener('click',()=>{if(dl.dataset.armed!=='1'){dl.dataset.armed='1';dl.textContent=t('recDelConfirm');setTimeout(()=>{if(dl.isConnected){dl.dataset.armed='0';dl.textContent=t('recDel');}},4000);return;}dbDel(it.id).then(renderRecs);});
+      bt.append(sv,sh,dl);row.append(m,bt);box.appendChild(row);
+    });
+  }).catch(()=>{box.textContent='';const p=document.createElement('p');p.className='muted';p.textContent=t('recStoreFail');box.appendChild(p);});
+}
+
 /* ---------- set control: idle -> running -> done ---------- */
 let setState='idle', setStartedAt=null, idleHintShown=false;
 const HKEY='vbt-history';
@@ -525,7 +689,7 @@ function updateSetUI(){
   $('setDot').dataset.s=setState;
   const nr=history.length+1;
   const title=run?t('setRunning',nr):(setState==='done'?t('setDone',history.length):t('noSet'));
-  $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title;
+  $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title+(run&&rec?'<span class="recdot">'+t('recOn')+'</span>':'');
   let sub;
   if(!tracker)sub=t('subNoTracker');
   else if(run)sub=t('subRunning',reps.length,stopAt!=null?t('subSignalAt',stopAt+1):'');
@@ -537,6 +701,7 @@ function clearReps(){reps=[];stopAt=null;alarmed=false;$('alarm').hidden=true;ki
 function startSet(){
   if(!tracker)return;
   unlockAudio(); clearReps(); trail=[]; setState='running'; setStartedAt=new Date(); idleHintShown=false;
+  recStart();
   chip('track'); hint(null); updateSetUI(); keepAwake();
   beep(880,0.07,0);beep(1175,0.09,0.1);
   if(mode==='file'){
@@ -549,6 +714,7 @@ function endSet(){
   if(setState!=='running')return;
   setState='done'; $('alarm').hidden=true;
   if(mode==='file')video.pause();
+  recStop(history.length+(reps.length?1:0));
   if(reps.length){
     const valid=reps.filter(r=>r.valid), lastV=valid[valid.length-1];
     const t=setStartedAt||new Date(),pad=n=>String(n).padStart(2,'0');
@@ -780,10 +946,12 @@ function onFrame(now,meta){
   else tm=(meta&&meta.captureTime?meta.captureTime:now)/1000;
   if(tm!==lastT&&tracker&&!tapStage&&(mode==='live'||!video.paused)){
     lastT=tm;
+    fpsMon(tm);
     const r=tracker.update();
-    if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();kin.push(tm,r.y);
+    if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();kin.push(tm,r.y);recFrame(tm,r);
       if($('chip').dataset.s!=='alarm')chip('track');}
     else if($('chip').dataset.s!=='alarm'){chip('lost');hint('h_lost');}
+    if(!r.ok)recFrame(tm,r);
     if(r.ok&&lastHint&&lastHint[0]==='h_lost')hint(null);
     $('liveV').textContent=t('current',fmt(kin.v));
   }
@@ -909,8 +1077,8 @@ function setLang(l){
   if(stopAt!=null&&reps[stopAt]){const k=reps.length-1,r=reps[k];$('alarmSub').textContent=k>stopAt?t('a_after',r.n,fmt(r.mcv),fmt(r.loss,0)):t('a_first',r.n,fmt(r.mcv),fmt(r.loss,0),fmt(r.ref));}
   drawSpark(); drawReps();
 }
-$('lang').addEventListener('change',e=>setLang(e.target.value));
-bindSettings(); applyStatic(); chip('idle'); renderReadout(); renderTable(); renderHistory(); updateSetUI();
+$('lang').addEventListener('change',e=>{setLang(e.target.value);renderRecs();});
+bindSettings(); applyStatic(); chip('idle'); renderReadout(); renderTable(); renderHistory(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
