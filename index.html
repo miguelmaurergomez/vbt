@@ -38,6 +38,36 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;fl
 h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;text-wrap:balance;line-height:1.05}
 h1 small{display:block;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--muted);letter-spacing:0}
 h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.exbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.exlab{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+#exSel{font:600 17px var(--font-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:44px;flex:1 1 180px;min-width:0}
+#btnExDel[data-armed="1"]{background:var(--alarm);border-color:var(--alarm);color:#fff}
+.exform{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:12px;border:1px dashed var(--line);border-radius:var(--radius);background:var(--surface)}
+.exform input,.exform select{font:500 16px var(--font-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.exform #exName{flex:1 1 100%}
+.ef{display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;font-size:13px;color:var(--muted);font-weight:600}
+.efb{display:flex;gap:8px}
+.exform .perr{flex-basis:100%;font-size:13px;color:var(--alarm)}
+.guide{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:0 12px}
+.guide summary{cursor:pointer;padding:11px 0;font-weight:600;font-size:15px;list-style-position:inside}
+.gbody{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+.gbody svg{width:100%;max-width:520px;height:auto;display:block}
+.gbody p{margin:0;font-size:14px;color:var(--muted);max-width:65ch}
+.g-line{stroke:var(--muted);stroke-width:1.5;fill:none}
+.g-dash{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.g-plate{fill:var(--ink);stroke:var(--surface);stroke-width:1}
+.g-plate2{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:3 3}
+.g-phone{fill:var(--accent)}
+.g-arrow{stroke:var(--alarm);stroke-width:2.5;fill:none}
+.g-arrowhead{fill:var(--alarm)}
+.g-txt{fill:var(--muted);font:15px var(--font-body)}
+.g-ttl{fill:var(--ink);font:600 15px var(--font-body);letter-spacing:.04em;text-transform:uppercase}
+.g-floor{stroke:var(--line);stroke-width:2}
+.loadbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.lf{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted);flex:0 1 130px;min-width:0}
+.lf input{font:600 17px var(--font-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;font-variant-numeric:tabular-nums}
+.lhelp{flex:1 1 180px;font-size:13px;color:var(--muted);padding-bottom:6px}
+.exnote{flex-basis:100%;font-size:13px;color:var(--muted);grid-column:1/-1;margin-bottom:-6px}
 .reclist{display:flex;flex-direction:column}
 .recrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .recrow:last-child{border-bottom:0}
@@ -62,7 +92,8 @@ h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform
 .viewport video,.viewport canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .viewport video{object-fit:fill}
 .hint{position:absolute;left:10px;right:10px;bottom:10px;padding:8px 12px;border-radius:8px;background:rgba(10,12,16,.72);color:#f3f5f8;font-size:14px;line-height:1.35;pointer-events:none}
-.placeholder{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:18px 20px;color:#cfd6e0;font-size:14px}
+.placeholder{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:14px 16px;color:#cfd6e0;font-size:14px;overflow:auto}
+@media (max-width:520px){.placeholder{justify-content:flex-start;font-size:12.5px;gap:4px;padding:10px 12px}.placeholder b{font-size:16px}}
 .placeholder b{font-family:var(--font-display);font-size:20px;color:#fff;font-weight:600;letter-spacing:.02em}
 .placeholder ol{margin:4px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
 .alarm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(207,47,43,.82);color:#fff;font-family:var(--font-display);font-weight:700;font-size:clamp(30px,8vw,56px);letter-spacing:.04em;text-align:center;cursor:pointer}
@@ -88,6 +119,7 @@ button:focus-visible,.btn:focus-within,input:focus-visible,select:focus-visible{
 .btn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .btn{position:relative}
 
+.readout[data-f="1"]{grid-template-columns:1.4fr 1fr 1fr 1fr}
 .readout{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .cell{background:var(--surface);padding:12px 14px;min-width:0}
 .cell .lab{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
@@ -96,7 +128,7 @@ button:focus-visible,.btn:focus-within,input:focus-visible,select:focus-visible{
 .cell.main .val{font-size:58px}
 .cell .sub{font-size:13px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
 #lossVal[data-bad="1"]{color:var(--alarm)}
-@media (max-width:480px){.readout{grid-template-columns:1fr 1fr}.cell.main{grid-column:1/-1}}
+@media (max-width:480px){.readout{grid-template-columns:1fr 1fr}.readout[data-f="1"]{grid-template-columns:1fr 1fr 1fr}.cell.main{grid-column:1/-1}.readout .cell .val{font-size:36px}}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
 canvas.chart{width:100%;display:block}
@@ -152,6 +184,26 @@ tr.after td{color:var(--muted)}
   </header>
 
   <section class="stage">
+    <div class="exbar">
+      <label for="exSel" class="exlab" data-i18n="exLabel">Übung</label>
+      <select id="exSel"></select>
+      <button type="button" id="btnExAdd" data-i18n="exAdd">+ Eigene Übung</button>
+      <button type="button" id="btnExDel" hidden data-i18n="exDel">Übung löschen</button>
+    </div>
+    <div class="exform" id="exForm" hidden>
+      <input id="exName" type="text" maxlength="30" autocomplete="off" data-i18n-ph="exNamePh" placeholder="Name der Übung">
+      <label class="ef"><span data-i18n="exDirLabel">Richtung</span>
+        <select id="exDir"><option value="90" data-i18n="dirUp">Senkrecht (nach oben)</option><option value="0" data-i18n="dirRight">Waagrecht nach rechts</option><option value="180" data-i18n="dirLeft">Waagrecht nach links</option><option value="angle" data-i18n="dirAngle">Schräg: Winkel eingeben</option></select></label>
+      <label class="ef" id="exAngleWrap" hidden><span data-i18n="exAngleLabel">Winkel in Grad (0 = nach rechts, 90 = nach oben, 180 = nach links)</span>
+        <input id="exAngle" type="text" inputmode="decimal" autocomplete="off" value="45"></label>
+      <label class="ef"><span data-i18n="exOrderLabel">Ablauf</span>
+        <select id="exOrder"><option value="down" data-i18n="orderDown">Erst absenken, dann drücken</option><option value="up" data-i18n="orderUp">Erst hoch, dann absenken</option></select></label>
+      <label class="ef"><span data-i18n="exRomLabel">Mindestweg (cm)</span>
+        <input id="exRom" type="text" inputmode="decimal" autocomplete="off" value="15"></label>
+      <div class="efb"><button type="button" class="primary" id="exSave" data-i18n="pSave">Speichern</button><button type="button" id="exCancel" data-i18n="pCancel">Abbrechen</button></div>
+      <div class="perr" id="exErr" hidden></div>
+    </div>
+    <details class="guide" id="guide"><summary id="guideSum">Kamera-Aufbau</summary><div class="gbody" id="guideBody"></div></details>
     <div class="viewport" id="viewport">
       <video id="video" playsinline muted></video>
       <canvas id="overlay"></canvas>
@@ -180,12 +232,18 @@ tr.after td{color:var(--muted)}
       <button class="primary" id="btnSet" data-s="idle" disabled>Satz starten</button>
       <div class="setstat"><b id="setTitle"><span class="dot" id="setDot"></span>Kein Satz aktiv</b><span id="setSub">Erst Kamera starten und Platte markieren.</span></div>
     </div>
+    <div class="loadbar">
+      <label class="lf"><span data-i18n="loadLabel">Last (kg)</span><input id="loadKg" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="loadPh" placeholder="z. B. 60"></label>
+      <label class="lf"><span data-i18n="extraLabel">Zusatz (kg)</span><input id="extraKg" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+      <span class="lhelp" data-i18n="loadHelp">Optional. Mit Gewicht berechnet die App Kraft und Leistung.</span>
+    </div>
   </section>
 
-  <section class="readout" aria-live="polite">
+  <section class="readout" id="readout" aria-live="polite">
     <div class="cell main"><div class="lab" id="mainLab">Letzte Wiederholung · MCV</div><div class="val" id="mcvVal">–<small>m/s</small></div><div class="sub" id="liveV">Aktuell: – m/s</div></div>
     <div class="cell"><div class="lab" id="lossLab">Verlust</div><div class="val" id="lossVal">–<small>%</small></div><div class="sub" id="refVal">Referenz: –</div></div>
     <div class="cell"><div class="lab" data-i18n="repsShort">Wdh.</div><div class="val" id="repVal">0</div><div class="sub" id="romVal">ROM: –</div></div>
+    <div class="cell" id="forceCell" hidden><div class="lab" data-i18n="forceLab">Kraft · Leistung</div><div class="val" id="forceVal">–<small>N</small></div><div class="sub" id="powVal">– W</div></div>
   </section>
 
   <section class="panel">
@@ -198,8 +256,8 @@ tr.after td{color:var(--muted)}
     <canvas class="chart" id="repChart"></canvas>
     <div class="tablewrap">
       <table>
-        <thead id="thReps"><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Ref. m/s</th><th>Verlust</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
+        <thead id="thReps"><tr><th>Wdh.</th><th>MCV m/s</th><th>Peak m/s</th><th>ROM cm</th><th>Dauer s</th><th>Ref. m/s</th><th>Verlust</th><th>F̄ N</th><th>P̄ W</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="9" style="text-align:left" class="muted">Noch keine Wiederholungen in diesem Satz.</td></tr></tbody>
       </table>
     </div>
     <div class="row">
@@ -212,8 +270,8 @@ tr.after td{color:var(--muted)}
     <h2 data-i18n="setsTitle">Sätze</h2>
     <div class="tablewrap">
       <table>
-        <thead id="thSets"><tr><th>Satz</th><th>Zeit</th><th>Wdh.</th><th>Signal bei</th><th>Beste m/s</th><th>Letzte m/s</th><th>Verlust Ende</th></tr></thead>
-        <tbody id="hbody"><tr><td colspan="7" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr></tbody>
+        <thead id="thSets"><tr><th>Satz</th><th>Zeit</th><th>kg</th><th>Wdh.</th><th>Signal bei</th><th>Beste m/s</th><th>Letzte m/s</th><th>Verlust Ende</th></tr></thead>
+        <tbody id="hbody"><tr><td colspan="8" style="text-align:left" class="muted">Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.</td></tr></tbody>
       </table>
     </div>
     <div class="row">
@@ -245,6 +303,7 @@ tr.after td{color:var(--muted)}
         <div class="help" data-i18n="diamHelp">Wähle deine Scheibe oder leg mit „+ Eigene Größe“ eine andere mit Namen an. Miss den Durchmesser am besten mit dem Maßband nach.</div>
       </div>
       <div class="field">
+        <div class="exnote" id="exNote"></div>
         <label for="thresh" data-i18n="threshLabel">Signal bei Geschwindigkeitsverlust</label>
         <div class="inline"><input type="range" id="thresh" min="5" max="40" step="1"><output id="threshOut">10 %</output></div>
         <div class="help" data-i18n="threshHelp">Signal, sobald eine Wiederholung so viel langsamer ist als die Referenz.</div>
@@ -279,20 +338,20 @@ tr.after td{color:var(--muted)}
 const $ = id => document.getElementById(id);
 const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const S=Object.assign({facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,record:false,rate:'1'},store.get('vbt-settings',{}));
+const S=Object.assign({ex:'bench',exSet:{},customEx:[],load:'',extra:'',facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,record:false,rate:'1'},store.get('vbt-settings',{}));
 const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':(L==='en'?v.toFixed(d):v.toFixed(d).replace('.',','));
 /* ---------- languages ---------- */
 const I18N={
-de:{doc:'VBT Bankdrück-Tracker',title:'VBT Bankdrück-Tracker',subtitle:'Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust',langLabel:'Sprache',
+de:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Übung',exAdd:'+ Eigene Übung',exDel:'Übung löschen',exDelConfirm:'Wirklich löschen?',exNamePh:'Name der Übung, z. B. Landmine Press',exDirLabel:'Richtung',dirUp:'Senkrecht (nach oben)',dirRight:'Waagrecht nach rechts',dirLeft:'Waagrecht nach links',dirAngle:'Schräg: Winkel eingeben',exAngleLabel:'Winkel in Grad (0 = nach rechts, 90 = nach oben, 180 = nach links)',exOrderLabel:'Ablauf',orderDown:'Erst absenken, dann drücken',orderUp:'Erst hoch, dann absenken',exRomLabel:'Mindestweg (cm)',exErr:'Bitte einen Namen, einen Winkel zwischen 0 und 180 und einen Mindestweg zwischen 3 und 100 cm eingeben.',exNote:'Diese Einstellungen gelten für: {0}',custom:'eigene',ex_bench:'Bankdrücken',ex_squat:'Kniebeuge',ex_deadlift:'Kreuzheben',ex_bss:'Bulgarian Split Squat',ex_hipthrust:'Hip Thrust',ex_ohp:'Schulterdrücken',ex_row:'Rudern vorgebeugt',guideSum:'Kamera-Aufbau: {0}',gTop:'Von oben',gSide:'Höhe',gDist:'1,5–3 m',gPhone:'Handy',gFirstDown:'zuerst ↓',gFirstUp:'zuerst ↑',guideTxt:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf etwa {0} m Höhe (bei ca. 1,80 m Körpergröße). Die Scheibe muss während der ganzen Bewegung im Bild sein.',guideTxtCustom:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf Höhe der Mitte des Bewegungswegs. Die Scheibe muss während der ganzen Bewegung im Bild sein.',tip_bench:'Arme und Hantelablage dürfen die Scheibe nicht verdecken.',tip_squat:'Im Rack darauf achten, dass die Ständer die Scheibe nicht verdecken.',tip_deadlift:'Die Scheibe startet am Boden, der untere Rand muss im Bild sein.',tip_bss:'Mit Langhantel. Kurzhanteln gehen nur mit Scheiben oder einer Markierung.',tip_hipthrust:'Der Weg ist kurz, der Mindestweg steht deshalb auf 10 cm.',tip_ohp:'Die Scheibe muss auch ganz oben im Bild sein, Handy notfalls weiter weg.',tip_row:'Oberkörper und Arme dürfen die Scheibe nicht verdecken.',loadLabel:'Last (kg)',loadPh:'z. B. 60',extraLabel:'Zusatz (kg)',loadHelp:'Optional. Mit Gewicht berechnet die App Kraft und Leistung. Zusatz z. B. für Weste, Ketten oder Körpergewicht bei Sprüngen.',forceLab:'Kraft · Leistung',powSub:'{0} W · max {1} W',subtitle:'Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust',langLabel:'Sprache',
 chip_idle:'Bereit',chip_track:'Verfolgt',chip_lost:'Verloren',chip_mark:'Markieren',chip_alarm:'Signal',
-howTitle:"So geht's",how1:'Handy seitlich auf Höhe der Hantelscheibe fest hinstellen.',how2:'Kamera starten oder ein Video wählen.',how3:'„Platte markieren“: oberen und unteren Rand antippen.',how4:'„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.',how5:'Nach dem Ablegen „Satz beenden“ tippen.',
+howTitle:"So geht's",how1:'Übung wählen und das Handy wie in „Kamera-Aufbau“ beschrieben hinstellen.',how2:'Kamera starten oder ein Video wählen.',how3:'„Platte markieren“: oberen und unteren Rand antippen.',how4:'„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.',how5:'Nach dem Ablegen „Satz beenden“ tippen.',
 alarmTitle:'SIGNAL: SATZ BEENDEN',endSet:'Satz beenden',goOn:'Weiter messen',startCam:'Kamera starten',toSelfie:'Zur Selfie-Kamera',toBack:'Zur Rückkamera',camSelfie:'Selfie-Kamera',camBack:'Rückkamera',
 video:'Video aufnehmen / wählen',mark:'Platte markieren',play:'▶ Auswerten',startSet:'Satz starten',setRunning:'Satz {0} läuft',setDone:'Satz {0} beendet',noSet:'Kein Satz aktiv',
 subNoTracker:'Erst Kamera starten und Platte markieren.',subRunning:'{0} Wdh. gemessen{1}. Nach dem Ablegen „Satz beenden“.',subSignalAt:' · Signal bei Wdh. {0}',subDone:'Es wird nichts gezählt. Für den nächsten Satz „Satz starten“.',subIdle:'Bereit. Tippe „Satz starten“, bevor du die Hantel aushebst.',
 lastRep:'Letzte Wiederholung · MCV',current:'Aktuell: {0} m/s',loss:'Verlust',reference:'Referenz: {0}',repsShort:'Wdh.',liveSpeed:'Geschwindigkeit live',sparkLabel:'m/s · letzte 6 s',repsTitle:'Wiederholungen',
-th:['Wdh.','MCV m/s','Peak m/s','ROM cm','Dauer s','Ref. m/s','Verlust'],noReps:'Noch keine Wiederholungen in diesem Satz.',
+th:['Wdh.','MCV m/s','Peak m/s','ROM cm','Dauer s','Ref. m/s','Verlust','F̄ N','P̄ W'],noReps:'Noch keine Wiederholungen in diesem Satz.',
 note:'MCV = mittlere konzentrische Geschwindigkeit. Verlust = Abstand zur schnellsten Wdh. bis zu diesem Zeitpunkt, beim Signal eingefroren.',copySet:'Satz als CSV kopieren',partial:'unvollständig',tagSignal:'Signal',exampleNote:'Beispielsatz. Deine Wiederholungen ersetzen ihn.',refChart:'Referenz',
-setsTitle:'Sätze',hth:['Satz','Zeit','Wdh.','Signal bei','Beste m/s','Abbruch-Wdh. m/s','Verlust Abbruch'],sigRep:'Abbruch-Wdh. {0} · MCV',lossAtSig:'Verlust beim Signal',afterSig:'davon {0} nach dem Signal',noSets:'Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.',histNote:'„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.',
+setsTitle:'Sätze',hth:['Satz','Zeit','kg','Wdh.','Signal bei','Beste m/s','Abbruch-Wdh. m/s','Verlust Abbruch'],sigRep:'Abbruch-Wdh. {0} · MCV',lossAtSig:'Verlust beim Signal',afterSig:'davon {0} nach dem Signal',noSets:'Noch keine beendeten Sätze. Sie bleiben auf diesem Handy gespeichert.',histNote:'„Wdh.“ zählt alle vollständigen Wiederholungen, auch die nach dem Signal.',
 signalAt:'Wdh. {0} ({1} %)',noSignal:'kein Signal',copyAll:'Alle Sätze als CSV',clear:'Liste leeren',clearConfirm:'Wirklich leeren?',cleared:'Liste geleert.',noSetsSaved:'Noch keine Sätze gespeichert.',
 copiedSets:'Kopiert: {0} Sätze. In Excel oder Sheets einfügen.',copyDenied:'Kopieren nicht erlaubt.',copyDeniedTable:'Kopieren nicht erlaubt. Werte stehen in der Tabelle.',nothingToCopy:'Noch nichts zu kopieren.',copiedReps:'Kopiert: {0} Wiederholungen. In Excel oder Sheets einfügen.',
 settings:'Einstellungen',diamLabel:'Referenzgröße (mm)',presetOly:'450 · Olympia-Scheibe',addPreset:'+ Eigene Größe',pNamePh:'Name, z. B. 10-kg-Scheibe Studio',pMMPh:'Durchmesser in mm',pSave:'Speichern',pCancel:'Abbrechen',pErr:'Bitte einen Namen und einen Durchmesser zwischen 20 und 2000 mm eingeben.',pDel:'{0} löschen',pDelConfirm:'Löschen?',diamHelp:'Wähle deine Scheibe oder leg mit „+ Eigene Größe“ eine andere mit Namen an. Miss den Durchmesser am besten mit dem Maßband nach.',
@@ -304,16 +363,16 @@ h_videoLoaded:'Video geladen. Spule zur Startposition, markiere die Platte, dann
 h_markedFile:'Markiert ({0} px = {1} mm). Jetzt „Auswerten“.',h_markedLive:'Markiert. Tippe „Satz starten“, wenn du bereit bist.',h_readFail:'Konnte das Bild nicht lesen. Bitte nochmal markieren.',h_videoEnd:'Video zu Ende. Satz beendet, Ergebnis siehe unten.',
 h_doneMove:'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.',h_idleMove:'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.',h_lost:'Platte verloren. Kurz ruhig halten oder neu markieren.',
 a_after:'Wdh. {0} nach dem Signal: {1} m/s · −{2} %',a_first:'Wdh. {0}: {1} m/s · −{2} % zur Referenz {3} m/s. Weitere Wdh. werden markiert, bis du beendest.',v_stop:'Stopp',v_dec:' Komma ',speech:'de-DE',recLabel:'Video und Rohdaten aufnehmen',recHelp:'Für Validierung und spätere Neuauswertung. Jeder Satz wird unter „Aufnahmen“ gespeichert.',recTitle:'Aufnahmen',recNote:'Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.',recEmpty:'Noch keine Aufnahmen. Schalte unter Einstellungen „Video und Rohdaten aufnehmen“ ein.',recRow:'Satz {0}',recInfo:'{0} · {1} Wdh. · {2}',recDataOnly:'nur Rohdaten',recSave:'Speichern (ZIP)',recShare:'Teilen',recDel:'×',recDelConfirm:'Löschen?',recSaved:'Gespeichert: {0}',recShareFail:'Teilen geht auf diesem Gerät nicht. Nimm „Speichern“.',recBusy:'Wird vorbereitet …',recNoVideo:'Video-Aufnahme wird von diesem Browser nicht unterstützt. Es werden nur Rohdaten gespeichert.',recStoreFail:'Aufnahme konnte nicht gespeichert werden (Speicher voll?).',recOn:'REC',h_slow:'Achtung: Das Handy wertet nur {0} Bilder/s aus, die Messung kann ungenau werden. Andere Apps schließen oder die Aufnahme ausschalten.'},
-es:{doc:'VBT Tracker · Press de banca',title:'VBT Tracker · Press de banca',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
+es:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Ejercicio',exAdd:'+ Ejercicio propio',exDel:'Eliminar ejercicio',exDelConfirm:'¿Eliminar de verdad?',exNamePh:'Nombre del ejercicio, p. ej. Landmine press',exDirLabel:'Dirección',dirUp:'Vertical (hacia arriba)',dirRight:'Horizontal hacia la derecha',dirLeft:'Horizontal hacia la izquierda',dirAngle:'Oblicua: indicar ángulo',exAngleLabel:'Ángulo en grados (0 = derecha, 90 = arriba, 180 = izquierda)',exOrderLabel:'Secuencia',orderDown:'Primero bajar, luego empujar',orderUp:'Primero subir, luego bajar',exRomLabel:'Recorrido mínimo (cm)',exErr:'Escribe un nombre, un ángulo entre 0 y 180 y un recorrido mínimo entre 3 y 100 cm.',exNote:'Estos ajustes son para: {0}',custom:'propio',ex_bench:'Press de banca',ex_squat:'Sentadilla',ex_deadlift:'Peso muerto',ex_bss:'Sentadilla búlgara',ex_hipthrust:'Hip thrust',ex_ohp:'Press militar',ex_row:'Remo con barra',guideSum:'Colocación de la cámara: {0}',gTop:'Desde arriba',gSide:'Altura',gDist:'1,5–3 m',gPhone:'Celular',gFirstDown:'primero ↓',gFirstUp:'primero ↑',guideTxt:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a unos {0} m de altura (para una estatura de aprox. 1,80 m). El disco debe verse durante todo el movimiento.',guideTxtCustom:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a la altura del centro del recorrido. El disco debe verse durante todo el movimiento.',tip_bench:'Los brazos y los soportes no deben tapar el disco.',tip_squat:'En el rack, cuida que los soportes no tapen el disco.',tip_deadlift:'El disco empieza en el suelo; el borde inferior debe verse.',tip_bss:'Con barra. Con mancuernas solo funciona con discos o una marca.',tip_hipthrust:'El recorrido es corto; por eso el mínimo está en 10 cm.',tip_ohp:'El disco debe verse también arriba del todo; si hace falta, aleja el celular.',tip_row:'El torso y los brazos no deben tapar el disco.',loadLabel:'Carga (kg)',loadPh:'p. ej. 60',extraLabel:'Extra (kg)',loadHelp:'Opcional. Con el peso, la app calcula fuerza y potencia. Extra, p. ej., para chaleco, cadenas o peso corporal en saltos.',forceLab:'Fuerza · Potencia',powSub:'{0} W · máx. {1} W',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
 chip_idle:'Listo',chip_track:'Siguiendo',chip_lost:'Perdido',chip_mark:'Marcando',chip_alarm:'Aviso',
-howTitle:'Cómo funciona',how1:'Coloca el celular de lado, fijo y a la altura del disco.',how2:'Inicia la cámara o elige un video.',how3:'«Marcar disco»: toca el borde superior y el inferior.',how4:'Toca «Iniciar serie» y empuja. Si pierdes demasiada velocidad, suena un aviso.',how5:'Después de dejar la barra, toca «Terminar serie».',
+howTitle:'Cómo funciona',how1:'Elige el ejercicio y coloca el celular como indica «Colocación de la cámara».',how2:'Inicia la cámara o elige un video.',how3:'«Marcar disco»: toca el borde superior y el inferior.',how4:'Toca «Iniciar serie» y empuja. Si pierdes demasiada velocidad, suena un aviso.',how5:'Después de dejar la barra, toca «Terminar serie».',
 alarmTitle:'AVISO: TERMINA LA SERIE',endSet:'Terminar serie',goOn:'Seguir midiendo',startCam:'Iniciar cámara',toSelfie:'Cambiar a cámara frontal',toBack:'Cambiar a cámara trasera',camSelfie:'Cámara frontal',camBack:'Cámara trasera',
 video:'Grabar / elegir video',mark:'Marcar disco',play:'▶ Analizar',startSet:'Iniciar serie',setRunning:'Serie {0} en curso',setDone:'Serie {0} terminada',noSet:'Ninguna serie activa',
 subNoTracker:'Primero inicia la cámara y marca el disco.',subRunning:'{0} rep. medidas{1}. Al dejar la barra, «Terminar serie».',subSignalAt:' · aviso en la rep. {0}',subDone:'No se cuenta nada. Para la siguiente serie, «Iniciar serie».',subIdle:'Listo. Toca «Iniciar serie» antes de sacar la barra.',
 lastRep:'Última repetición · VM',current:'Ahora: {0} m/s',loss:'Pérdida',reference:'Referencia: {0}',repsShort:'Rep.',liveSpeed:'Velocidad en vivo',sparkLabel:'m/s · últimos 6 s',repsTitle:'Repeticiones',
-th:['Rep.','VM m/s','Pico m/s','ROM cm','Duración s','Ref. m/s','Pérdida'],noReps:'Todavía no hay repeticiones en esta serie.',
+th:['Rep.','VM m/s','Pico m/s','ROM cm','Duración s','Ref. m/s','Pérdida','F̄ N','P̄ W'],noReps:'Todavía no hay repeticiones en esta serie.',
 note:'VM = velocidad media concéntrica. Pérdida = diferencia con la rep. más rápida hasta ese momento, fijada al sonar el aviso.',copySet:'Copiar serie como CSV',partial:'incompleta',tagSignal:'Aviso',exampleNote:'Serie de ejemplo. Tus repeticiones la reemplazan.',refChart:'Referencia',
-setsTitle:'Series',hth:['Serie','Hora','Rep.','Aviso en','Mejor m/s','Rep. de corte m/s','Pérdida en el corte'],sigRep:'Rep. de corte {0} · VM',lossAtSig:'Pérdida en el aviso',afterSig:'{0} después del aviso',noSets:'Aún no hay series terminadas. Se guardan en este celular.',histNote:'«Rep.» cuenta todas las repeticiones completas, también las posteriores al aviso.',
+setsTitle:'Series',hth:['Serie','Hora','kg','Rep.','Aviso en','Mejor m/s','Rep. de corte m/s','Pérdida en el corte'],sigRep:'Rep. de corte {0} · VM',lossAtSig:'Pérdida en el aviso',afterSig:'{0} después del aviso',noSets:'Aún no hay series terminadas. Se guardan en este celular.',histNote:'«Rep.» cuenta todas las repeticiones completas, también las posteriores al aviso.',
 signalAt:'Rep. {0} ({1} %)',noSignal:'sin aviso',copyAll:'Todas las series como CSV',clear:'Vaciar lista',clearConfirm:'¿Vaciar de verdad?',cleared:'Lista vaciada.',noSetsSaved:'Aún no hay series guardadas.',
 copiedSets:'Copiado: {0} series. Pégalo en Excel o Sheets.',copyDenied:'No se permite copiar.',copyDeniedTable:'No se permite copiar. Los valores están en la tabla.',nothingToCopy:'Todavía no hay nada que copiar.',copiedReps:'Copiado: {0} repeticiones. Pégalo en Excel o Sheets.',
 settings:'Ajustes',diamLabel:'Tamaño de referencia (mm)',presetOly:'450 · Disco olímpico',addPreset:'+ Tamaño propio',pNamePh:'Nombre, p. ej. disco de 10 kg del gym',pMMPh:'Diámetro en mm',pSave:'Guardar',pCancel:'Cancelar',pErr:'Escribe un nombre y un diámetro entre 20 y 2000 mm.',pDel:'Eliminar {0}',pDelConfirm:'¿Eliminar?',diamHelp:'Elige tu disco o crea otro con nombre en «+ Tamaño propio». Lo ideal es medir el diámetro con una cinta métrica.',
@@ -325,16 +384,16 @@ h_videoLoaded:'Video cargado. Ve a la posición inicial, marca el disco y luego 
 h_markedFile:'Marcado ({0} px = {1} mm). Ahora «Analizar».',h_markedLive:'Marcado. Toca «Iniciar serie» cuando estés listo.',h_readFail:'No se pudo leer la imagen. Marca otra vez.',h_videoEnd:'Fin del video. Serie terminada, resultado abajo.',
 h_doneMove:'La serie terminó, no se cuenta nada. Para una nueva serie, «Iniciar serie».',h_idleMove:'Se detectó movimiento, pero no hay serie activa. Toca «Iniciar serie».',h_lost:'Disco perdido. Quédate quieto un momento o vuelve a marcar.',
 a_after:'Rep. {0} después del aviso: {1} m/s · −{2} %',a_first:'Rep. {0}: {1} m/s · −{2} % respecto a la referencia de {3} m/s. Las siguientes se marcan hasta que termines.',v_stop:'Para',v_dec:' coma ',speech:'es-ES',recLabel:'Grabar video y datos brutos',recHelp:'Para validar y volver a analizar después. Cada serie se guarda en «Grabaciones».',recTitle:'Grabaciones',recNote:'Las grabaciones solo están en este celular. Después de guardarlas, bórralas para liberar espacio.',recEmpty:'Aún no hay grabaciones. Activa «Grabar video y datos brutos» en Ajustes.',recRow:'Serie {0}',recInfo:'{0} · {1} rep. · {2}',recDataOnly:'solo datos brutos',recSave:'Guardar (ZIP)',recShare:'Compartir',recDel:'×',recDelConfirm:'¿Eliminar?',recSaved:'Guardado: {0}',recShareFail:'Compartir no funciona en este dispositivo. Usa «Guardar».',recBusy:'Preparando …',recNoVideo:'Este navegador no puede grabar video. Solo se guardan los datos brutos.',recStoreFail:'No se pudo guardar la grabación (¿memoria llena?).',recOn:'REC',h_slow:'Atención: el celular solo analiza {0} imágenes/s, la medición puede ser imprecisa. Cierra otras apps o desactiva la grabación.'},
-en:{doc:'VBT Bench Press Tracker',title:'VBT Bench Press Tracker',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
+en:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Exercise',exAdd:'+ Custom exercise',exDel:'Delete exercise',exDelConfirm:'Really delete?',exNamePh:'Exercise name, e.g. Landmine press',exDirLabel:'Direction',dirUp:'Vertical (upward)',dirRight:'Horizontal to the right',dirLeft:'Horizontal to the left',dirAngle:'Diagonal: enter angle',exAngleLabel:'Angle in degrees (0 = right, 90 = up, 180 = left)',exOrderLabel:'Sequence',orderDown:'Lower first, then push',orderUp:'Up first, then lower',exRomLabel:'Minimum range (cm)',exErr:'Enter a name, an angle between 0 and 180 and a minimum range between 3 and 100 cm.',exNote:'These settings apply to: {0}',custom:'custom',ex_bench:'Bench press',ex_squat:'Back squat',ex_deadlift:'Deadlift',ex_bss:'Bulgarian split squat',ex_hipthrust:'Hip thrust',ex_ohp:'Overhead press',ex_row:'Bent-over row',guideSum:'Camera setup: {0}',gTop:'From above',gSide:'Height',gDist:'1.5–3 m',gPhone:'Phone',gFirstDown:'first ↓',gFirstUp:'first ↑',guideTxt:'Phone steady and level, in line with the bar, 1.5–3 m away, at about {0} m height (for a lifter of about 1.80 m). The plate must stay in view for the whole movement.',guideTxtCustom:'Phone steady and level, in line with the bar, 1.5–3 m away, at the height of the middle of the movement. The plate must stay in view for the whole movement.',tip_bench:'Arms and the rack must not cover the plate.',tip_squat:'In the rack, make sure the uprights don’t cover the plate.',tip_deadlift:'The plate starts on the floor; its bottom edge must be in view.',tip_bss:'With a barbell. Dumbbells only work with plates or a marker.',tip_hipthrust:'The range is short, so the minimum is set to 10 cm.',tip_ohp:'The plate must stay in view at the very top; move the phone back if needed.',tip_row:'Torso and arms must not cover the plate.',loadLabel:'Load (kg)',loadPh:'e.g. 60',extraLabel:'Extra (kg)',loadHelp:'Optional. With a weight, the app calculates force and power. Extra, e.g., for a vest, chains or body mass in jumps.',forceLab:'Force · Power',powSub:'{0} W · max {1} W',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
 chip_idle:'Ready',chip_track:'Tracking',chip_lost:'Lost',chip_mark:'Marking',chip_alarm:'Signal',
-howTitle:'How it works',how1:'Set the phone up to the side, steady, at plate height.',how2:'Start the camera or choose a video.',how3:'“Mark plate”: tap the top and bottom edge.',how4:'Tap “Start set” and lift. If you lose too much speed, you get a signal.',how5:'After racking the bar, tap “End set”.',
+howTitle:'How it works',how1:'Pick the exercise and set up the phone as shown in “Camera setup”.',how2:'Start the camera or choose a video.',how3:'“Mark plate”: tap the top and bottom edge.',how4:'Tap “Start set” and lift. If you lose too much speed, you get a signal.',how5:'After racking the bar, tap “End set”.',
 alarmTitle:'SIGNAL: END THE SET',endSet:'End set',goOn:'Keep measuring',startCam:'Start camera',toSelfie:'Switch to selfie camera',toBack:'Switch to rear camera',camSelfie:'Selfie camera',camBack:'Rear camera',
 video:'Record / choose video',mark:'Mark plate',play:'▶ Analyze',startSet:'Start set',setRunning:'Set {0} running',setDone:'Set {0} finished',noSet:'No set active',
 subNoTracker:'First start the camera and mark the plate.',subRunning:'{0} reps measured{1}. After racking, tap “End set”.',subSignalAt:' · signal at rep {0}',subDone:'Nothing is counted. For the next set, tap “Start set”.',subIdle:'Ready. Tap “Start set” before you unrack the bar.',
 lastRep:'Last rep · MCV',current:'Now: {0} m/s',loss:'Loss',reference:'Reference: {0}',repsShort:'Reps',liveSpeed:'Live velocity',sparkLabel:'m/s · last 6 s',repsTitle:'Reps',
-th:['Rep','MCV m/s','Peak m/s','ROM cm','Time s','Ref. m/s','Loss'],noReps:'No reps in this set yet.',
+th:['Rep','MCV m/s','Peak m/s','ROM cm','Time s','Ref. m/s','Loss','F̄ N','P̄ W'],noReps:'No reps in this set yet.',
 note:'MCV = mean concentric velocity. Loss = gap to the fastest rep so far, frozen at the signal.',copySet:'Copy set as CSV',partial:'partial',tagSignal:'Signal',exampleNote:'Example set. Your reps will replace it.',refChart:'Reference',
-setsTitle:'Sets',hth:['Set','Time','Reps','Signal at','Best m/s','Stop rep m/s','Loss at stop'],sigRep:'Stop rep {0} · MCV',lossAtSig:'Loss at signal',afterSig:'{0} after the signal',noSets:'No finished sets yet. They stay saved on this phone.',histNote:'“Reps” counts all complete reps, including those after the signal.',
+setsTitle:'Sets',hth:['Set','Time','kg','Reps','Signal at','Best m/s','Stop rep m/s','Loss at stop'],sigRep:'Stop rep {0} · MCV',lossAtSig:'Loss at signal',afterSig:'{0} after the signal',noSets:'No finished sets yet. They stay saved on this phone.',histNote:'“Reps” counts all complete reps, including those after the signal.',
 signalAt:'Rep {0} ({1} %)',noSignal:'no signal',copyAll:'All sets as CSV',clear:'Clear list',clearConfirm:'Really clear?',cleared:'List cleared.',noSetsSaved:'No sets saved yet.',
 copiedSets:'Copied: {0} sets. Paste into Excel or Sheets.',copyDenied:'Copying is not allowed.',copyDeniedTable:'Copying is not allowed. The values are in the table.',nothingToCopy:'Nothing to copy yet.',copiedReps:'Copied: {0} reps. Paste into Excel or Sheets.',
 settings:'Settings',diamLabel:'Reference size (mm)',presetOly:'450 · Olympic plate',addPreset:'+ Custom size',pNamePh:'Name, e.g. 10 kg plate at my gym',pMMPh:'Diameter in mm',pSave:'Save',pCancel:'Cancel',pErr:'Enter a name and a diameter between 20 and 2000 mm.',pDel:'Delete {0}',pDelConfirm:'Delete?',diamHelp:'Pick your plate or add another one with a name under “+ Custom size”. Ideally, measure the diameter with a tape measure.',
@@ -375,12 +434,41 @@ let loopOn=false;
 let audio=null;
 let wake=null;
 
+/* ---------- exercises ---------- */
+/* axis: direction of the concentric movement in the image, degrees (0 = right, 90 = up).
+   order: 'down' = lower first, then push (bench, squat); 'up' = concentric first (deadlift, row).
+   lo/hi: approximate plate-centre heights in metres for the camera sketch (lifter ~1.80 m). */
+const EXERCISES=[
+  {id:'bench',axis:90,order:'down',rom:15,lo:0.70,hi:1.10},
+  {id:'squat',axis:90,order:'down',rom:20,lo:0.95,hi:1.50},
+  {id:'deadlift',axis:90,order:'up',rom:25,lo:0.225,hi:0.75},
+  {id:'bss',axis:90,order:'down',rom:15,lo:1.10,hi:1.50},
+  {id:'hipthrust',axis:90,order:'up',rom:10,lo:0.30,hi:0.60},
+  {id:'ohp',axis:90,order:'up',rom:20,lo:1.45,hi:1.95},
+  {id:'row',axis:90,order:'up',rom:15,lo:0.40,hi:0.80}
+];
+if(!S.exSet||typeof S.exSet!=='object')S.exSet={};
+if(!Array.isArray(S.customEx))S.customEx=[];
+const allEx=()=>EXERCISES.concat(S.customEx);
+function curEx(){return allEx().find(e=>e.id===S.ex)||EXERCISES[0];}
+function exName(e){return e.custom?e.name:t('ex_'+e.id);}
+const AX=()=>{const a=(curEx().axis!=null?curEx().axis:90)*Math.PI/180;return {ux:Math.cos(a),uy:-Math.sin(a),gS:9.81*Math.sin(a)};};
+function snapshotEx(){S.exSet[S.ex]={thresh:S.thresh,ref:S.ref,minROM:S.minROM,load:S.load,extra:S.extra};}
+function loadEx(id){
+  const e=allEx().find(x=>x.id===id)||EXERCISES[0]; S.ex=e.id;
+  const st=S.exSet[e.id]||{};
+  S.thresh=st.thresh!=null?st.thresh:10; S.ref=st.ref||'best'; S.minROM=st.minROM!=null?st.minROM:e.rom;
+  S.load=st.load!=null?st.load:''; S.extra=st.extra!=null?st.extra:'';
+}
+const parseNum=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(n)?n:null;};
+function massKg(){const m=(parseNum(S.load)||0)+(parseNum(S.extra)||0);return m>0&&Math.abs(Math.sin((curEx().axis!=null?curEx().axis:90)*Math.PI/180))>=0.5?m:null;}
+
 /* ---------- settings UI ---------- */
 function bindSettings(){
   $('diam').value=S.diamMM; $('thresh').value=S.thresh; $('threshOut').textContent=S.thresh+' %';
   $('ref').value=S.ref; $('minRom').value=S.minROM; $('rate').value=S.rate;
   $('sound').checked=S.sound; $('voice').checked=S.voice;
-  const save=()=>{store.set('vbt-settings',S);recomputeLoss();drawReps();};
+  const save=()=>{snapshotEx();store.set('vbt-settings',S);recomputeLoss();drawReps();};
   $('diam').addEventListener('change',e=>{const v=parseFloat(e.target.value);if(v>0){S.diamMM=v;save();}});
   if(!Array.isArray(S.presets))S.presets=[];
   const pickDiam=mm=>{S.diamMM=mm;$('diam').value=mm;save();renderPresets();};
@@ -405,6 +493,90 @@ function bindSettings(){
   $('record').addEventListener('change',e=>{S.record=e.target.checked;save();updateSetUI();});
 }
 
+function renderExSel(){
+  const sel=$('exSel');sel.textContent='';
+  allEx().forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=exName(e)+(e.custom?' ('+t('custom')+')':'');sel.appendChild(o);});
+  sel.value=S.ex; $('btnExDel').hidden=!curEx().custom; $('btnExDel').textContent=t('exDel'); $('btnExDel').dataset.armed='0';
+  $('exNote').textContent=t('exNote',exName(curEx()));
+  renderGuide();
+}
+function guideSVG(e){
+  const W=520,H=190,fy=170,sc=62;
+  const lo=e.lo!=null?e.lo:0.6,hi=e.hi!=null?e.hi:1.2,mid=(lo+hi)/2;
+  const vert=Math.abs(Math.sin((e.axis!=null?e.axis:90)*Math.PI/180))>0.5;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+t('guideSum',exName(e))+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="g-arrowhead"/></marker></defs>';
+  /* left panel: from above. bar with plates, phone in line with the bar axis */
+  s+='<text x="10" y="18" class="g-ttl">'+t('gTop')+'</text>';
+  s+='<line x1="40" y1="95" x2="170" y2="95" class="g-line" style="stroke-width:4"/>';
+  s+='<rect x="34" y="68" width="10" height="54" rx="2" class="g-plate"/><rect x="166" y="68" width="10" height="54" rx="2" class="g-plate"/>';
+  s+='<rect x="236" y="85" width="12" height="20" rx="3" class="g-phone"/>';
+  s+='<path d="M236,95 L178,74 M236,95 L178,116" class="g-dash"/>';
+  s+='<line x1="180" y1="140" x2="234" y2="140" class="g-line" marker-start="url(#ah)" marker-end="url(#ah)"/>';
+  s+='<text x="207" y="158" text-anchor="middle" class="g-txt">'+t('gDist')+'</text>';
+  s+='<text x="242" y="78" text-anchor="middle" class="g-txt">'+t('gPhone')+'</text>';
+  /* right panel: height. phone at the middle of the plate path */
+  const X0=300,px=470,Y=h=>fy-h*sc,r=0.225*sc*0.6;
+  s+='<text x="'+X0+'" y="18" class="g-ttl">'+t('gSide')+'</text>';
+  s+='<line x1="'+X0+'" y1="'+fy+'" x2="'+(W-6)+'" y2="'+fy+'" class="g-floor"/>';
+  if(vert){
+    const yl=Y(Math.max(lo,0.12)),yh=Y(hi);
+    s+='<circle cx="'+px+'" cy="'+yl+'" r="'+r+'" class="g-plate2"/><circle cx="'+px+'" cy="'+yh+'" r="'+r+'" class="g-plate"/>';
+    const up=e.order==='up';
+    s+='<line x1="'+(px+r+10)+'" y1="'+(up?yl:yh)+'" x2="'+(px+r+10)+'" y2="'+(up?yh:yl)+'" class="g-arrow" marker-end="url(#ah)"/>';
+    s+='<text x="'+(px+r+10)+'" y="'+(yh-r-10)+'" class="g-txt" text-anchor="end">'+t(up?'gFirstUp':'gFirstDown')+'</text>';
+  } else {
+    const yy=Y(mid);
+    s+='<circle cx="'+(px-50)+'" cy="'+yy+'" r="'+r+'" class="g-plate2"/><circle cx="'+px+'" cy="'+yy+'" r="'+r+'" class="g-plate"/>';
+    s+='<line x1="'+(px-50)+'" y1="'+(yy-r-10)+'" x2="'+px+'" y2="'+(yy-r-10)+'" class="g-arrow" marker-end="url(#ah)"/>';
+  }
+  const ym=Y(mid);
+  s+='<rect x="'+(X0+14)+'" y="'+(ym-10)+'" width="12" height="20" rx="3" class="g-phone"/>';
+  s+='<line x1="'+(X0+28)+'" y1="'+ym+'" x2="'+(px-r-6)+'" y2="'+ym+'" class="g-dash"/>';
+  s+='<line x1="'+(X0+6)+'" y1="'+(ym+12)+'" x2="'+(X0+6)+'" y2="'+(fy-2)+'" class="g-line" marker-end="url(#ah)"/>';
+  if(e.lo!=null)s+='<text x="'+(X0+34)+'" y="'+(ym-8)+'" class="g-txt">≈ '+fmt(Math.round(mid*20)/20,2).replace(/0$/,'')+' m</text>';
+  s+='</svg>';
+  return s;
+}
+function renderGuide(){
+  const e=curEx();
+  $('guideSum').textContent=t('guideSum',exName(e));
+  const mid=e.lo!=null?fmt(Math.round((e.lo+e.hi)/2*20)/20,2).replace(/0$/,''):null;
+  const p=document.createElement('p');p.textContent=(mid?t('guideTxt',mid):t('guideTxtCustom'))+(e.custom?'':' '+t('tip_'+e.id));
+  $('guideBody').innerHTML=guideSVG(e);$('guideBody').appendChild(p);
+}
+function switchEx(id){
+  if(setState==='running')endSet();
+  snapshotEx(); loadEx(id); store.set('vbt-settings',S);
+  $('thresh').value=S.thresh;$('threshOut').textContent=S.thresh+' %';$('ref').value=S.ref;$('minRom').value=S.minROM;
+  $('loadKg').value=S.load;$('extraKg').value=S.extra;
+  clearReps(); kin.reset(); if(setState==='done')setState='idle';
+  renderExSel(); renderHistory(); updateSetUI(); renderReadout();
+}
+function bindExercises(){
+  loadEx(S.ex);
+  $('loadKg').value=S.load;$('extraKg').value=S.extra;
+  const onLoad=()=>{S.load=$('loadKg').value.trim();S.extra=$('extraKg').value.trim();snapshotEx();store.set('vbt-settings',S);renderReadout();renderTable();};
+  $('loadKg').addEventListener('input',onLoad);$('extraKg').addEventListener('input',onLoad);
+  $('exSel').addEventListener('change',e=>switchEx(e.target.value));
+  $('btnExAdd').addEventListener('click',()=>{$('exForm').hidden=false;$('exErr').hidden=true;$('exName').focus();});
+  $('exCancel').addEventListener('click',()=>{$('exForm').hidden=true;});
+  $('exDir').addEventListener('change',e=>{$('exAngleWrap').hidden=e.target.value!=='angle';});
+  $('exSave').addEventListener('click',()=>{
+    const name=$('exName').value.trim(),dv=$('exDir').value,ang=dv==='angle'?parseNum($('exAngle').value):+dv,rom=parseNum($('exRom').value);
+    if(!name||ang==null||ang<0||ang>180||rom==null||rom<3||rom>100){$('exErr').textContent=t('exErr');$('exErr').hidden=false;return;}
+    const id='c'+Date.now().toString(36);
+    S.customEx.push({id,custom:true,name,axis:ang,order:$('exOrder').value,rom});
+    $('exForm').hidden=true;$('exName').value='';
+    switchEx(id);
+  });
+  $('btnExDel').addEventListener('click',()=>{
+    const b=$('btnExDel');
+    if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent=t('exDelConfirm');setTimeout(()=>{if(b.isConnected){b.dataset.armed='0';b.textContent=t('exDel');}},4000);return;}
+    const id=S.ex;S.customEx=S.customEx.filter(e=>e.id!==id);delete S.exSet[id];S.ex='bench';
+    loadEx('bench');store.set('vbt-settings',S);switchEx('bench');
+  });
+}
 function renderPresets(){
   const box=$('presets'); if(!box)return; box.textContent='';
   const cur=parseFloat($('diam').value)||S.diamMM;
@@ -498,6 +670,7 @@ $('file').addEventListener('change',e=>{
   e.target.value='';
 });
 function onSourceReady(){
+  $('guide').open=false;
   $('placeholder').hidden=true; calib=null; tracker=null; trail=[]; resetSet();
   $('btnMark').disabled=false; $('btnPlay').hidden=(mode!=='file'); $('btnPlay').disabled=true;
   chip('idle');
@@ -572,7 +745,8 @@ function recFrame(tm,r){
   if(!rec||setState!=='running')return;
   if(rec.t0==null)rec.t0=mode==='live'?tm:0;
   const mpp=calib?S.diamMM/1000/calib.dpx:null;
-  rec.frames.push([+(tm-(mode==='live'?rec.t0:0)).toFixed(4),r.ok?+r.x.toFixed(2):'',r.ok?+r.y.toFixed(2):'',r.ok&&mpp?+((calib.cy-r.y)*mpp).toFixed(4):'',r.ok?+kin.v.toFixed(4):'',+(r.score||0).toFixed(3),r.ok?1:0]);
+  const ax=AX();
+  rec.frames.push([+(tm-(mode==='live'?rec.t0:0)).toFixed(4),r.ok?+r.x.toFixed(2):'',r.ok?+r.y.toFixed(2):'',r.ok&&mpp?+((calib.cy-r.y)*mpp).toFixed(4):'',r.ok&&mpp?+(((r.x-calib.cx)*ax.ux+(r.y-calib.cy)*ax.uy)*mpp).toFixed(4):'',r.ok?+kin.v.toFixed(4):'',+(r.score||0).toFixed(3),r.ok?1:0]);
 }
 function recStop(nr){
   const R=rec; rec=null; if(!R)return;
@@ -581,12 +755,14 @@ function recStop(nr){
       userAgent:navigator.userAgent,videoMime:video?R.mime:null,
       camera:R.trackSettings,frameSize:[videoEl().videoWidth,videoEl().videoHeight],
       calibration:calib?{centerPx:[+calib.cx.toFixed(2),+calib.cy.toFixed(2)],diameterPx:+calib.dpx.toFixed(2),diameterMm:S.diamMM,metersPerPixel:+(S.diamMM/1000/calib.dpx).toFixed(6)}:null,
+      exercise:{id:S.ex,name:exName(curEx()),axisDeg:curEx().axis,order:curEx().order},
+      load:{loadKg:parseNum(S.load),extraKg:parseNum(S.extra),massKg:massKg()},
       settings:{thresholdPct:S.thresh,reference:S.ref,minRomCm:S.minROM,lang:L},
       signalRep:stopAt!=null?stopAt+1:null,
       processedFps:R.frames.length>1?+((R.frames.length-1)/Math.max(1e-6,R.frames[R.frames.length-1][0]-R.frames[0][0])).toFixed(1):null,
-      reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
-      framesColumns:['t_s','x_px','y_px','y_m','v_m_s','match_score','tracked']};
-    const item={id:R.startedAt.getTime(),nr,started:R.startedAt.toISOString(),reps:reps.filter(r=>r.valid).length,mime:video?R.mime:'',size:video?video.size:0,meta,frames:R.frames,video:video||null};
+      reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),mpv:r.mpv!=null?+r.mpv.toFixed(4):null,meanForceN:massKg()&&r.ga!=null?+(massKg()*r.ga).toFixed(1):null,meanPowerW:massKg()&&r.gav!=null?+(massKg()*r.gav).toFixed(1):null,peakPowerW:massKg()&&r.gavMax!=null?+(massKg()*r.gavMax).toFixed(1):null,peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
+      framesColumns:['t_s','x_px','y_px','y_m','s_m','v_m_s','match_score','tracked']};
+    const item={id:R.startedAt.getTime(),nr,ex:S.ex,exName:exName(curEx()),started:R.startedAt.toISOString(),reps:reps.filter(r=>r.valid).length,mime:video?R.mime:'',size:video?video.size:0,meta,frames:R.frames,video:video||null};
     dbPut(item).then(renderRecs).catch(()=>{$('recMsg').textContent=t('recStoreFail');});
   };
   if(R.mr&&R.mr.state!=='inactive'){
@@ -603,7 +779,7 @@ const dbPut=item=>tx('readwrite',st=>st.put(item));
 const dbDel=id=>tx('readwrite',st=>st.delete(id));
 const dbGet=id=>tx('readonly',st=>st.get(id));
 function dbList(){return db().then(d=>new Promise((res,rej)=>{const out=[];const x=d.transaction('recs','readonly');const c=x.objectStore('recs').openCursor();
-  c.onsuccess=()=>{const cur=c.result;if(cur){const v=cur.value;out.push({id:v.id,nr:v.nr,started:v.started,reps:v.reps,mime:v.mime,size:v.size});cur.continue();}};
+  c.onsuccess=()=>{const cur=c.result;if(cur){const v=cur.value;out.push({id:v.id,nr:v.nr,ex:v.ex,exName:v.exName,started:v.started,reps:v.reps,mime:v.mime,size:v.size});cur.continue();}};
   x.oncomplete=()=>res(out);x.onerror=()=>rej(x.error);}));}
 /* minimal ZIP writer (stored, no compression) */
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
@@ -625,14 +801,14 @@ function zip(files){
 }
 function stamp(iso){const d=new Date(iso),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds());}
 function recFiles(it){
-  const base='vbt_satz'+it.nr+'_'+stamp(it.started);
+  const base='vbt_'+String(it.exName||'satz').toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'_'+it.nr+'_'+stamp(it.started);
   const enc=new TextEncoder();
   const frames=[it.meta.framesColumns.join(','),...it.frames.map(r=>r.join(','))].join('\n');
   const repsCsv=['n,mcv_m_s,peak_m_s,rom_m,dur_s,ref_m_s,loss_pct,valid,after_signal',...it.meta.reps.map(r=>[r.n,r.mcv,r.peak,r.romM,r.durS,r.ref??'',r.lossPct??'',r.valid?1:0,r.afterSignal?1:0].join(','))].join('\n');
   const readme=['VBT-Tracker '+it.meta.version+' – '+it.started,'',
     'frames.csv: one row per analysed camera frame.',' t_s = seconds since set start (live: since recording start; video file: media time).',
-    ' x_px,y_px = plate centre in video pixels (y grows downward). y_m = height above calibration point in metres (up = positive).',
-    ' v_m_s = smoothed vertical velocity used by the app. match_score = tracker confidence (0..1). tracked = 1 if the plate was found.',
+    ' x_px,y_px = plate centre in video pixels (y grows downward). y_m = height above calibration point in metres (up = positive). s_m = position along the exercise axis in metres.',
+    ' v_m_s = smoothed velocity along the exercise axis used by the app. match_score = tracker confidence (0..1). tracked = 1 if the plate was found.',
     'reps.csv: one row per detected rep, values as shown in the app.','meta.json: camera, calibration, settings, reps.',
     '','Sync with a reference system (Qualisys, accelerometer, transducer): match reps by order, or align a distinct',
     'movement (e.g. a quick bar lift at the start) in both recordings. Phone and reference clocks are not synchronised.'].join('\n');
@@ -654,7 +830,7 @@ function renderRecs(){
     if(!list.length){const p=document.createElement('p');p.className='muted';p.textContent=t('recEmpty');box.appendChild(p);return;}
     list.sort((a,b)=>b.id-a.id).forEach(it=>{
       const row=document.createElement('div');row.className='recrow';
-      const m=document.createElement('div');m.className='rmeta';const b=document.createElement('b');b.textContent=t('recRow',it.nr);
+      const m=document.createElement('div');m.className='rmeta';const b=document.createElement('b');b.textContent=(it.exName?it.exName+' · ':'')+t('recRow',it.nr);
       const d=new Date(it.started),p=n=>String(n).padStart(2,'0');
       const sp=document.createElement('span');sp.textContent=t('recInfo',p(d.getDate())+'.'+p(d.getMonth()+1)+'. '+p(d.getHours())+':'+p(d.getMinutes()),it.reps,fmtMB(it.size));m.append(b,sp);
       const bt=document.createElement('div');bt.className='rbtns';
@@ -687,7 +863,7 @@ function updateSetUI(){
   const b=$('btnSet'),run=setState==='running';
   b.disabled=!tracker; b.dataset.s=setState; b.textContent=t(run?'endSet':'startSet');
   $('setDot').dataset.s=setState;
-  const nr=history.length+1;
+  const nr=exHistory().length+1;
   const title=run?t('setRunning',nr):(setState==='done'?t('setDone',history.length):t('noSet'));
   $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title+(run&&rec?'<span class="recdot">'+t('recOn')+'</span>':'');
   let sub;
@@ -714,16 +890,18 @@ function endSet(){
   if(setState!=='running')return;
   setState='done'; $('alarm').hidden=true;
   if(mode==='file')video.pause();
-  recStop(history.length+(reps.length?1:0));
+  recStop(exHistory().length+(reps.length?1:0));
   if(reps.length){
     const valid=reps.filter(r=>r.valid), lastV=valid[valid.length-1];
     const t=setStartedAt||new Date(),pad=n=>String(n).padStart(2,'0');
-    history.push({nr:history.length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
+    const mk=massKg();
+    history.push({ex:S.ex,exName:exName(curEx()),mass:mk,load:parseNum(S.load),extra:parseNum(S.extra),nr:exHistory().length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
       thr:S.thresh,reps:valid.length,signal:stopAt!=null?stopAt+1:null,best:valid.length?Math.max(...valid.map(r=>r.mcv)):null,
       last:lastV?lastV.mcv:null,lossEnd:lastV&&lastV.loss!=null?lastV.loss:null,
       stopMcv:stopAt!=null?reps[stopAt].mcv:(lastV?lastV.mcv:null),stopLoss:stopAt!=null?reps[stopAt].loss:(lastV&&lastV.loss!=null?lastV.loss:null),
-      data:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(3),peak:+r.peak.toFixed(3),rom:+(r.rom*100).toFixed(1),dur:+r.dur.toFixed(3),ref:r.ref?+r.ref.toFixed(3):null,loss:r.loss!=null?+r.loss.toFixed(1):null,valid:r.valid,after:!!r.after}))});
-    if(history.length>200)history=history.slice(-200);
+      data:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(3),mpv:r.mpv!=null?+r.mpv.toFixed(3):null,peak:+r.peak.toFixed(3),rom:+(r.rom*100).toFixed(1),dur:+r.dur.toFixed(3),ref:r.ref?+r.ref.toFixed(3):null,loss:r.loss!=null?+r.loss.toFixed(1):null,valid:r.valid,after:!!r.after,
+        F:mk&&r.ga!=null?Math.round(mk*r.ga):null,P:mk&&r.gav!=null?Math.round(mk*r.gav):null,Pmax:mk&&r.gavMax!=null?Math.round(mk*r.gavMax):null}))});
+    if(history.length>500)history=history.slice(-500);
     store.set(HKEY,history);
   }
   chip('track'); beep(660,0.12,0); updateSetUI(); renderHistory();
@@ -742,25 +920,27 @@ function stopOf(h){
   if(r)return {mcv:r.mcv,loss:r.loss};
   return {mcv:h.stopMcv!==undefined?h.stopMcv:h.last,loss:h.stopLoss!==undefined?h.stopLoss:h.lossEnd};
 }
+function exHistory(){return history.filter(h=>(h.ex||'bench')===S.ex);}
 function renderHistory(){
-  const tb=$('hbody');
-  if(!history.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
-  tb.innerHTML=history.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(stopOf(h).mcv)+'</td><td>'+(stopOf(h).loss!=null?'−'+fmt(stopOf(h).loss,1)+' %':'–')+'</td></tr>').join('');
+  const tb=$('hbody'),hs=exHistory();
+  if(!hs.length){tb.innerHTML='<tr><td colspan="8" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
+  tb.innerHTML=hs.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+(h.mass?fmt(h.mass,h.mass%1?1:0):'–')+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(stopOf(h).mcv)+'</td><td>'+(stopOf(h).loss!=null?'−'+fmt(stopOf(h).loss,1)+' %':'–')+'</td></tr>').join('');
 }
 $('btnCopyAll').addEventListener('click',()=>{
   const m=t=>{$('histMsg').textContent=t;};
-  if(!history.length){m(t('noSetsSaved'));return;}
-  const head='satz;datum;zeit;schwelle_prozent;wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;status';
-  const rows=[];history.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.nr,h.date,h.time,h.thr,r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
+  const hs=exHistory();
+  if(!hs.length){m(t('noSetsSaved'));return;}
+  const head='uebung;satz;datum;zeit;masse_kg;schwelle_prozent;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
+  const rows=[];hs.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.exName||exName(curEx()),h.nr,h.date,h.time,h.mass?fmt(h.mass,1):'',h.thr,r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),r.F==null?'':r.F,r.P==null?'':r.P,r.Pmax==null?'':r.Pmax,!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
   const txt=[head,...rows].join('\n');
-  try{navigator.clipboard.writeText(txt).then(()=>m(t('copiedSets',history.length)),()=>m(t('copyDenied')));}catch(e){m(t('copyDenied'));}
+  try{navigator.clipboard.writeText(txt).then(()=>m(t('copiedSets',hs.length)),()=>m(t('copyDenied')));}catch(e){m(t('copyDenied'));}
 });
 let clearArmed=null;
 $('btnClear').addEventListener('click',()=>{
   const b=$('btnClear');
   if(!clearArmed){b.textContent=t('clearConfirm');clearArmed=setTimeout(()=>{b.textContent=t('clear');clearArmed=null;},4000);return;}
   clearTimeout(clearArmed);clearArmed=null;b.textContent=t('clear');
-  history=[];store.set(HKEY,history);renderHistory();updateSetUI();$('histMsg').textContent=t('cleared');
+  history=history.filter(h=>(h.ex||'bench')!==S.ex);store.set(HKEY,history);renderHistory();updateSetUI();$('histMsg').textContent=t('cleared');
 });
 
 /* ---------- template tracker (normalized cross-correlation) ---------- */
@@ -830,9 +1010,9 @@ const VON=0.06, VEND=0.025;
 const kin={
   buf:[],hist:[],seg:[],state:'idle',minY:0,minT:0,maxY:0,maxT:0,peak:0,lowSince:null,v:0,
   reset(){this.buf=[];this.hist=[];this.seg=[];this.state='idle';this.lowSince=null;this.v=0;},
-  push(t,yPx){
+  push(t,xPx,yPx){
     if(!calib)return;
-    const mpp=S.diamMM/1000/calib.dpx, y=(calib.cy-yPx)*mpp; // meters, up = positive
+    const ax=AX(), mpp=S.diamMM/1000/calib.dpx, y=((xPx-calib.cx)*ax.ux+(yPx-calib.cy)*ax.uy)*mpp; // metres along the exercise axis
     const b=this.buf; b.push({t,y}); while(b.length&&t-b[0].t>0.6)b.shift();
     const n=b.length,k=Math.min(3,n);let ys=0,ts=0;for(let i=n-k;i<n;i++){ys+=b[i].y;ts+=b[i].t;}ys/=k;ts/=k;
     let m=0,sx=0,sy=0,sxx=0,sxy=0;
@@ -844,7 +1024,14 @@ const kin={
   },
   step(ts,y,v){
     switch(this.state){
-      case 'idle': if(v<-VON){this.state='down';this.minY=y;this.minT=ts;this.seg=[{t:ts,y}];} break;
+      case 'idle':
+        if(v<-VON){this.state='down';this.minY=y;this.minT=ts;this.seg=[{t:ts,y}];}
+        else if(curEx().order==='up'&&v>VON){ /* concentric-first exercises start straight from rest */
+          const b=this.buf;let mi=0;for(let i=1;i<b.length;i++)if(b[i].y<b[mi].y)mi=i;
+          this.seg=b.map(p=>({t:p.t,y:p.y}));this.minY=b[mi].y;this.minT=b[mi].t;
+          this.state='up';this.maxY=y;this.maxT=ts;this.peak=v;this.lowSince=null;
+        }
+        break;
       case 'down':
         if(y<this.minY){this.minY=y;this.minT=ts;}
         if(v>VON&&y>this.minY+0.01){this.state='up';this.maxY=y;this.maxT=ts;this.peak=v;this.lowSince=null;}
@@ -880,7 +1067,31 @@ const kin={
     const vS=slope(i,i+4),vE=slope(j-4,j);
     const cS=vS>0.05?Math.min(0.12,eps/vS):0, cE=vE>0.05?Math.min(0.12,eps/vE):0;
     const dur=(tE+cE)-(tS-cS); if(!(dur>0.08))return;
-    onRep({mcv:rom/dur,peak:this.peak,rom,dur});
+    onRep(Object.assign({mcv:rom/dur,peak:this.peak,rom,dur},this.metrics(tS-cS,tE+cE)));
+  },
+  /* Force and power per unit mass over the concentric phase: v and a from the smoothed path.
+     ga  = mean (g·sinθ + a) over the propulsive phase  → mean propulsive force = m·ga
+     gav = mean (g·sinθ + a)·v over the concentric phase → mean power = m·gav
+     The propulsive phase ends when the bar decelerates faster than gravity (Sánchez-Medina et al. 2010). */
+  metrics(t0,t1){
+    const g=this.seg.filter(p=>p.t>=t0-0.12&&p.t<=t1+0.12),n=g.length; if(n<7)return {};
+    const v=new Array(n).fill(0),a=new Array(n).fill(0);
+    for(let i=1;i<n-1;i++)v[i]=(g[i+1].y-g[i-1].y)/((g[i+1].t-g[i-1].t)||1e-6);
+    v[0]=v[1];v[n-1]=v[n-2];
+    const sm=(arr,k)=>arr.map((_,i)=>{let s=0,c=0;for(let j=Math.max(0,i-k);j<=Math.min(arr.length-1,i+k);j++){s+=arr[j];c++;}return s/c;});
+    const vs=sm(v,1);
+    for(let i=1;i<n-1;i++)a[i]=(vs[i+1]-vs[i-1])/((g[i+1].t-g[i-1].t)||1e-6);
+    a[0]=a[1];a[n-1]=a[n-2];
+    const as=sm(a,2), gS=AX().gS;
+    const idx=[];for(let i=0;i<n;i++)if(g[i].t>=t0&&g[i].t<=t1)idx.push(i); if(idx.length<4)return {};
+    let ipk=idx[0];idx.forEach(i=>{if(vs[i]>vs[ipk])ipk=i;});
+    const lim=Math.abs(gS)>1?-gS:0;let iend=idx[idx.length-1];
+    for(const i of idx){if(i>ipk&&as[i]<lim){iend=i;break;}}
+    const prop=idx.filter(i=>i<=iend);
+    const mean=f=>{let s=0;for(const i of f.idx)s+=f.fn(i);return s/f.idx.length;};
+    const ga=mean({idx:prop,fn:i=>gS+as[i]}),mpv=mean({idx:prop,fn:i=>vs[i]});
+    const gav=mean({idx,fn:i=>(gS+as[i])*vs[i]});let gavMax=-1e9;idx.forEach(i=>{const pw=(gS+as[i])*vs[i];if(pw>gavMax)gavMax=pw;});
+    return {ga,gav,gavMax,mpv};
   }
 };
 
@@ -948,7 +1159,7 @@ function onFrame(now,meta){
     lastT=tm;
     fpsMon(tm);
     const r=tracker.update();
-    if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();kin.push(tm,r.y);recFrame(tm,r);
+    if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();kin.push(tm,r.x,r.y);recFrame(tm,r);
       if($('chip').dataset.s!=='alarm')chip('track');}
     else if($('chip').dataset.s!=='alarm'){chip('lost');hint('h_lost');}
     if(!r.ok)recFrame(tm,r);
@@ -1048,19 +1259,25 @@ function renderReadout(){
   $('refVal').textContent=t('reference',f&&f.ref?fmt(f.ref)+' m/s':'–');
   $('repVal').textContent=reps.length;
   $('romVal').textContent=sig?t('afterSig',reps.length-1-stopAt):'ROM: '+(f?fmt(f.rom*100,0)+' cm':'–');
+  const m=massKg(),fc=$('forceCell');fc.hidden=!m;$('readout').dataset.f=m?'1':'0';
+  if(m){$('forceVal').innerHTML=(f&&f.ga!=null?fmtInt(m*f.ga):'–')+'<small>N</small>';
+    $('powVal').textContent=f&&f.gav!=null?t('powSub',fmtInt(m*f.gav),fmtInt(m*f.gavMax)):'– W';}
 }
+function fmtInt(v){if(v==null||!isFinite(v))return '–';const s=String(Math.round(v));return s.replace(/\B(?=(\d{3})+(?!\d))/g,L==='en'?',':'.');}
 function renderTable(){
   const tb=$('tbody');
-  if(!reps.length){tb.innerHTML='<tr><td colspan="7" style="text-align:left" class="muted">'+t('noReps')+'</td></tr>';return;}
+  if(!reps.length){tb.innerHTML='<tr><td colspan="9" style="text-align:left" class="muted">'+t('noReps')+'</td></tr>';return;}
+  const mk=massKg();
   tb.innerHTML=reps.map((r,i)=>{
     const isStop=i===stopAt;
     let v=!r.valid?'<span class="muted">'+t('partial')+'</span>':(i===0?'–':'−'+fmt(r.loss,1)+' %');
     if(isStop)v+=' <span class="tag">'+t('tagSignal')+'</span>';
-    return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td></tr>';}).join('');
+    return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td><td>'+(mk&&r.ga!=null?fmtInt(mk*r.ga):'–')+'</td><td>'+(mk&&r.gav!=null?fmtInt(mk*r.gav):'–')+'</td></tr>';}).join('');
 }
 $('btnCopy').addEventListener('click',()=>{
-  const head='wdh;mcv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;status';
-  const rows=reps.map((r,i)=>[r.n,fmt(r.mcv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
+  const head='uebung;masse_kg;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
+  const mk=massKg(),nm=exName(curEx());
+  const rows=reps.map((r,i)=>[nm,mk==null?'':fmt(mk,1),r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),mk&&r.ga!=null?Math.round(mk*r.ga):'',mk&&r.gav!=null?Math.round(mk*r.gav):'',mk&&r.gavMax!=null?Math.round(mk*r.gavMax):'',!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
   const txt=[head,...rows].join('\n');
   const done=m=>{$('copyMsg').textContent=m;};
   if(!reps.length){done(t('nothingToCopy'));return;}
@@ -1077,8 +1294,8 @@ function setLang(l){
   if(stopAt!=null&&reps[stopAt]){const k=reps.length-1,r=reps[k];$('alarmSub').textContent=k>stopAt?t('a_after',r.n,fmt(r.mcv),fmt(r.loss,0)):t('a_first',r.n,fmt(r.mcv),fmt(r.loss,0),fmt(r.ref));}
   drawSpark(); drawReps();
 }
-$('lang').addEventListener('change',e=>{setLang(e.target.value);renderRecs();});
-bindSettings(); applyStatic(); chip('idle'); renderReadout(); renderTable(); renderHistory(); updateSetUI(); renderRecs();
+$('lang').addEventListener('change',e=>{setLang(e.target.value);renderRecs();renderExSel();});
+bindExercises(); bindSettings(); applyStatic(); renderExSel(); $('guide').open=true; chip('idle'); renderReadout(); renderTable(); renderHistory(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
