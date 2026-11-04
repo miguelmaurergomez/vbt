@@ -66,7 +66,9 @@ h2{font-family:var(--font-display);font-weight:600;font-size:15px;text-transform
 .loadbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
 .lf{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted);flex:0 1 150px;min-width:0}
 .lf input{font:600 17px var(--font-body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;font-variant-numeric:tabular-nums}
-.lhelp{flex:1 1 180px;font-size:13px;color:var(--muted);padding-bottom:6px}
+.lhelp{flex:1 1 100%;font-size:13px;color:var(--muted)}
+.lcheck{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;min-height:44px}
+.lcheck input{width:20px;height:20px;accent-color:var(--accent)}
 .exnote{flex-basis:100%;font-size:13px;color:var(--muted);grid-column:1/-1;margin-bottom:-6px}
 .reclist{display:flex;flex-direction:column}
 .recrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -200,6 +202,7 @@ tr.after td{color:var(--muted)}
         <select id="exOrder"><option value="down" data-i18n="orderDown">Erst absenken, dann drücken</option><option value="up" data-i18n="orderUp">Erst hoch, dann absenken</option></select></label>
       <label class="ef"><span data-i18n="exRomLabel">Mindestweg (cm)</span>
         <input id="exRom" type="text" inputmode="decimal" autocomplete="off" value="15"></label>
+      <label class="check lcheck"><input type="checkbox" id="exBody"> <span data-i18n="exBodyLabel">Körper bewegt sich mit (Körpergewicht einrechnen)</span></label>
       <div class="efb"><button type="button" class="primary" id="exSave" data-i18n="pSave">Speichern</button><button type="button" id="exCancel" data-i18n="pCancel">Abbrechen</button></div>
       <div class="perr" id="exErr" hidden></div>
     </div>
@@ -232,9 +235,10 @@ tr.after td{color:var(--muted)}
       <div class="setstat"><b id="setTitle"><span class="dot" id="setDot"></span>Kein Satz aktiv</b><span id="setSub">Erst Kamera starten und Platte markieren.</span></div>
     </div>
     <div class="loadbar">
-      <label class="lf"><span data-i18n="loadLabel">Hantel (kg)</span><input id="loadKg" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="loadPh" placeholder="z. B. 20"></label>
-      <label class="lf"><span data-i18n="extraLabel">Zusatzgewicht (kg)</span><input id="extraKg" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="extraPh" placeholder="z. B. 40"></label>
-      <span class="lhelp" data-i18n="loadHelp">Optional. Gewicht der Stange und der aufgelegten Scheiben. Daraus berechnet die App Kraft und Leistung.</span>
+      <label class="lf"><span data-i18n="loadLabel">Trainingsgewicht (kg)</span><input id="loadKg" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="loadPh" placeholder="z. B. 60"></label>
+      <label class="lf" id="bodyWrap"><span data-i18n="bodyLabel">Körpergewicht (kg)</span><input id="bodyKg" type="text" inputmode="decimal" autocomplete="off" data-i18n-ph="bodyPh" placeholder="z. B. 80"></label>
+      <label class="check lcheck"><input type="checkbox" id="bodyOn"> <span data-i18n="bodyOn">Körpergewicht einrechnen</span></label>
+      <span class="lhelp" data-i18n="loadHelp">Optional. Trainingsgewicht = Stange mit Scheiben. Bei Übungen, bei denen sich der Körper mitbewegt (z. B. Kniebeuge), das Körpergewicht einrechnen. Daraus berechnet die App Kraft und Leistung.</span>
     </div>
   </section>
 
@@ -339,11 +343,11 @@ tr.after td{color:var(--muted)}
 const $ = id => document.getElementById(id);
 const video=$('video'), overlay=$('overlay'), octx=overlay.getContext('2d');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const S=Object.assign({ex:'bench',exSet:{},customEx:[],load:'',extra:'',facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,record:false,rate:'1'},store.get('vbt-settings',{}));
+const S=Object.assign({ex:'bench',exSet:{},customEx:[],load:'',bodyKg:'',bodyOn:false,facing:'environment',diamMM:450,thresh:10,ref:'best',minROM:15,sound:true,voice:false,record:false,rate:'1'},store.get('vbt-settings',{}));
 const fmt=(v,d=2)=>(v==null||!isFinite(v))?'–':(L==='en'?v.toFixed(d):v.toFixed(d).replace('.',','));
 /* ---------- languages ---------- */
 const I18N={
-de:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Übung',exAdd:'+ Eigene Übung',exDel:'Übung löschen',exDelConfirm:'Wirklich löschen?',exNamePh:'Name der Übung, z. B. Landmine Press',exDirLabel:'Richtung',dirUp:'Senkrecht (nach oben)',dirRight:'Waagrecht nach rechts',dirLeft:'Waagrecht nach links',dirAngle:'Schräg: Winkel eingeben',exAngleLabel:'Winkel in Grad (0 = nach rechts, 90 = nach oben, 180 = nach links)',exOrderLabel:'Ablauf',orderDown:'Erst absenken, dann drücken',orderUp:'Erst hoch, dann absenken',exRomLabel:'Mindestweg (cm)',exErr:'Bitte einen Namen, einen Winkel zwischen 0 und 180 und einen Mindestweg zwischen 3 und 100 cm eingeben.',exNote:'Diese Einstellungen gelten für: {0}',custom:'eigene',ex_bench:'Bankdrücken',ex_squat:'Kniebeuge',ex_deadlift:'Kreuzheben',ex_bss:'Bulgarian Split Squat',ex_hipthrust:'Hip Thrust',ex_ohp:'Schulterdrücken',ex_row:'Rudern vorgebeugt',guideSum:'Kamera-Aufbau: {0}',gTop:'Von oben',gSide:'Höhe',gDist:'1,5–3 m',gPhone:'Handy',gFirstDown:'zuerst ↓',gFirstUp:'zuerst ↑',guideTxt:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf etwa {0} m Höhe (bei ca. 1,80 m Körpergröße). Die Scheibe muss während der ganzen Bewegung im Bild sein.',guideTxtCustom:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf Höhe der Mitte des Bewegungswegs. Die Scheibe muss während der ganzen Bewegung im Bild sein.',tip_bench:'Arme und Hantelablage dürfen die Scheibe nicht verdecken.',tip_squat:'Im Rack darauf achten, dass die Ständer die Scheibe nicht verdecken.',tip_deadlift:'Die Scheibe startet am Boden, der untere Rand muss im Bild sein.',tip_bss:'Mit Langhantel. Kurzhanteln gehen nur mit Scheiben oder einer Markierung.',tip_hipthrust:'Der Weg ist kurz, der Mindestweg steht deshalb auf 10 cm.',tip_ohp:'Die Scheibe muss auch ganz oben im Bild sein, Handy notfalls weiter weg.',tip_row:'Oberkörper und Arme dürfen die Scheibe nicht verdecken.',loadLabel:'Hantel (kg)',loadPh:'z. B. 20',extraLabel:'Zusatzgewicht (kg)',extraPh:'z. B. 40',loadHelp:'Optional. Gewicht der Stange und der aufgelegten Scheiben. Daraus berechnet die App Kraft und Leistung.',forceLab:'Kraft · Leistung',powSub:'{0} W · max {1} W',subtitle:'Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust',langLabel:'Sprache',
+de:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Übung',exAdd:'+ Eigene Übung',exDel:'Übung löschen',exDelConfirm:'Wirklich löschen?',exNamePh:'Name der Übung, z. B. Landmine Press',exDirLabel:'Richtung',dirUp:'Senkrecht (nach oben)',dirRight:'Waagrecht nach rechts',dirLeft:'Waagrecht nach links',dirAngle:'Schräg: Winkel eingeben',exAngleLabel:'Winkel in Grad (0 = nach rechts, 90 = nach oben, 180 = nach links)',exOrderLabel:'Ablauf',orderDown:'Erst absenken, dann drücken',orderUp:'Erst hoch, dann absenken',exRomLabel:'Mindestweg (cm)',exErr:'Bitte einen Namen, einen Winkel zwischen 0 und 180 und einen Mindestweg zwischen 3 und 100 cm eingeben.',exNote:'Diese Einstellungen gelten für: {0}',custom:'eigene',ex_bench:'Bankdrücken',ex_squat:'Kniebeuge',ex_deadlift:'Kreuzheben',ex_bss:'Bulgarian Split Squat',ex_hipthrust:'Hip Thrust',ex_ohp:'Schulterdrücken',ex_row:'Rudern vorgebeugt',guideSum:'Kamera-Aufbau: {0}',gTop:'Von oben',gSide:'Höhe',gDist:'1,5–3 m',gPhone:'Handy',gFirstDown:'zuerst ↓',gFirstUp:'zuerst ↑',guideTxt:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf etwa {0} m Höhe (bei ca. 1,80 m Körpergröße). Die Scheibe muss während der ganzen Bewegung im Bild sein.',guideTxtCustom:'Handy fest und gerade in Verlängerung der Stange, 1,5–3 m entfernt, auf Höhe der Mitte des Bewegungswegs. Die Scheibe muss während der ganzen Bewegung im Bild sein.',tip_bench:'Arme und Hantelablage dürfen die Scheibe nicht verdecken.',tip_squat:'Im Rack darauf achten, dass die Ständer die Scheibe nicht verdecken.',tip_deadlift:'Die Scheibe startet am Boden, der untere Rand muss im Bild sein.',tip_bss:'Mit Langhantel. Kurzhanteln gehen nur mit Scheiben oder einer Markierung.',tip_hipthrust:'Der Weg ist kurz, der Mindestweg steht deshalb auf 10 cm.',tip_ohp:'Die Scheibe muss auch ganz oben im Bild sein, Handy notfalls weiter weg.',tip_row:'Oberkörper und Arme dürfen die Scheibe nicht verdecken.',loadLabel:'Trainingsgewicht (kg)',loadPh:'z. B. 60',bodyLabel:'Körpergewicht (kg)',bodyPh:'z. B. 80',bodyOn:'Körpergewicht einrechnen',exBodyLabel:'Körper bewegt sich mit (Körpergewicht einrechnen)',loadHelp:'Optional. Trainingsgewicht = Stange mit Scheiben. Bei Übungen, bei denen sich der Körper mitbewegt (z. B. Kniebeuge), das Körpergewicht einrechnen. Daraus berechnet die App Kraft und Leistung.',forceLab:'Kraft · Leistung',powSub:'{0} W · max {1} W',subtitle:'Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust',langLabel:'Sprache',
 chip_idle:'Bereit',chip_track:'Verfolgt',chip_lost:'Verloren',chip_mark:'Markieren',chip_alarm:'Signal',
 howTitle:"So geht's",how1:'Übung wählen und das Handy wie unter „Kamera-Aufbau“ (weiter unten) hinstellen.',how2:'Kamera starten oder ein Video wählen.',how3:'„Platte markieren“: oberen und unteren Rand antippen.',how4:'„Satz starten“ tippen und drücken. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.',how5:'Nach dem Ablegen „Satz beenden“ tippen.',
 alarmTitle:'SIGNAL: SATZ BEENDEN',endSet:'Satz beenden',goOn:'Weiter messen',startCam:'Kamera starten',toSelfie:'Zur Selfie-Kamera',toBack:'Zur Rückkamera',camSelfie:'Selfie-Kamera',camBack:'Rückkamera',
@@ -364,7 +368,7 @@ h_videoLoaded:'Video geladen. Spule zur Startposition, markiere die Platte, dann
 h_markedFile:'Markiert ({0} px = {1} mm). Jetzt „Auswerten“.',h_markedLive:'Markiert. Tippe „Satz starten“, wenn du bereit bist.',h_readFail:'Konnte das Bild nicht lesen. Bitte nochmal markieren.',h_videoEnd:'Video zu Ende. Satz beendet, Ergebnis siehe unten.',
 h_doneMove:'Satz ist beendet, es wird nichts gezählt. Für einen neuen Satz „Satz starten“.',h_idleMove:'Bewegung erkannt, aber kein Satz aktiv. Tippe „Satz starten“.',h_lost:'Platte verloren. Kurz ruhig halten oder neu markieren.',
 a_after:'Wdh. {0} nach dem Signal: {1} m/s · −{2} %',a_first:'Wdh. {0}: {1} m/s · −{2} % zur Referenz {3} m/s. Weitere Wdh. werden markiert, bis du beendest.',v_stop:'Stopp',v_dec:' Komma ',speech:'de-DE',recLabel:'Video und Rohdaten aufnehmen',recHelp:'Für Validierung und spätere Neuauswertung. Jeder Satz wird unter „Aufnahmen“ gespeichert.',recTitle:'Aufnahmen',recNote:'Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.',recEmpty:'Noch keine Aufnahmen. Schalte unter Einstellungen „Video und Rohdaten aufnehmen“ ein.',recRow:'Satz {0}',recInfo:'{0} · {1} Wdh. · {2}',recDataOnly:'nur Rohdaten',recSave:'Speichern (ZIP)',recShare:'Teilen',recDel:'×',recDelConfirm:'Löschen?',recSaved:'Gespeichert: {0}',recShareFail:'Teilen geht auf diesem Gerät nicht. Nimm „Speichern“.',recBusy:'Wird vorbereitet …',recNoVideo:'Video-Aufnahme wird von diesem Browser nicht unterstützt. Es werden nur Rohdaten gespeichert.',recStoreFail:'Aufnahme konnte nicht gespeichert werden (Speicher voll?).',recOn:'REC',h_slow:'Achtung: Das Handy wertet nur {0} Bilder/s aus, die Messung kann ungenau werden. Andere Apps schließen oder die Aufnahme ausschalten.'},
-es:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Ejercicio',exAdd:'+ Ejercicio propio',exDel:'Eliminar ejercicio',exDelConfirm:'¿Eliminar de verdad?',exNamePh:'Nombre del ejercicio, p. ej. Landmine press',exDirLabel:'Dirección',dirUp:'Vertical (hacia arriba)',dirRight:'Horizontal hacia la derecha',dirLeft:'Horizontal hacia la izquierda',dirAngle:'Oblicua: indicar ángulo',exAngleLabel:'Ángulo en grados (0 = derecha, 90 = arriba, 180 = izquierda)',exOrderLabel:'Secuencia',orderDown:'Primero bajar, luego empujar',orderUp:'Primero subir, luego bajar',exRomLabel:'Recorrido mínimo (cm)',exErr:'Escribe un nombre, un ángulo entre 0 y 180 y un recorrido mínimo entre 3 y 100 cm.',exNote:'Estos ajustes son para: {0}',custom:'propio',ex_bench:'Press de banca',ex_squat:'Sentadilla',ex_deadlift:'Peso muerto',ex_bss:'Sentadilla búlgara',ex_hipthrust:'Hip thrust',ex_ohp:'Press militar',ex_row:'Remo con barra',guideSum:'Colocación de la cámara: {0}',gTop:'Desde arriba',gSide:'Altura',gDist:'1,5–3 m',gPhone:'Celular',gFirstDown:'primero ↓',gFirstUp:'primero ↑',guideTxt:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a unos {0} m de altura (para una estatura de aprox. 1,80 m). El disco debe verse durante todo el movimiento.',guideTxtCustom:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a la altura del centro del recorrido. El disco debe verse durante todo el movimiento.',tip_bench:'Los brazos y los soportes no deben tapar el disco.',tip_squat:'En el rack, cuida que los soportes no tapen el disco.',tip_deadlift:'El disco empieza en el suelo; el borde inferior debe verse.',tip_bss:'Con barra. Con mancuernas solo funciona con discos o una marca.',tip_hipthrust:'El recorrido es corto; por eso el mínimo está en 10 cm.',tip_ohp:'El disco debe verse también arriba del todo; si hace falta, aleja el celular.',tip_row:'El torso y los brazos no deben tapar el disco.',loadLabel:'Barra (kg)',loadPh:'p. ej. 20',extraLabel:'Peso adicional (kg)',extraPh:'p. ej. 40',loadHelp:'Opcional. Peso de la barra y de los discos cargados. Con eso, la app calcula fuerza y potencia.',forceLab:'Fuerza · Potencia',powSub:'{0} W · máx. {1} W',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
+es:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Ejercicio',exAdd:'+ Ejercicio propio',exDel:'Eliminar ejercicio',exDelConfirm:'¿Eliminar de verdad?',exNamePh:'Nombre del ejercicio, p. ej. Landmine press',exDirLabel:'Dirección',dirUp:'Vertical (hacia arriba)',dirRight:'Horizontal hacia la derecha',dirLeft:'Horizontal hacia la izquierda',dirAngle:'Oblicua: indicar ángulo',exAngleLabel:'Ángulo en grados (0 = derecha, 90 = arriba, 180 = izquierda)',exOrderLabel:'Secuencia',orderDown:'Primero bajar, luego empujar',orderUp:'Primero subir, luego bajar',exRomLabel:'Recorrido mínimo (cm)',exErr:'Escribe un nombre, un ángulo entre 0 y 180 y un recorrido mínimo entre 3 y 100 cm.',exNote:'Estos ajustes son para: {0}',custom:'propio',ex_bench:'Press de banca',ex_squat:'Sentadilla',ex_deadlift:'Peso muerto',ex_bss:'Sentadilla búlgara',ex_hipthrust:'Hip thrust',ex_ohp:'Press militar',ex_row:'Remo con barra',guideSum:'Colocación de la cámara: {0}',gTop:'Desde arriba',gSide:'Altura',gDist:'1,5–3 m',gPhone:'Celular',gFirstDown:'primero ↓',gFirstUp:'primero ↑',guideTxt:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a unos {0} m de altura (para una estatura de aprox. 1,80 m). El disco debe verse durante todo el movimiento.',guideTxtCustom:'Celular fijo y recto en la prolongación de la barra, a 1,5–3 m, a la altura del centro del recorrido. El disco debe verse durante todo el movimiento.',tip_bench:'Los brazos y los soportes no deben tapar el disco.',tip_squat:'En el rack, cuida que los soportes no tapen el disco.',tip_deadlift:'El disco empieza en el suelo; el borde inferior debe verse.',tip_bss:'Con barra. Con mancuernas solo funciona con discos o una marca.',tip_hipthrust:'El recorrido es corto; por eso el mínimo está en 10 cm.',tip_ohp:'El disco debe verse también arriba del todo; si hace falta, aleja el celular.',tip_row:'El torso y los brazos no deben tapar el disco.',loadLabel:'Peso de entrenamiento (kg)',loadPh:'p. ej. 60',bodyLabel:'Peso corporal (kg)',bodyPh:'p. ej. 80',bodyOn:'Incluir el peso corporal',exBodyLabel:'El cuerpo se mueve con la barra (incluir peso corporal)',loadHelp:'Opcional. Peso de entrenamiento = barra con discos. En ejercicios en los que el cuerpo también se mueve (p. ej. sentadilla), incluye el peso corporal. Con eso, la app calcula fuerza y potencia.',forceLab:'Fuerza · Potencia',powSub:'{0} W · máx. {1} W',subtitle:'Velocidad de la barra con la cámara, aviso por pérdida de velocidad',langLabel:'Idioma',
 chip_idle:'Listo',chip_track:'Siguiendo',chip_lost:'Perdido',chip_mark:'Marcando',chip_alarm:'Aviso',
 howTitle:'Cómo funciona',how1:'Elige el ejercicio y coloca el celular como indica «Colocación de la cámara» (más abajo).',how2:'Inicia la cámara o elige un video.',how3:'«Marcar disco»: toca el borde superior y el inferior.',how4:'Toca «Iniciar serie» y empuja. Si pierdes demasiada velocidad, suena un aviso.',how5:'Después de dejar la barra, toca «Terminar serie».',
 alarmTitle:'AVISO: TERMINA LA SERIE',endSet:'Terminar serie',goOn:'Seguir midiendo',startCam:'Iniciar cámara',toSelfie:'Cambiar a cámara frontal',toBack:'Cambiar a cámara trasera',camSelfie:'Cámara frontal',camBack:'Cámara trasera',
@@ -385,7 +389,7 @@ h_videoLoaded:'Video cargado. Ve a la posición inicial, marca el disco y luego 
 h_markedFile:'Marcado ({0} px = {1} mm). Ahora «Analizar».',h_markedLive:'Marcado. Toca «Iniciar serie» cuando estés listo.',h_readFail:'No se pudo leer la imagen. Marca otra vez.',h_videoEnd:'Fin del video. Serie terminada, resultado abajo.',
 h_doneMove:'La serie terminó, no se cuenta nada. Para una nueva serie, «Iniciar serie».',h_idleMove:'Se detectó movimiento, pero no hay serie activa. Toca «Iniciar serie».',h_lost:'Disco perdido. Quédate quieto un momento o vuelve a marcar.',
 a_after:'Rep. {0} después del aviso: {1} m/s · −{2} %',a_first:'Rep. {0}: {1} m/s · −{2} % respecto a la referencia de {3} m/s. Las siguientes se marcan hasta que termines.',v_stop:'Para',v_dec:' coma ',speech:'es-ES',recLabel:'Grabar video y datos brutos',recHelp:'Para validar y volver a analizar después. Cada serie se guarda en «Grabaciones».',recTitle:'Grabaciones',recNote:'Las grabaciones solo están en este celular. Después de guardarlas, bórralas para liberar espacio.',recEmpty:'Aún no hay grabaciones. Activa «Grabar video y datos brutos» en Ajustes.',recRow:'Serie {0}',recInfo:'{0} · {1} rep. · {2}',recDataOnly:'solo datos brutos',recSave:'Guardar (ZIP)',recShare:'Compartir',recDel:'×',recDelConfirm:'¿Eliminar?',recSaved:'Guardado: {0}',recShareFail:'Compartir no funciona en este dispositivo. Usa «Guardar».',recBusy:'Preparando …',recNoVideo:'Este navegador no puede grabar video. Solo se guardan los datos brutos.',recStoreFail:'No se pudo guardar la grabación (¿memoria llena?).',recOn:'REC',h_slow:'Atención: el celular solo analiza {0} imágenes/s, la medición puede ser imprecisa. Cierra otras apps o desactiva la grabación.'},
-en:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Exercise',exAdd:'+ Custom exercise',exDel:'Delete exercise',exDelConfirm:'Really delete?',exNamePh:'Exercise name, e.g. Landmine press',exDirLabel:'Direction',dirUp:'Vertical (upward)',dirRight:'Horizontal to the right',dirLeft:'Horizontal to the left',dirAngle:'Diagonal: enter angle',exAngleLabel:'Angle in degrees (0 = right, 90 = up, 180 = left)',exOrderLabel:'Sequence',orderDown:'Lower first, then push',orderUp:'Up first, then lower',exRomLabel:'Minimum range (cm)',exErr:'Enter a name, an angle between 0 and 180 and a minimum range between 3 and 100 cm.',exNote:'These settings apply to: {0}',custom:'custom',ex_bench:'Bench press',ex_squat:'Back squat',ex_deadlift:'Deadlift',ex_bss:'Bulgarian split squat',ex_hipthrust:'Hip thrust',ex_ohp:'Overhead press',ex_row:'Bent-over row',guideSum:'Camera setup: {0}',gTop:'From above',gSide:'Height',gDist:'1.5–3 m',gPhone:'Phone',gFirstDown:'first ↓',gFirstUp:'first ↑',guideTxt:'Phone steady and level, in line with the bar, 1.5–3 m away, at about {0} m height (for a lifter of about 1.80 m). The plate must stay in view for the whole movement.',guideTxtCustom:'Phone steady and level, in line with the bar, 1.5–3 m away, at the height of the middle of the movement. The plate must stay in view for the whole movement.',tip_bench:'Arms and the rack must not cover the plate.',tip_squat:'In the rack, make sure the uprights don’t cover the plate.',tip_deadlift:'The plate starts on the floor; its bottom edge must be in view.',tip_bss:'With a barbell. Dumbbells only work with plates or a marker.',tip_hipthrust:'The range is short, so the minimum is set to 10 cm.',tip_ohp:'The plate must stay in view at the very top; move the phone back if needed.',tip_row:'Torso and arms must not cover the plate.',loadLabel:'Bar (kg)',loadPh:'e.g. 20',extraLabel:'Added weight (kg)',extraPh:'e.g. 40',loadHelp:'Optional. Weight of the bar and the plates loaded on it. The app uses it to calculate force and power.',forceLab:'Force · Power',powSub:'{0} W · max {1} W',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
+en:{doc:'VBT Tracker',title:'VBT Tracker',exLabel:'Exercise',exAdd:'+ Custom exercise',exDel:'Delete exercise',exDelConfirm:'Really delete?',exNamePh:'Exercise name, e.g. Landmine press',exDirLabel:'Direction',dirUp:'Vertical (upward)',dirRight:'Horizontal to the right',dirLeft:'Horizontal to the left',dirAngle:'Diagonal: enter angle',exAngleLabel:'Angle in degrees (0 = right, 90 = up, 180 = left)',exOrderLabel:'Sequence',orderDown:'Lower first, then push',orderUp:'Up first, then lower',exRomLabel:'Minimum range (cm)',exErr:'Enter a name, an angle between 0 and 180 and a minimum range between 3 and 100 cm.',exNote:'These settings apply to: {0}',custom:'custom',ex_bench:'Bench press',ex_squat:'Back squat',ex_deadlift:'Deadlift',ex_bss:'Bulgarian split squat',ex_hipthrust:'Hip thrust',ex_ohp:'Overhead press',ex_row:'Bent-over row',guideSum:'Camera setup: {0}',gTop:'From above',gSide:'Height',gDist:'1.5–3 m',gPhone:'Phone',gFirstDown:'first ↓',gFirstUp:'first ↑',guideTxt:'Phone steady and level, in line with the bar, 1.5–3 m away, at about {0} m height (for a lifter of about 1.80 m). The plate must stay in view for the whole movement.',guideTxtCustom:'Phone steady and level, in line with the bar, 1.5–3 m away, at the height of the middle of the movement. The plate must stay in view for the whole movement.',tip_bench:'Arms and the rack must not cover the plate.',tip_squat:'In the rack, make sure the uprights don’t cover the plate.',tip_deadlift:'The plate starts on the floor; its bottom edge must be in view.',tip_bss:'With a barbell. Dumbbells only work with plates or a marker.',tip_hipthrust:'The range is short, so the minimum is set to 10 cm.',tip_ohp:'The plate must stay in view at the very top; move the phone back if needed.',tip_row:'Torso and arms must not cover the plate.',loadLabel:'Training load (kg)',loadPh:'e.g. 60',bodyLabel:'Body mass (kg)',bodyPh:'e.g. 80',bodyOn:'Include body mass',exBodyLabel:'Body moves with the bar (include body mass)',loadHelp:'Optional. Training load = bar with plates. For exercises where your body moves too (e.g. squat), include your body mass. The app uses it to calculate force and power.',forceLab:'Force · Power',powSub:'{0} W · max {1} W',subtitle:'Bar speed from your camera, with a velocity-loss signal',langLabel:'Language',
 chip_idle:'Ready',chip_track:'Tracking',chip_lost:'Lost',chip_mark:'Marking',chip_alarm:'Signal',
 howTitle:'How it works',how1:'Pick the exercise and set up the phone as shown in “Camera setup” (further down).',how2:'Start the camera or choose a video.',how3:'“Mark plate”: tap the top and bottom edge.',how4:'Tap “Start set” and lift. If you lose too much speed, you get a signal.',how5:'After racking the bar, tap “End set”.',
 alarmTitle:'SIGNAL: END THE SET',endSet:'End set',goOn:'Keep measuring',startCam:'Start camera',toSelfie:'Switch to selfie camera',toBack:'Switch to rear camera',camSelfie:'Selfie camera',camBack:'Rear camera',
@@ -441,9 +445,9 @@ let wake=null;
    lo/hi: approximate plate-centre heights in metres for the camera sketch (lifter ~1.80 m). */
 const EXERCISES=[
   {id:'bench',axis:90,order:'down',rom:15,lo:0.70,hi:1.10},
-  {id:'squat',axis:90,order:'down',rom:20,lo:0.95,hi:1.50},
+  {id:'squat',axis:90,order:'down',rom:20,lo:0.95,hi:1.50,body:true},
   {id:'deadlift',axis:90,order:'up',rom:25,lo:0.225,hi:0.75},
-  {id:'bss',axis:90,order:'down',rom:15,lo:1.10,hi:1.50},
+  {id:'bss',axis:90,order:'down',rom:15,lo:1.10,hi:1.50,body:true},
   {id:'hipthrust',axis:90,order:'up',rom:10,lo:0.30,hi:0.60},
   {id:'ohp',axis:90,order:'up',rom:20,lo:1.45,hi:1.95},
   {id:'row',axis:90,order:'up',rom:15,lo:0.40,hi:0.80}
@@ -454,15 +458,16 @@ const allEx=()=>EXERCISES.concat(S.customEx);
 function curEx(){return allEx().find(e=>e.id===S.ex)||EXERCISES[0];}
 function exName(e){return e.custom?e.name:t('ex_'+e.id);}
 const AX=()=>{const a=(curEx().axis!=null?curEx().axis:90)*Math.PI/180;return {ux:Math.cos(a),uy:-Math.sin(a),gS:9.81*Math.sin(a)};};
-function snapshotEx(){S.exSet[S.ex]={thresh:S.thresh,ref:S.ref,minROM:S.minROM,load:S.load,extra:S.extra};}
+function snapshotEx(){S.exSet[S.ex]={thresh:S.thresh,ref:S.ref,minROM:S.minROM,load:S.load,bodyOn:S.bodyOn};}
 function loadEx(id){
   const e=allEx().find(x=>x.id===id)||EXERCISES[0]; S.ex=e.id;
   const st=S.exSet[e.id]||{};
   S.thresh=st.thresh!=null?st.thresh:10; S.ref=st.ref||'best'; S.minROM=st.minROM!=null?st.minROM:e.rom;
-  S.load=st.load!=null?st.load:''; S.extra=st.extra!=null?st.extra:'';
+  S.load=st.load!=null?st.load:''; S.bodyOn=st.bodyOn!=null?!!st.bodyOn:!!e.body;
 }
 const parseNum=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(n)?n:null;};
-function massKg(){const m=(parseNum(S.load)||0)+(parseNum(S.extra)||0);return m>0&&Math.abs(Math.sin((curEx().axis!=null?curEx().axis:90)*Math.PI/180))>=0.5?m:null;}
+function bodyPart(){return S.bodyOn?(parseNum(S.bodyKg)||0):0;}
+function massKg(){const m=(parseNum(S.load)||0)+bodyPart();return m>0&&Math.abs(Math.sin((curEx().axis!=null?curEx().axis:90)*Math.PI/180))>=0.5?m:null;}
 
 /* ---------- settings UI ---------- */
 function bindSettings(){
@@ -546,19 +551,20 @@ function renderGuide(){
   const p=document.createElement('p');p.textContent=(mid?t('guideTxt',mid):t('guideTxtCustom'))+(e.custom?'':' '+t('tip_'+e.id));
   $('guideBody').innerHTML=guideSVG(e);$('guideBody').appendChild(p);
 }
+function syncLoadUI(){$('loadKg').value=S.load;$('bodyKg').value=S.bodyKg;$('bodyOn').checked=!!S.bodyOn;$('bodyWrap').hidden=!S.bodyOn;}
 function switchEx(id){
   if(setState==='running')endSet();
   snapshotEx(); loadEx(id); store.set('vbt-settings',S);
   $('thresh').value=S.thresh;$('threshOut').textContent=S.thresh+' %';$('ref').value=S.ref;$('minRom').value=S.minROM;
-  $('loadKg').value=S.load;$('extraKg').value=S.extra;
+  syncLoadUI();
   clearReps(); kin.reset(); if(setState==='done')setState='idle';
   renderExSel(); renderHistory(); updateSetUI(); renderReadout();
 }
 function bindExercises(){
   loadEx(S.ex);
-  $('loadKg').value=S.load;$('extraKg').value=S.extra;
-  const onLoad=()=>{S.load=$('loadKg').value.trim();S.extra=$('extraKg').value.trim();snapshotEx();store.set('vbt-settings',S);renderReadout();renderTable();};
-  $('loadKg').addEventListener('input',onLoad);$('extraKg').addEventListener('input',onLoad);
+  syncLoadUI();
+  const onLoad=()=>{S.load=$('loadKg').value.trim();S.bodyKg=$('bodyKg').value.trim();S.bodyOn=$('bodyOn').checked;$('bodyWrap').hidden=!S.bodyOn;snapshotEx();store.set('vbt-settings',S);renderReadout();renderTable();};
+  $('loadKg').addEventListener('input',onLoad);$('bodyKg').addEventListener('input',onLoad);$('bodyOn').addEventListener('change',onLoad);
   $('exSel').addEventListener('change',e=>switchEx(e.target.value));
   $('btnExAdd').addEventListener('click',()=>{$('exForm').hidden=false;$('exErr').hidden=true;$('exName').focus();});
   $('exCancel').addEventListener('click',()=>{$('exForm').hidden=true;});
@@ -567,7 +573,7 @@ function bindExercises(){
     const name=$('exName').value.trim(),dv=$('exDir').value,ang=dv==='angle'?parseNum($('exAngle').value):+dv,rom=parseNum($('exRom').value);
     if(!name||ang==null||ang<0||ang>180||rom==null||rom<3||rom>100){$('exErr').textContent=t('exErr');$('exErr').hidden=false;return;}
     const id='c'+Date.now().toString(36);
-    S.customEx.push({id,custom:true,name,axis:ang,order:$('exOrder').value,rom});
+    S.customEx.push({id,custom:true,name,axis:ang,order:$('exOrder').value,rom,body:$('exBody').checked});
     $('exForm').hidden=true;$('exName').value='';
     switchEx(id);
   });
@@ -756,7 +762,7 @@ function recStop(nr){
       camera:R.trackSettings,frameSize:[videoEl().videoWidth,videoEl().videoHeight],
       calibration:calib?{centerPx:[+calib.cx.toFixed(2),+calib.cy.toFixed(2)],diameterPx:+calib.dpx.toFixed(2),diameterMm:S.diamMM,metersPerPixel:+(S.diamMM/1000/calib.dpx).toFixed(6)}:null,
       exercise:{id:S.ex,name:exName(curEx()),axisDeg:curEx().axis,order:curEx().order},
-      load:{loadKg:parseNum(S.load),extraKg:parseNum(S.extra),massKg:massKg()},
+      load:{trainingLoadKg:parseNum(S.load),bodyMassKg:S.bodyOn?parseNum(S.bodyKg):null,bodyMassIncluded:!!S.bodyOn,massKg:massKg()},
       settings:{thresholdPct:S.thresh,reference:S.ref,minRomCm:S.minROM,lang:L},
       signalRep:stopAt!=null?stopAt+1:null,
       processedFps:R.frames.length>1?+((R.frames.length-1)/Math.max(1e-6,R.frames[R.frames.length-1][0]-R.frames[0][0])).toFixed(1):null,
@@ -895,7 +901,7 @@ function endSet(){
     const valid=reps.filter(r=>r.valid), lastV=valid[valid.length-1];
     const t=setStartedAt||new Date(),pad=n=>String(n).padStart(2,'0');
     const mk=massKg();
-    history.push({ex:S.ex,exName:exName(curEx()),mass:mk,load:parseNum(S.load),extra:parseNum(S.extra),nr:exHistory().length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
+    history.push({ex:S.ex,exName:exName(curEx()),mass:mk,load:parseNum(S.load),body:S.bodyOn?parseNum(S.bodyKg):null,nr:exHistory().length+1,date:pad(t.getDate())+'.'+pad(t.getMonth()+1)+'.',time:pad(t.getHours())+':'+pad(t.getMinutes()),
       thr:S.thresh,reps:valid.length,signal:stopAt!=null?stopAt+1:null,best:valid.length?Math.max(...valid.map(r=>r.mcv)):null,
       last:lastV?lastV.mcv:null,lossEnd:lastV&&lastV.loss!=null?lastV.loss:null,
       stopMcv:stopAt!=null?reps[stopAt].mcv:(lastV?lastV.mcv:null),stopLoss:stopAt!=null?reps[stopAt].loss:(lastV&&lastV.loss!=null?lastV.loss:null),
@@ -920,18 +926,19 @@ function stopOf(h){
   if(r)return {mcv:r.mcv,loss:r.loss};
   return {mcv:h.stopMcv!==undefined?h.stopMcv:h.last,loss:h.stopLoss!==undefined?h.stopLoss:h.lossEnd};
 }
+function kgOf(h){return h.load!=null?h.load:h.mass;}
 function exHistory(){return history.filter(h=>(h.ex||'bench')===S.ex);}
 function renderHistory(){
   const tb=$('hbody'),hs=exHistory();
   if(!hs.length){tb.innerHTML='<tr><td colspan="8" style="text-align:left" class="muted">'+t('noSets')+'</td></tr>';return;}
-  tb.innerHTML=hs.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+(h.mass?fmt(h.mass,h.mass%1?1:0):'–')+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(stopOf(h).mcv)+'</td><td>'+(stopOf(h).loss!=null?'−'+fmt(stopOf(h).loss,1)+' %':'–')+'</td></tr>').join('');
+  tb.innerHTML=hs.slice().reverse().map(h=>'<tr><td>'+h.nr+'</td><td>'+h.date+' '+h.time+'</td><td>'+(kgOf(h)?fmt(kgOf(h),kgOf(h)%1?1:0):'–')+'</td><td>'+h.reps+'</td><td class="'+(h.signal?'bad':'')+'">'+(h.signal?t('signalAt',h.signal,h.thr):t('noSignal'))+'</td><td>'+fmt(h.best)+'</td><td>'+fmt(stopOf(h).mcv)+'</td><td>'+(stopOf(h).loss!=null?'−'+fmt(stopOf(h).loss,1)+' %':'–')+'</td></tr>').join('');
 }
 $('btnCopyAll').addEventListener('click',()=>{
   const m=t=>{$('histMsg').textContent=t;};
   const hs=exHistory();
   if(!hs.length){m(t('noSetsSaved'));return;}
-  const head='uebung;satz;datum;zeit;masse_kg;schwelle_prozent;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
-  const rows=[];hs.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.exName||exName(curEx()),h.nr,h.date,h.time,h.mass?fmt(h.mass,1):'',h.thr,r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),r.F==null?'':r.F,r.P==null?'':r.P,r.Pmax==null?'':r.Pmax,!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
+  const head='uebung;satz;datum;zeit;trainingsgewicht_kg;koerpergewicht_kg;masse_gesamt_kg;schwelle_prozent;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
+  const rows=[];hs.forEach(h=>(h.data||[]).forEach(r=>rows.push([h.exName||exName(curEx()),h.nr,h.date,h.time,h.load!=null?fmt(h.load,1):'',h.body!=null?fmt(h.body,1):'',h.mass?fmt(h.mass,1):'',h.thr,r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),r.F==null?'':r.F,r.P==null?'':r.P,r.Pmax==null?'':r.Pmax,!r.valid?'unvollstaendig':(h.signal===r.n?'signal':(r.after?'nach_signal':''))].join(';'))));
   const txt=[head,...rows].join('\n');
   try{navigator.clipboard.writeText(txt).then(()=>m(t('copiedSets',hs.length)),()=>m(t('copyDenied')));}catch(e){m(t('copyDenied'));}
 });
@@ -1275,9 +1282,10 @@ function renderTable(){
     return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td>'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td><td>'+(mk&&r.ga!=null?fmtInt(mk*r.ga):'–')+'</td><td>'+(mk&&r.gav!=null?fmtInt(mk*r.gav):'–')+'</td></tr>';}).join('');
 }
 $('btnCopy').addEventListener('click',()=>{
-  const head='uebung;masse_kg;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
+  const head='uebung;trainingsgewicht_kg;koerpergewicht_kg;masse_gesamt_kg;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
   const mk=massKg(),nm=exName(curEx());
-  const rows=reps.map((r,i)=>[nm,mk==null?'':fmt(mk,1),r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),mk&&r.ga!=null?Math.round(mk*r.ga):'',mk&&r.gav!=null?Math.round(mk*r.gav):'',mk&&r.gavMax!=null?Math.round(mk*r.gavMax):'',!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
+  const ld=parseNum(S.load),bd=S.bodyOn?parseNum(S.bodyKg):null;
+  const rows=reps.map((r,i)=>[nm,ld==null?'':fmt(ld,1),bd==null?'':fmt(bd,1),mk==null?'':fmt(mk,1),r.n,fmt(r.mcv,3),fmt(r.mpv,3),fmt(r.peak,3),fmt(r.rom*100,1),fmt(r.dur,3),fmt(r.ref,3),r.loss==null?'':fmt(r.loss,1),mk&&r.ga!=null?Math.round(mk*r.ga):'',mk&&r.gav!=null?Math.round(mk*r.gav):'',mk&&r.gavMax!=null?Math.round(mk*r.gavMax):'',!r.valid?'unvollstaendig':(i===stopAt?'signal':(r.after?'nach_signal':''))].join(';'));
   const txt=[head,...rows].join('\n');
   const done=m=>{$('copyMsg').textContent=m;};
   if(!reps.length){done(t('nothingToCopy'));return;}
