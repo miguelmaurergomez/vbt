@@ -1,7 +1,7 @@
 /* VBT-Tracker service worker: makes the app installable and usable offline.
    The page itself is loaded fresh from the network when online (so updates arrive at once)
    and from the cache when offline. */
-const CACHE = 'vbt-v3';
+const CACHE = 'vbt-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const OPTIONAL = ['./plate.onnx'];   // detection model: cached when present, app works without it
 
