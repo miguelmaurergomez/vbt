@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>*,*::before,*::after{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}</style>
-<title>VBT Bankdrück-Tracker</title>
+<title>VBT Tracker</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -150,7 +150,59 @@ body.imu-mode .viewport{aspect-ratio:auto;min-height:220px}
 .srcbtn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:18px 16px;border-radius:var(--radius);font-size:15px;line-height:1.35}
 .srcbtn b{font-size:19px}
 .startscreen[hidden]{display:none}
-#btnSrc.small{padding:6px 10px;font-size:13px}
+#btnSrc.small{padding:6px 10px;font-size:13px;min-height:36px}
+/* tabs */
+body{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
+.tab{display:flex;flex-direction:column;gap:18px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{flex:1;border:0;background:transparent;border-radius:8px;justify-content:center;font:600 14px var(--font-body);color:var(--muted);min-height:48px}
+.tabbar button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+/* onboarding */
+.startscreen{align-items:flex-start;overflow:auto}
+.startscreen .sbox{margin:auto 0;padding:8px 0}
+.obtop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.oblogo{font:700 22px var(--font-display);color:#fff;background:var(--alarm);border-radius:8px;padding:4px 10px;letter-spacing:.04em}
+.obstep{flex:1;font-size:13px;color:var(--muted)}
+#obLang,.bigsel,#lang,#theme{font:600 15px var(--font-body);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:44px}
+.bigsel{font-size:18px;width:100%}
+.obh{font-family:var(--font-display);font-size:28px;font-weight:700;text-transform:none;letter-spacing:.01em;color:var(--ink);margin:6px 0 10px}
+#ob1,#ob2,#ob3{display:flex;flex-direction:column;gap:12px}
+#ob1[hidden],#ob2[hidden],#ob3[hidden]{display:none}
+.obsub{margin:0;color:var(--muted);font-size:14px}
+.oblist{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:16px}
+.obnav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.obnav button{min-width:120px;justify-content:center}
+/* focus screen */
+.focus{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.focus[hidden]{display:none}
+.ftop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.fhead{display:flex;flex-direction:column}
+.fhead b{font:700 22px var(--font-display)}
+.fhead span{font-size:14px;color:var(--muted)}
+.fsig{background:var(--alarm);color:#fff;font:700 clamp(22px,6vw,34px) var(--font-display);text-align:center;border-radius:var(--radius);padding:10px;letter-spacing:.04em}
+.fmain{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;border-radius:var(--radius);background:var(--surface);border:1px solid var(--line)}
+.flab{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;text-align:center}
+.fbig{font:700 clamp(88px,34vw,220px)/0.95 var(--font-display);font-variant-numeric:tabular-nums}
+.funit{font:600 20px var(--font-display);color:var(--muted)}
+.focus[data-zone="ok"] .fmain{background:color-mix(in srgb,var(--ok) 18%,var(--surface));border-color:var(--ok)}
+.focus[data-zone="slow"] .fmain{background:color-mix(in srgb,var(--alarm) 16%,var(--surface));border-color:var(--alarm)}
+.focus[data-zone="fast"] .fmain{background:color-mix(in srgb,var(--warn) 18%,var(--surface));border-color:var(--warn)}
+.focus[data-sig="1"] .fmain{border-color:var(--alarm);border-width:3px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.frow>div{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;text-align:center}
+.fmid{font:700 clamp(40px,13vw,72px)/1 var(--font-display);font-variant-numeric:tabular-nums}
+.fmid small{font-size:.45em;margin-left:2px;color:var(--muted)}
+.fnow{text-align:center;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fset{min-height:64px;font-size:20px;justify-content:center}
+.fset[data-s="running"]{background:var(--alarm);border-color:var(--alarm)}
+.flash{position:fixed;inset:0;z-index:60;pointer-events:none;background:var(--alarm);opacity:0}
+.flash.on{animation:flash 1.6s ease-out}
+@keyframes flash{0%,30%,60%{opacity:.75}15%,45%{opacity:.1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.flash.on{animation:none}}
+/* info buttons */
+.ib{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;min-height:22px;padding:0;margin-left:6px;border-radius:50%;font:700 12px var(--font-body);color:var(--accent);border-color:var(--accent);background:transparent;vertical-align:1px}
+.ib[aria-expanded="true"]{background:var(--accent);color:#fff}
+.loadbar .ib{order:9}
 button,.btn{font:600 15px/1 var(--font-body);padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px}
 button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button:disabled{opacity:.45;cursor:default}
@@ -215,21 +267,44 @@ tr.after td{color:var(--muted)}
 <body>
 <div class="startscreen" id="startScreen" hidden>
   <div class="sbox">
-    <h2 data-i18n="srcTitle">Wie willst du messen?</h2>
-    <button type="button" class="srcbtn" id="srcCamBtn"><b data-i18n="srcCam">Kamera</b><span data-i18n="srcCamSub"></span></button>
-    <button type="button" class="srcbtn" id="srcImuBtn"><b data-i18n="srcImu">Sensor (IMU)</b><span data-i18n="srcImuSub"></span></button>
+    <div class="obtop"><span class="oblogo">VBT</span><span class="obstep" id="obStepTxt"></span><select id="obLang" aria-label="Sprache / Idioma / Language"><option value="de">Deutsch</option><option value="es">Español</option><option value="en">English</option></select></div>
+    <div id="ob1">
+      <h2 class="obh" data-i18n="srcTitle">Wie willst du messen?</h2>
+      <button type="button" class="srcbtn" id="srcCamBtn"><b data-i18n="srcCam">Kamera</b><span data-i18n="srcCamSub"></span></button>
+      <button type="button" class="srcbtn" id="srcImuBtn"><b data-i18n="srcImu">Sensor (IMU)</b><span data-i18n="srcImuSub"></span></button>
+    </div>
+    <div id="ob2" hidden>
+      <h2 class="obh" data-i18n="obEx">Welche Übung?</h2>
+      <select id="obEx" class="bigsel"></select>
+      <p class="obsub" data-i18n="obExSub"></p>
+      <div class="obnav"><button type="button" id="ob2Back" data-i18n="obBack">Zurück</button><button type="button" class="primary" id="ob2Next" data-i18n="obNext">Weiter</button></div>
+    </div>
+    <div id="ob3" hidden>
+      <h2 class="obh" id="obSetT"></h2>
+      <ol class="oblist" id="obSetList"></ol>
+      <div class="obnav"><button type="button" id="ob3Back" data-i18n="obBack">Zurück</button><button type="button" class="primary" id="ob3Go" data-i18n="obGo">Los geht’s</button></div>
+    </div>
   </div>
 </div>
+<div class="focus" id="focus" hidden>
+  <div class="ftop"><div class="fhead"><b id="fEx"></b><span id="fState"></span></div><button type="button" id="fClose" data-i18n="focusClose">Schließen</button></div>
+  <div class="fsig" id="fSig" hidden data-i18n="fSig">SIGNAL: SATZ BEENDEN</div>
+  <div class="fmain"><div class="flab" data-i18n="fLast">Letzte Wdh.</div><div class="fbig" id="fMcv">–</div><div class="funit">m/s</div></div>
+  <div class="frow"><div><div class="flab" data-i18n="fLoss">Verlust</div><div class="fmid" id="fLossV">–</div></div><div><div class="flab" data-i18n="fReps">Wdh.</div><div class="fmid" id="fRepsV">0</div></div></div>
+  <div class="fnow" id="fNowV"></div>
+  <button type="button" class="fset primary" id="fSet">Satz starten</button>
+</div>
+<div class="flash" id="flash"></div>
 <div class="app">
   <header>
-    <h1><span data-i18n="title">VBT Bankdrück-Tracker</span><small data-i18n="subtitle">Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
+    <h1><span data-i18n="title">VBT Tracker</span><small data-i18n="subtitle">Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
     <div class="hright">
-      <select id="lang" aria-label="Sprache / Idioma / Language"><option value="de">Deutsch</option><option value="es">Español</option><option value="en">English</option></select>
       <button type="button" id="btnSrc" class="small" data-i18n="srcSwitch">Modus wechseln</button>
       <span class="chip" id="chip" data-s="idle">Bereit</span>
     </div>
   </header>
 
+  <main class="tab" id="tabTrain">
   <section class="stage">
     <div class="exbar">
       <label for="exSel" class="exlab" data-i18n="exLabel">Übung</label>
@@ -283,6 +358,7 @@ tr.after td{color:var(--muted)}
     </div>
     <div class="setbar">
       <button class="primary" id="btnSet" data-s="idle" disabled>Satz starten</button>
+      <button type="button" id="btnFocus" data-i18n="focusBtn">Großanzeige</button>
       <div class="setstat"><b id="setTitle"><span class="dot" id="setDot"></span>Kein Satz aktiv</b><span id="setSub">Erst Kamera starten und Platte markieren.</span></div>
     </div>
     <div class="loadbar">
@@ -321,6 +397,9 @@ tr.after td{color:var(--muted)}
     <details class="legend"><summary data-i18n="legendTitle">Was bedeuten die Abkürzungen?</summary><dl id="legendList"></dl></details>
   </section>
 
+  <details class="guide camonly" id="guide"><summary id="guideSum">Kamera-Aufbau</summary><div class="gbody" id="guideBody"></div></details>
+  </main>
+  <main class="tab" id="tabHist" hidden>
   <section class="panel">
     <h2 data-i18n="setsTitle">Sätze</h2>
     <div class="tablewrap">
@@ -351,11 +430,19 @@ tr.after td{color:var(--muted)}
     <p class="muted" id="recMsg" data-i18n="recNote">Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.</p>
   </section>
 
-  <details class="guide camonly" id="guide"><summary id="guideSum">Kamera-Aufbau</summary><div class="gbody" id="guideBody"></div></details>
-
+  </main>
+  <main class="tab" id="tabSet" hidden>
   <section class="panel">
     <h2 data-i18n="settings">Einstellungen</h2>
     <div class="settings">
+      <div class="field">
+        <label for="lang" data-i18n="langLabel">Sprache</label>
+        <select id="lang" aria-label="Sprache / Idioma / Language"><option value="de">Deutsch</option><option value="es">Español</option><option value="en">English</option></select>
+      </div>
+      <div class="field">
+        <label for="theme" data-i18n="themeLabel">Darstellung</label>
+        <select id="theme"><option value="auto" data-i18n="themeAuto">Wie das Handy</option><option value="light" data-i18n="themeLight">Hell</option><option value="dark" data-i18n="themeDark">Dunkel</option></select>
+      </div>
       <div class="field camonly">
         <label for="diam" data-i18n="diamLabel">Referenzgröße (mm)</label>
         <input type="number" id="diam" min="20" max="2000" step="1">
@@ -404,7 +491,9 @@ tr.after td{color:var(--muted)}
       <div class="help" id="appVer" style="text-align:right">Version</div>
     </div>
   </section>
+  </main>
 </div>
+<nav class="tabbar" id="tabbar"><button type="button" data-tab="tabTrain" data-i18n="tabTrain">Training</button><button type="button" data-tab="tabHist" data-i18n="tabHist">Verlauf</button><button type="button" data-tab="tabSet" data-i18n="tabSet">Einstellungen</button></nav>
 
 <script>
 (function(){
@@ -1065,7 +1154,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='25';
+const APP_VERSION='26';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -1229,6 +1318,7 @@ function updateSetUI(){
   else if(setState==='done')sub=t('subDone');
   else sub=t('subIdle');
   $('setSub').textContent=sub;
+  if(typeof renderFocus==='function')try{renderFocus();}catch(e){}
 }
 function clearReps(){reps=[];stopAt=null;alarmed=false;$('alarm').hidden=true;kin.reset();renderReadout();renderTable();drawReps();}
 function startSet(){
@@ -1236,6 +1326,7 @@ function startSet(){
   unlockAudio(); clearReps(); trail=[]; setState='running'; setStartedAt=new Date(); idleHintShown=false;
   recStart();
   chip('track'); hint(null); updateSetUI(); keepAwake();
+  if(isImu()&&!focusOpen&&!IMU.batch)openFocus();
   beep(880,0.07,0);beep(1175,0.09,0.1);
   if(!isImu()&&mode==='file'){
     const go=()=>{startTracking();video.playbackRate=+S.rate;video.play().catch(()=>{});startLoop();};
@@ -1615,8 +1706,7 @@ function onRep(r){
   if(stopAt!=null&&k===stopAt&&last.valid){
     $('alarmSub').textContent=t('a_first',last.n,fmt(last.mcv),fmt(last.loss,0),fmt(last.ref));
     $('alarm').hidden=false; chip('alarm');
-    beep(440,0.18,0,0.35);beep(370,0.18,0.24,0.35);beep(300,0.35,0.48,0.35);
-    try{navigator.vibrate&&navigator.vibrate([200,80,200,80,400]);}catch(e){}
+    strongSignal();
     say(t('v_stop')+'. '+spoken(last.mcv));
   }else{
     beep(last.valid?1046:620,0.08);
@@ -1755,6 +1845,7 @@ function renderReadout(){
   const m=massKg(),fc=$('forceCell');fc.hidden=!m;$('readout').dataset.f=m?'1':'0';
   if(m){$('forceVal').innerHTML=(f&&f.ga!=null?fmtInt(m*f.ga):'–')+'<small>N</small>';
     $('powVal').textContent=f&&f.gav!=null?t('powSub',fmtInt(m*f.gav),fmtInt(m*f.gavMax)):'– W';}
+  if(typeof renderFocus==='function')try{renderFocus();}catch(e){}
 }
 function fmtInt(v){if(v==null||!isFinite(v))return '–';const s=String(Math.round(v));return s.replace(/\B(?=(\d{3})+(?!\d))/g,L==='en'?',':'.');}
 function renderTable(){
@@ -1788,7 +1879,7 @@ function setLang(l){
   if(stopAt!=null&&reps[stopAt]){const k=reps.length-1,r=reps[k];$('alarmSub').textContent=k>stopAt?t('a_after',r.n,fmt(r.mcv),fmt(r.loss,0)):t('a_first',r.n,fmt(r.mcv),fmt(r.loss,0),fmt(r.ref));}
   drawSpark(); drawReps(); renderAI();
 }
-$('lang').addEventListener('change',e=>{setLang(e.target.value);renderRecs();renderExSel();});
+$('lang').addEventListener('change',e=>{setLang(e.target.value);$('obLang').value=e.target.value;renderRecs();renderExSel();});
 /* =====================================================================================
    SENSOR (IMU) MODE
    The sensor is fixed to the bar. It measures acceleration (incl. gravity) and, if it can,
@@ -2040,24 +2131,129 @@ function imuButtons(){
 function applySrc(){
   const imu=isImu();
   document.body.classList.toggle('imu-mode',imu);
-  $('startScreen').hidden=!!S.src;
+  $('startScreen').hidden=!!(S.src&&S.onboarded);
   if(imu){
     if(stream){try{stream.getTracks().forEach(tr=>tr.stop());}catch(e){}}
     $('imuNote').textContent=t('imuAxisNote');
   }else{imuStop();}
   hint(null);if(setState!=='running')chip('idle');updateSetUI();imuView();
 }
-function chooseSrc(s){S.src=s;store.set('vbt-settings',S);applySrc();}
+function chooseSrc(s){S.src=s;store.set('vbt-settings',S);applySrc();if(!S.onboarded)obShow(2);else $('startScreen').hidden=true;}
 $('srcCamBtn').addEventListener('click',()=>chooseSrc('cam'));
 $('srcImuBtn').addEventListener('click',()=>chooseSrc('imu'));
-$('btnSrc').addEventListener('click',()=>{if(setState==='running')endSet();$('startScreen').hidden=false;});
+$('btnSrc').addEventListener('click',()=>{if(setState==='running')endSet();obOpen(false);});
 $('btnImuPhone').addEventListener('click',()=>{unlockAudio();imuPhone();});
 $('btnImuBle').addEventListener('click',()=>{unlockAudio();imuBle();});
 $('btnImuDisc').addEventListener('click',()=>imuStop());
 $('imuFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)imuCsv(f);e.target.value='';});
 window.__vbt.imu={IMU,reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
 
-bindExercises(); bindSettings(); applyStatic(); renderExSel(); applySrc(); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
+/* =====================================================================================
+   UI SHELL: tabs, focus screen, onboarding, info toggles, theme, stronger signal
+   ===================================================================================== */
+Object.assign(I18N.de,{
+  tabTrain:'Training',tabHist:'Verlauf',tabSet:'Einstellungen',focusBtn:'Großanzeige',focusClose:'Schließen',
+  fLast:'Letzte Wdh.',fLoss:'Verlust',fReps:'Wdh.',fNow:'jetzt {0} m/s',fSig:'SIGNAL: SATZ BEENDEN',fNoSet:'Kein Satz aktiv',
+  obNext:'Weiter',obBack:'Zurück',obGo:'Los geht’s',obStep:'Schritt {0} von 3',obEx:'Welche Übung?',obExSub:'Das kannst du jederzeit oben auf der Trainingsseite ändern.',
+  obCamT:'So stellst du die Kamera auf',obCam1:'Handy seitlich fest hinstellen, 1,5–3 m entfernt, die Hantelscheibe ganz im Bild.',obCam2:'„Kamera starten“, dann findet die KI die Scheibe automatisch (oder „Platte markieren“).',obCam3:'„Satz starten“ tippen und los. Bei zu viel Geschwindigkeitsverlust kommt ein Signal.',
+  obImuT:'So nutzt du den Sensor',obImu1:'Sensor oder Handy fest an der Stange befestigen, nah an der Hand.',obImu2:'„Handy-Sensor verwenden“ oder „Bluetooth-Sensor verbinden“, dann die Stange kurz ruhig halten.',obImu3:'„Satz starten“, vor der ersten Wdh. 1–2 s ruhig halten und oben jeweils kurz stoppen.',
+  themeLabel:'Darstellung',themeAuto:'Wie das Handy',themeLight:'Hell',themeDark:'Dunkel',infoBtn:'Erklärung ein-/ausblenden',
+  subtitle:'Hantelgeschwindigkeit messen, Signal bei Geschwindigkeitsverlust'});
+Object.assign(I18N.es,{
+  tabTrain:'Entrenamiento',tabHist:'Historial',tabSet:'Ajustes',focusBtn:'Pantalla grande',focusClose:'Cerrar',
+  fLast:'Última rep.',fLoss:'Pérdida',fReps:'Rep.',fNow:'ahora {0} m/s',fSig:'AVISO: TERMINAR SERIE',fNoSet:'Ninguna serie activa',
+  obNext:'Siguiente',obBack:'Atrás',obGo:'Empezar',obStep:'Paso {0} de 3',obEx:'¿Qué ejercicio?',obExSub:'Puedes cambiarlo en cualquier momento arriba en la página de entrenamiento.',
+  obCamT:'Así colocas la cámara',obCam1:'Pon el celular de lado y fijo, a 1,5–3 m, con el disco completo en la imagen.',obCam2:'«Iniciar cámara»; la IA encuentra el disco sola (o «Marcar disco»).',obCam3:'Toca «Iniciar serie» y empieza. Si pierdes demasiada velocidad, suena un aviso.',
+  obImuT:'Así usas el sensor',obImu1:'Fija el sensor o el celular firmemente a la barra, cerca de la mano.',obImu2:'«Usar el sensor del celular» o «Conectar sensor Bluetooth» y mantén la barra quieta un momento.',obImu3:'«Iniciar serie», mantén quieto 1–2 s antes de la primera rep. y detente arriba un momento en cada una.',
+  themeLabel:'Apariencia',themeAuto:'Como el celular',themeLight:'Clara',themeDark:'Oscura',infoBtn:'Mostrar/ocultar explicación',
+  subtitle:'Mide la velocidad de la barra, aviso por pérdida de velocidad'});
+Object.assign(I18N.en,{
+  tabTrain:'Training',tabHist:'History',tabSet:'Settings',focusBtn:'Big display',focusClose:'Close',
+  fLast:'Last rep',fLoss:'Loss',fReps:'Reps',fNow:'now {0} m/s',fSig:'SIGNAL: END SET',fNoSet:'No set active',
+  obNext:'Next',obBack:'Back',obGo:'Let’s go',obStep:'Step {0} of 3',obEx:'Which exercise?',obExSub:'You can change it any time at the top of the training page.',
+  obCamT:'How to set up the camera',obCam1:'Place the phone side-on and steady, 1.5–3 m away, with the whole plate in view.',obCam2:'“Start camera”; the AI finds the plate on its own (or “Mark plate”).',obCam3:'Tap “Start set” and go. If you lose too much speed, you get a signal.',
+  obImuT:'How to use the sensor',obImu1:'Fix the sensor or the phone firmly to the bar, close to the hand.',obImu2:'“Use the phone’s sensor” or “Connect Bluetooth sensor”, then hold the bar still for a moment.',obImu3:'“Start set”, hold still for 1–2 s before the first rep and pause briefly at the top of each.',
+  themeLabel:'Appearance',themeAuto:'Same as phone',themeLight:'Light',themeDark:'Dark',infoBtn:'Show/hide explanation',
+  subtitle:'Measure bar speed, signal on velocity loss'});
+
+/* ---- tabs ---- */
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(el=>{el.hidden=el.id!==id;});
+  document.querySelectorAll('#tabbar button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===id?'page':'false'));
+  S.tab=id;store.set('vbt-settings',S);
+  window.scrollTo(0,0);
+  requestAnimationFrame(()=>{try{sizeOverlay();drawSpark();drawReps();renderSessions();}catch(e){}});
+}
+document.querySelectorAll('#tabbar button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+/* ---- theme ---- */
+function applyTheme(){const v=S.theme||'auto';if(v==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',v);
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#ffffff';
+  try{drawSpark();drawReps();}catch(e){}}
+$('theme').addEventListener('change',e=>{S.theme=e.target.value;store.set('vbt-settings',S);applyTheme();});
+
+/* ---- focus screen: big numbers for the set, readable from a few metres ---- */
+let focusOpen=false;
+function openFocus(){focusOpen=true;$('focus').hidden=false;renderFocus();keepAwake();}
+function closeFocus(){focusOpen=false;$('focus').hidden=true;}
+$('btnFocus').addEventListener('click',openFocus);
+$('fClose').addEventListener('click',closeFocus);
+$('fSet').addEventListener('click',()=>{unlockAudio();setState==='running'?endSet():startSet();});
+function renderFocus(){
+  if(!$('focus'))return;
+  const sig=stopAt!=null&&reps[stopAt]?reps[stopAt]:null,last=reps[reps.length-1],f=sig||last;
+  $('fEx').textContent=exName(curEx())+(parseNum(S.load)?' · '+fmt(parseNum(S.load),1).replace(/[.,]0$/,'')+' kg':'');
+  $('fState').textContent=setState==='running'?t('setRunning',exHistory().length+1):t('fNoSet');
+  $('fMcv').textContent=last?fmt(last.mcv):'–';
+  $('fLossV').innerHTML=f&&f.loss!=null&&reps.indexOf(f)>0?'−'+fmt(f.loss,0)+'<small>%</small>':'–';
+  $('fRepsV').textContent=String(reps.length);
+  $('fNowV').textContent=t('fNow',fmt(kin.v));
+  const z=typeof zoneOf==='function'&&last?zoneOf(last.mcv):null;
+  $('focus').dataset.zone=z||'';
+  $('focus').dataset.sig=sig?'1':'0';
+  $('fSig').hidden=!sig;
+  const b=$('fSet');b.disabled=!srcReady();b.dataset.s=setState;b.textContent=t(setState==='running'?'endSet':'startSet');
+}
+setInterval(()=>{if(focusOpen&&setState==='running')$('fNowV').textContent=t('fNow',fmt(kin.v));},150);
+
+/* ---- signal: stronger, longer, also visible ---- */
+function strongSignal(){
+  if(IMU.batch)return;
+  try{navigator.vibrate&&navigator.vibrate([400,120,400,120,700]);}catch(e){}
+  beep(440,0.22,0,0.6);beep(370,0.22,0.28,0.6);beep(300,0.45,0.56,0.6);beep(440,0.22,1.2,0.6);beep(300,0.45,1.48,0.6);
+  const fl=$('flash');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');
+}
+
+/* ---- info toggles: explanations hidden behind a small (i) button ---- */
+function infoToggles(){
+  document.querySelectorAll('.field .help, .lhelp').forEach(h=>{
+    if(h.id==='aiStatus'||h.id==='appVer'||h.dataset.keep!=null||h.dataset.ib)return;
+    h.dataset.ib='1';h.classList.add('collapsible');h.hidden=true;
+    const b=document.createElement('button');b.type='button';b.className='ib';b.textContent='i';b.setAttribute('aria-label',t('infoBtn'));
+    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();h.hidden=!h.hidden;b.setAttribute('aria-expanded',String(!h.hidden));});
+    const field=h.closest('.field');
+    const lab=field?field.querySelector('label'):null;
+    if(lab&&!lab.querySelector('.ib'))lab.appendChild(b);else h.parentNode.insertBefore(b,h);
+  });
+}
+
+/* ---- onboarding (3 steps) ---- */
+let obStep=1;
+function obShow(n){obStep=n;
+  ['ob1','ob2','ob3'].forEach((id,i)=>{$(id).hidden=i+1!==n;});
+  $('obStepTxt').textContent=t('obStep',n);
+  if(n===2){const sel=$('obEx');sel.textContent='';allEx().forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=exName(e);sel.appendChild(o);});sel.value=S.ex;}
+  if(n===3){const imu=isImu();$('obSetT').textContent=t(imu?'obImuT':'obCamT');$('obSetList').innerHTML=[1,2,3].map(i=>'<li>'+t((imu?'obImu':'obCam')+i)+'</li>').join('');}
+}
+function obOpen(full){$('startScreen').hidden=false;obShow(1);$('startScreen').dataset.full=full?'1':'0';}
+$('ob2Next').addEventListener('click',()=>{const v=$('obEx').value;if(v&&v!==S.ex){$('exSel').value=v;$('exSel').dispatchEvent(new Event('change'));}obShow(3);});
+$('ob2Back').addEventListener('click',()=>obShow(1));
+$('ob3Back').addEventListener('click',()=>obShow(2));
+$('ob3Go').addEventListener('click',()=>{S.onboarded=true;store.set('vbt-settings',S);$('startScreen').hidden=true;showTab('tabTrain');});
+$('obLang').addEventListener('change',e=>{setLang(e.target.value);$('lang').value=e.target.value;renderRecs();renderExSel();obShow(obStep);});
+
+bindExercises(); bindSettings(); applyStatic(); renderExSel(); applySrc();
+$('theme').value=S.theme||'auto';applyTheme();$('obLang').value=L;$('lang').value=L;infoToggles();showTab(S.tab||'tabTrain');if(!$('startScreen').hidden)obShow(1); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
