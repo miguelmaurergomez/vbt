@@ -1,7 +1,8 @@
 {
-  "name": "VBT Bankdrück-Tracker",
+  "id": "./",
+  "name": "VBT Tracker",
   "short_name": "VBT Tracker",
-  "description": "Hantelgeschwindigkeit per Kamera messen, Signal bei Geschwindigkeitsverlust.",
+  "description": "Hantelgeschwindigkeit per Kamera oder Sensor messen, Signal bei Geschwindigkeitsverlust, 1RM-Schätzung und Trainingsverlauf.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",
@@ -9,6 +10,7 @@
   "orientation": "any",
   "background_color": "#eef1f5",
   "theme_color": "#1f5fbf",
+  "categories": ["sports", "fitness", "health"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

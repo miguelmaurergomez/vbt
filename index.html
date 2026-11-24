@@ -223,6 +223,8 @@ body{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
 .planrow select{flex:1 1 100%}
 .pf{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);font-weight:600}
 .planrow>button{margin-left:auto;min-height:40px}
+.imuv{font-weight:500;color:var(--muted)}
+.auxstat{font-size:14px;font-weight:600;color:var(--ok)}
 .planbanner{background:var(--accent);color:#fff;border-radius:var(--radius);padding:10px 12px;font-weight:600}
 .lvhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .lvhead b{font:700 26px var(--font-display)}
@@ -405,11 +407,13 @@ tr.after td{color:var(--muted)}
       <button id="btnAuto" class="camonly" disabled data-i18n="autoFind">Automatisch finden</button>
       <button id="btnMark" class="camonly" disabled data-i18n="mark">Platte markieren</button>
       <button id="btnPlay" class="camonly" hidden disabled data-i18n="play">▶ Auswerten</button>
+      <button class="camonly" id="btnAux" data-i18n="auxBtn">+ Bluetooth-Sensor dazu</button>
       <button class="primary imuonly" id="btnImuPhone" data-i18n="imuPhone">Handy-Sensor verwenden</button>
       <button class="imuonly" id="btnImuBle" data-i18n="imuBle">Bluetooth-Sensor verbinden</button>
       <label class="btn imuonly" id="imuFileLbl"><span data-i18n="imuCsv">IMU-Datei (CSV) auswerten</span><input type="file" id="imuFile" accept=".csv,.txt,text/csv,text/plain"></label>
       <button class="imuonly" id="btnImuDisc" hidden data-i18n="imuDisc">Trennen</button>
     </div>
+    <div class="auxstat camonly" id="auxStat" hidden></div>
     <details class="planbox" id="planBox"><summary data-i18n="planTitle">Trainingsplan</summary>
       <div class="planlist" id="planList"></div>
       <p class="muted" id="planEmpty" data-i18n="planEmpty"></p>
@@ -1255,7 +1259,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='28';
+const APP_VERSION='29';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -1299,7 +1303,7 @@ function recStop(nr){
       athlete:athName(curAth()),
       signalRep:stopAt!=null?stopAt+1:null,
       processedFps:R.frames.length>1?+((R.frames.length-1)/Math.max(1e-6,R.frames[R.frames.length-1][0]-R.frames[0][0])).toFixed(1):null,
-      reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),mpv:r.mpv!=null?+r.mpv.toFixed(4):null,meanForceN:massKg()&&r.ga!=null?+(massKg()*r.ga).toFixed(1):null,meanPowerW:massKg()&&r.gav!=null?+(massKg()*r.gav).toFixed(1):null,peakPowerW:massKg()&&r.gavMax!=null?+(massKg()*r.gavMax).toFixed(1):null,peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
+      reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),mpv:r.mpv!=null?+r.mpv.toFixed(4):null,meanForceN:massKg()&&r.ga!=null?+(massKg()*r.ga).toFixed(1):null,meanPowerW:massKg()&&r.gav!=null?+(massKg()*r.gav).toFixed(1):null,peakPowerW:massKg()&&r.gavMax!=null?+(massKg()*r.gavMax).toFixed(1):null,peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),imuMcv:r.imu!=null?+r.imu.toFixed(4):null,ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
       framesColumns:R.cols||['t_s','x_px','y_px','y_m','s_m','v_m_s','match_score','tracked','scale','rim_radius_px']};
     const item={id:R.startedAt.getTime(),nr,ex:S.ex,exName:exName(curEx()),started:R.startedAt.toISOString(),reps:reps.filter(r=>r.valid).length,mime:video?R.mime:'',size:video?video.size:0,meta,frames:R.frames,video:video||null};
     dbPut(item).then(renderRecs).catch(()=>{$('recMsg').textContent=t('recStoreFail');});
@@ -1809,6 +1813,8 @@ function recomputeLoss(){
 }
 function refMcv(){const l=reps[reps.length-1];return l?l.ref:null;}
 function onRep(r){
+  if(r.tEnd==null)r.tEnd=performance.now()/1000-0.25;
+  if(IMU.aux&&!isImu()&&typeof auxMatchCam==='function')auxMatchCam(r);
   if(setState!=='running'){
     if(!idleHintShown&&srcReady()&&!isImu()){idleHintShown=true;hint(setState==='done'?'h_doneMove':'h_idleMove');}
     return;
@@ -1978,7 +1984,7 @@ function renderTable(){
     const isStop=i===stopAt;
     let v=!r.valid?'<span class="muted">'+t('partial')+'</span>':(i===0?'–':'−'+fmt(r.loss,1)+' %');
     if(isStop)v+=' <span class="tag">'+t('tagSignal')+'</span>';
-    return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td class="'+(zoneOf(r.mcv)?'z-'+zoneOf(r.mcv):'')+'">'+fmt(r.mcv)+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td><td>'+(mk&&r.ga!=null?fmtInt(mk*r.ga):'–')+'</td><td>'+(mk&&r.gav!=null?fmtInt(mk*r.gav):'–')+'</td></tr>';}).join('');
+    return '<tr class="'+(r.after?'after':'')+'"><td>'+r.n+'</td><td class="'+(zoneOf(r.mcv)?'z-'+zoneOf(r.mcv):'')+'">'+fmt(r.mcv)+(r.imu!=null?'<br><small class="imuv">'+t('auxCol')+' '+fmt(r.imu)+'</small>':'')+'</td><td>'+fmt(r.peak)+'</td><td>'+fmt(r.rom*100,1)+'</td><td>'+fmt(r.dur,2)+'</td><td>'+(r.ref?fmt(r.ref):'–')+'</td><td class="'+(isStop?'bad':'')+'">'+v+'</td><td>'+(mk&&r.ga!=null?fmtInt(mk*r.ga):'–')+'</td><td>'+(mk&&r.gav!=null?fmtInt(mk*r.gav):'–')+'</td></tr>';}).join('');
 }
 $('btnCopy').addEventListener('click',()=>{
   const head='uebung;trainingsgewicht_kg;koerpergewicht_kg;masse_gesamt_kg;wdh;mcv_m_s;mpv_m_s;peak_m_s;rom_cm;dauer_s;referenz_m_s;verlust_prozent;kraft_mittel_N;leistung_mittel_W;leistung_max_W;status';
@@ -2052,7 +2058,7 @@ function srcReady(){return isImu()?IMU.ready:!!tracker;}
 const vadd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],vsc=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
   vlen=a=>Math.sqrt(vdot(a,a)),vcross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 
-function imuReset(){Object.assign(IMU,{ready:false,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,qN:0,qS:null});kin.reset();}
+function imuReset(){Object.assign(IMU,{ready:false,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,qN:0,qS:null});if(!(IMU.aux&&!isImu()))kin.reset();}
 
 /* one sample: t in s, acc in m/s² (incl. gravity, sensor frame), gyro in rad/s (sensor frame) or null */
 function imuSample(t,acc,gyro){
@@ -2080,7 +2086,7 @@ function imuSample(t,acc,gyro){
   if(!IMU.g){imuView();return;}
   const gu=vsc(IMU.g,1/vlen(IMU.g));
   const av=vdot(a,gu)-IMU.gMag;          /* vertical acceleration, up = positive */
-  if(!IMU.ready){IMU.ready=true;updateSetUI();hint(null);}
+  if(!IMU.ready){IMU.ready=true;if(!IMU.aux){updateSetUI();hint(null);}}
   if(still){
     if(IMU.seg.length)imuEndSegment();
     IMU.v=0;IMU.rest=true;
@@ -2090,6 +2096,7 @@ function imuSample(t,acc,gyro){
     IMU.seg.push({t,a:av,v:IMU.v,m:am,mr:vlen(acc)});
     if(IMU.seg.length>6000)imuEndSegment();   /* safety: very long movement without a pause */
   }
+  if(IMU.aux&&!isImu())return;
   kin.v=IMU.v;
   kin.hist.push({t,v:IMU.v,ph:'imu'});while(kin.hist.length&&t-kin.hist[0].t>6)kin.hist.shift();
   if(rec&&setState==='running'&&rec.imu){if(rec.t0==null)rec.t0=t;rec.frames.push([+(t-rec.t0).toFixed(4),+acc[0].toFixed(4),+acc[1].toFixed(4),+acc[2].toFixed(4),gyro?+gyro[0].toFixed(4):'',gyro?+gyro[1].toFixed(4):'',gyro?+gyro[2].toFixed(4):'',+av.toFixed(4),+IMU.v.toFixed(4),still?1:0]);}
@@ -2126,11 +2133,11 @@ function imuEndSegment(){
       let pe=b;for(let k=ip;k<=b;k++)if(s[k].a<-IMU.gMag){pe=k;break;}
       let sv=0,sa=0,np=0,spow=0,pmax=-1e9;
       for(let k=a;k<=b;k++){const f=IMU.gMag+s[k].a,pw=f*v[k];spow+=pw;if(pw>pmax)pmax=pw;if(k<=pe){sv+=v[k];sa+=f;np++;}}
-      out.push({mcv:rom/dur,peak:pk,rom,dur,mpv:np?sv/np:null,ga:np?sa/np:null,gav:spow/(b-a+1),gavMax:pmax});
+      out.push({mcv:rom/dur,peak:pk,rom,dur,mpv:np?sv/np:null,ga:np?sa/np:null,gav:spow/(b-a+1),gavMax:pmax,tEnd:pb.t});
     }
     i=b+1;
   }
-  out.forEach(r=>onRep(r));
+  out.forEach(r=>(IMU.aux&&!isImu())?auxRep(r):onRep(r));
 }
 
 function imuView(){
@@ -2186,15 +2193,15 @@ async function imuBle(){
   let dev;
   try{dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:DRIVERS.map(d=>d.svc)});}
   catch(e){return;}    /* chooser closed */
-  await imuStop();
+  if(IMU.aux&&!isImu()){window.removeEventListener('devicemotion',onMotion);if(IMU.dev){try{IMU.dev.gatt.disconnect();}catch(e){}IMU.dev=null;}}else await imuStop();
   try{
     const server=await dev.gatt.connect();
     let drv=null;for(const d of DRIVERS){try{await server.getPrimaryService(d.svc);drv=d;break;}catch(e){}}
     if(!drv){try{dev.gatt.disconnect();}catch(e){}hint('imuBleUnknown');return;}
-    imuReset();IMU.src='ble';IMU.dev=dev;IMU.info=drv.name+(dev.name?' '+dev.name:'');
+    const aux=IMU.aux;imuReset();IMU.aux=aux;IMU.src='ble';IMU.dev=dev;IMU.info=drv.name+(dev.name?' '+dev.name:'');
     IMU.char=await drv.start(server);
-    dev.addEventListener('gattserverdisconnected',()=>{if(IMU.dev===dev){IMU.src=null;IMU.ready=false;imuButtons();imuView();updateSetUI();hint('imuOff');}});
-    keepAwake();imuButtons();imuView();hint('imuNeedStill');
+    dev.addEventListener('gattserverdisconnected',()=>{if(IMU.dev===dev){IMU.src=null;IMU.ready=false;imuButtons();imuView();updateSetUI();if(IMU.aux){IMU.aux=false;renderAux();}else hint('imuOff');}});
+    keepAwake();imuButtons();imuView();if(!IMU.aux)hint('imuNeedStill');
   }catch(e){hint('imuBleFail',String(e&&e.message||e).slice(0,80));}
 }
 async function imuStop(){
@@ -2269,7 +2276,7 @@ $('btnImuPhone').addEventListener('click',()=>{unlockAudio();imuPhone();});
 $('btnImuBle').addEventListener('click',()=>{unlockAudio();imuBle();});
 $('btnImuDisc').addEventListener('click',()=>imuStop());
 $('imuFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)imuCsv(f);e.target.value='';});
-window.__vbt.imu={IMU,reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
+window.__vbt.imu={IMU,DRIVERS,pmdDelta:(...a)=>pmdDelta(...a),auxRep:r=>auxRep(r),onRep:r=>onRep(r),reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
 
 /* =====================================================================================
    UI SHELL: tabs, focus screen, onboarding, info toggles, theme, stronger signal
@@ -2730,6 +2737,102 @@ $('bkFile').addEventListener('change',e=>{
     $('bkMsg').textContent=t('bkLoaded',added,dup);
   };fr.readAsText(f);
 });
+
+/* =====================================================================================
+   STAGE 4: more Bluetooth drivers (Movesense, Polar) and camera + sensor together
+   ===================================================================================== */
+Object.assign(I18N.de,{auxBtn:'+ Bluetooth-Sensor dazu',auxOn:'Sensor zur Kontrolle verbunden: {0}',auxCol:'IMU',auxHelp:'Kamera und Sensor messen gleichzeitig. In der Tabelle steht unter der Kamera-MCV der Wert vom Sensor, so siehst du sofort, ob beide übereinstimmen.',
+  imuBleUnknown:'Dieser Sensor wird noch nicht unterstützt. Unterstützt: WitMotion (BWT901BLE, WT9011 …), Movesense, Polar Verity Sense / H10 (nur Beschleunigung). Für andere Sensoren: Rohdaten als CSV exportieren und hier auswerten.'});
+Object.assign(I18N.es,{auxBtn:'+ Añadir sensor Bluetooth',auxOn:'Sensor de control conectado: {0}',auxCol:'IMU',auxHelp:'La cámara y el sensor miden a la vez. En la tabla, debajo de la VM de la cámara aparece el valor del sensor, así ves al instante si coinciden.',
+  imuBleUnknown:'Este sensor aún no es compatible. Compatibles: WitMotion (BWT901BLE, WT9011 …), Movesense, Polar Verity Sense / H10 (solo aceleración). Para otros: exporta los datos brutos en CSV y analízalos aquí.'});
+Object.assign(I18N.en,{auxBtn:'+ Add Bluetooth sensor',auxOn:'Check sensor connected: {0}',auxCol:'IMU',auxHelp:'Camera and sensor measure at the same time. In the table, the sensor value appears under the camera MCV, so you see straight away whether both agree.',
+  imuBleUnknown:'This sensor is not supported yet. Supported: WitMotion (BWT901BLE, WT9011 …), Movesense, Polar Verity Sense / H10 (acceleration only). For other sensors, export the raw data as CSV and analyse it here.'});
+
+/* ---- Movesense (GATT SensorData protocol, /Meas/IMU6: m/s² and deg/s, float32) ---- */
+const MS={svc:'34802252-7185-4d5d-b431-630e7050e8f0',w:'34800001-7185-4d5d-b431-630e7050e8f0',n:'34800002-7185-4d5d-b431-630e7050e8f0'};
+DRIVERS.push({
+  name:'Movesense',svc:MS.svc,
+  async start(server){
+    const sv=await server.getPrimaryService(MS.svc),wc=await sv.getCharacteristic(MS.w),nc=await sv.getCharacteristic(MS.n);
+    const RATE=104,REF=99;let t0=null,tl=0;
+    nc.addEventListener('characteristicvaluechanged',ev=>{
+      const d=ev.target.value;if(d.byteLength<6||d.getUint8(0)!==2||d.getUint8(1)!==REF)return;
+      const n=Math.floor((d.byteLength-6)/24);if(n<1)return;
+      const now=performance.now()/1000;if(t0==null)t0=now;
+      const D=Math.PI/180;
+      for(let i=0;i<n;i++){
+        const ao=6+i*12,go=6+n*12+i*12;
+        const acc=[d.getFloat32(ao,true),d.getFloat32(ao+4,true),d.getFloat32(ao+8,true)];
+        const gy=[d.getFloat32(go,true)*D,d.getFloat32(go+4,true)*D,d.getFloat32(go+8,true)*D];
+        tl=Math.max(tl+1/RATE,now-(n-1-i)/RATE);   /* even spacing inside a packet, never going backwards */
+        imuSample(tl,acc,gy);
+      }
+    });
+    await nc.startNotifications();
+    const path=new TextEncoder().encode('/Meas/IMU6/'+RATE);
+    await wc.writeValue(new Uint8Array([1,REF,...path]));
+    return nc;
+  }
+});
+
+/* ---- Polar PMD (Verity Sense, H10): acceleration in mG; raw 16-bit and delta-compressed frames ---- */
+const PMD={svc:'fb005c80-02e7-f387-1cad-8acd2d8df0c8',cp:'fb005c81-02e7-f387-1cad-8acd2d8df0c8',data:'fb005c82-02e7-f387-1cad-8acd2d8df0c8'};
+function pmdDelta(bytes,off,ch){
+  /* reference sample: ch × int16; then blocks [bitWidth, count, packed deltas (LSB first)] */
+  const out=[];const ref=[];
+  for(let c=0;c<ch;c++){let v=bytes[off+2*c]|(bytes[off+2*c+1]<<8);if(v>32767)v-=65536;ref.push(v);}
+  out.push(ref.slice());off+=2*ch;let prev=ref;
+  while(off+2<=bytes.length){
+    const w=bytes[off],cnt=bytes[off+1];off+=2;if(!w||!cnt)break;
+    const nbits=w*cnt*ch,nbytes=Math.ceil(nbits/8);if(off+nbytes>bytes.length)break;
+    let bit=0;const rd=()=>{let v=0;for(let k=0;k<w;k++){const b=(bytes[off+((bit+k)>>3)]>>((bit+k)&7))&1;v|=b<<k;}bit+=w;if(v&(1<<(w-1)))v-=1<<w;return v;};
+    for(let s=0;s<cnt;s++){const cur=[];for(let c=0;c<ch;c++)cur.push(prev[c]+rd());out.push(cur);prev=cur;}
+    off+=nbytes;
+  }
+  return out;
+}
+DRIVERS.push({
+  name:'Polar',svc:PMD.svc,
+  async start(server){
+    const sv=await server.getPrimaryService(PMD.svc),cp=await sv.getCharacteristic(PMD.cp),dc=await sv.getCharacteristic(PMD.data);
+    const RATE=52;let tl=0;
+    dc.addEventListener('characteristicvaluechanged',ev=>{
+      const dv=ev.target.value,b=new Uint8Array(dv.buffer,dv.byteOffset,dv.byteLength);
+      if(b.length<11||b[0]!==2)return;            /* 2 = acceleration */
+      const ft=b[9];let smp=[];
+      if(ft===1){for(let o=10;o+6<=b.length;o+=6){const r=k=>{let v=b[o+k]|(b[o+k+1]<<8);return v>32767?v-65536:v;};smp.push([r(0),r(2),r(4)]);}}
+      else if(ft&0x80)smp=pmdDelta(b,10,3);
+      else return;
+      const now=performance.now()/1000;
+      smp.forEach((s,i)=>{tl=Math.max(tl+1/RATE,now-(smp.length-1-i)/RATE);imuSample(tl,s.map(v=>v/1000*G0),null);});
+    });
+    await cp.startNotifications().catch(()=>{});
+    await dc.startNotifications();
+    /* start ACC: 52 Hz, 16 bit, ±8 g, 3 channels */
+    await cp.writeValue(new Uint8Array([0x02,0x02,0x00,0x01,0x34,0x00,0x01,0x01,0x10,0x00,0x02,0x01,0x08,0x00,0x04,0x01,0x03]));
+    return dc;
+  }
+});
+
+/* ---- camera + Bluetooth sensor together: the sensor checks every camera rep ---- */
+let auxReps=[];
+function auxRep(r){
+  /* match with the camera rep that ended closest in time (within 1.5 s) */
+  let best=null,bd=1.5;
+  reps.forEach(c=>{if(c.tEnd!=null&&c.imu==null){const d=Math.abs(c.tEnd-r.tEnd);if(d<bd){bd=d;best=c;}}});
+  if(best){best.imu=r.mcv;renderTable();}else auxReps.push(r);
+  while(auxReps.length>20)auxReps.shift();
+}
+function auxMatchCam(c){
+  let best=-1,bd=1.5;auxReps.forEach((r,i)=>{const d=Math.abs(c.tEnd-r.tEnd);if(d<bd){bd=d;best=i;}});
+  if(best>=0){c.imu=auxReps[best].mcv;auxReps.splice(best,1);}
+}
+$('btnAux').addEventListener('click',async()=>{unlockAudio();IMU.aux=true;await imuBle();if(!IMU.src)IMU.aux=false;renderAux();});
+function renderAux(){
+  const on=!isImu()&&IMU.aux&&IMU.src==='ble';
+  $('auxStat').hidden=!on;if(on)$('auxStat').textContent=t('auxOn',IMU.info||'Bluetooth')+' · '+(IMU.rateHz||'–')+' Hz';
+}
+setInterval(()=>{if(IMU.aux)renderAux();},1000);
 
 renderAth();bindZone();$('lvDays').value=S.lvDays||'90';renderLV();renderPlan();$('trendMetric').value=S.trendMetric||'avg';renderSessions();
 $('theme').value=S.theme||'auto';applyTheme();$('obLang').value=L;$('lang').value=L;infoToggles();showTab(S.tab||'tabTrain');if(!$('startScreen').hidden)obShow(1); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
