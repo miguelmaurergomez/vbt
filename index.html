@@ -229,6 +229,26 @@ body{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
 #lvDays{font:600 14px var(--font-body);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:36px}
 #lvChart{height:200px;margin-top:8px}
 .lvwarn{color:var(--warn)}
+#trendMetric{font:600 14px var(--font-body);padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:36px}
+.pbbox{margin-top:8px}
+.pbbox b{font-size:14px}
+.pbbox ul{margin:4px 0 0;padding-left:18px;font-size:14px;font-variant-numeric:tabular-nums}
+.exprow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.exprow label{font-weight:600;font-size:14px}
+#expScope{font:600 15px var(--font-body);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:40px}
+.report{display:none}
+@media print{
+  body{background:#fff!important;color:#000!important;padding:0!important}
+  body>*:not(#report){display:none!important}
+  #report{display:block!important;font:11pt/1.4 var(--font-body);color:#000}
+  #report h1{font:700 22pt var(--font-display);margin:0 0 4pt}
+  #report h2{font:700 14pt var(--font-display);text-transform:none;letter-spacing:0;color:#000;margin:14pt 0 4pt}
+  #report h3{font-size:11pt;margin:10pt 0 3pt}
+  #report table{width:100%;border-collapse:collapse;font-size:9.5pt}
+  #report th,#report td{border-bottom:1px solid #bbb;padding:3pt 4pt;color:#000}
+  #report img{max-width:100%;height:auto;border:1px solid #ddd}
+  #report .rpmeta{color:#333}
+}
 #mcvVal[data-zone="ok"]{color:var(--ok)}
 #mcvVal[data-zone="slow"]{color:var(--alarm)}
 #mcvVal[data-zone="fast"]{color:var(--warn)}
@@ -327,6 +347,7 @@ tr.after td{color:var(--muted)}
   <button type="button" class="fset primary" id="fSet">Satz starten</button>
 </div>
 <div class="flash" id="flash"></div>
+<div class="report" id="report"></div>
 <div class="app">
   <header>
     <h1><span data-i18n="title">VBT Tracker</span><small data-i18n="subtitle">Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
@@ -464,7 +485,7 @@ tr.after td{color:var(--muted)}
 
   <section class="panel" id="sessPanel">
     <h2 data-i18n="sessTitle">Trainingseinheiten</h2>
-    <div class="trend"><div class="trendhead"><b id="trendTitle"></b><select id="trendLoad" aria-label="kg"></select><span class="muted" id="trendNote"></span></div><canvas class="chart" id="trendChart"></canvas></div>
+    <div class="trend"><div class="trendhead"><b id="trendTitle"></b><select id="trendMetric" aria-label="Kennzahl"><option value="avg" data-i18n="tm_avg">Ø MCV</option><option value="best" data-i18n="tm_best">Beste Wdh.</option><option value="loss" data-i18n="tm_loss">Ø Verlust %</option><option value="vol" data-i18n="tm_vol">Volumen</option><option value="orm" data-i18n="tm_orm">1RM geschätzt</option></select><select id="trendLoad" aria-label="kg"></select><span class="muted" id="trendNote"></span></div><canvas class="chart" id="trendChart"></canvas><div class="pbbox"><b data-i18n="pbTitle">Bestwerte</b><ul id="pbList"></ul></div></div>
     <div class="sesslist" id="sessList"></div>
     <div class="row">
       <span class="muted" id="sessMsg" data-i18n="sessNote">Sätze mit mehr als 3 Stunden Abstand werden automatisch getrennt.</span>
@@ -472,6 +493,12 @@ tr.after td{color:var(--muted)}
     </div>
   </section>
 
+  <section class="panel" id="expPanel">
+    <h2 data-i18n="expTitle">Export</h2>
+    <div class="exprow"><label for="expScope" data-i18n="expScope">Umfang</label><select id="expScope"><option value="all" data-i18n="expAll">Alles</option><option value="last" data-i18n="expLast">Letzte Einheit</option><option value="30" data-i18n="exp30">Letzte 30 Tage</option></select></div>
+    <div class="controls"><button type="button" class="primary" id="btnXlsx" data-i18n="expXlsx">Excel-Datei (.xlsx)</button><button type="button" id="btnPdf" data-i18n="expPdf">PDF-Bericht</button></div>
+    <p class="muted" data-i18n="expHelp"></p><p class="muted" id="expMsg"></p>
+  </section>
   <section class="panel" id="recPanel">
     <h2 data-i18n="recTitle">Aufnahmen</h2>
     <div class="reclist" id="recList"></div>
@@ -529,6 +556,12 @@ tr.after td{color:var(--muted)}
         <label for="mvt" data-i18n="mvtLabel">Geschwindigkeit bei 1RM (m/s)</label>
         <input type="text" id="mvt" inputmode="decimal" autocomplete="off" class="txtin">
         <div class="help" data-i18n="mvtHelp"></div>
+      </div>
+      <div class="field">
+        <label data-i18n="bkTitle">Datensicherung</label>
+        <div class="controls"><button type="button" id="bkSave" data-i18n="bkSave">Sicherung speichern</button><label class="btn" id="bkLoadLbl"><span data-i18n="bkLoad">Sicherung laden</span><input type="file" id="bkFile" accept=".json,application/json"></label></div>
+        <div class="muted" id="bkMsg"></div>
+        <div class="help" data-i18n="bkHelp"></div>
       </div>
       <div class="field">
         <label data-i18n="athTitle">Athleten</label>
@@ -1222,7 +1255,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='27';
+const APP_VERSION='28';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -1510,19 +1543,36 @@ function drawTrend(ss){
   loads.forEach(l=>add(l,l?fmt(+l,(+l)%1?1:0)+' kg':t('noLoad')));if(loads.length>1)add('all',t('trendAll'));
   sel.value=trendSel[S.ex];sel.hidden=!loads.length;
   const fsel=trendSel[S.ex],match=h=>fsel==='all'||(kgOf(h)!=null&&kgOf(h)>0?String(kgOf(h)):'')===fsel;
-  const pts=[];(ss||getSessions()).forEach(se=>{const hs=se.sets.filter(h=>(h.ex||'bench')===S.ex&&match(h));if(!hs.length)return;const m=exSummary(hs);if(m.avg!=null)pts.push({ts:se.start,avg:m.avg,best:m.best});});
-  $('trendNote').textContent=pts.length>=2?t('trendNote'):t('trendFew');
+  const metric=S.trendMetric||'avg';
+  const sess=(ss||getSessions());
+  const pts=[];
+  sess.forEach(se=>{
+    const all=se.sets.filter(h=>(h.ex||'bench')===S.ex);if(!all.length)return;
+    const hs=metric==='vol'||metric==='orm'?all:all.filter(match);if(!hs.length)return;
+    const m=exSummary(hs);let val=null,val2=null;
+    if(metric==='avg'){val=m.avg;val2=m.best;}
+    else if(metric==='best')val=m.best;
+    else if(metric==='loss')val=m.loss;
+    else if(metric==='vol')val=m.vol;
+    else if(metric==='orm'){const f=lvFitAt(se.end);val=f&&f.ok&&f.orm>0?f.orm:null;}
+    if(val!=null&&isFinite(val))pts.push({ts:se.start,val,val2});
+  });
+  sel.hidden=!loads.length||metric==='vol'||metric==='orm';
+  $('trendNote').textContent=pts.length>=2?t('tn_'+metric):t('trendFew');
   const c=$('trendChart');c.hidden=pts.length<2;if(pts.length<2)return;
   const {x,w,h}=prepCanvas(c);const P=pts.slice(-20);
   const mut=tok('--muted'),line=tok('--line'),acc=tok('--accent'),ink=tok('--ink');
-  const lo=Math.min(...P.map(p=>p.avg))*0.9,hi=Math.max(...P.map(p=>p.best))*1.05;
-  const L0=40,R0=24,T0=10,B0=24,X=i=>L0+(w-L0-R0)*(P.length===1?0.5:i/(P.length-1)),Y=v=>T0+(h-T0-B0)*(1-(v-lo)/((hi-lo)||1));
+  const vals=P.map(p=>p.val).concat(P.map(p=>p.val2).filter(v=>v!=null));
+  let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*0.12||Math.abs(hi)*0.1||1;lo-=pad;hi+=pad;if(metric!=='loss'&&lo<0)lo=0;
+  const dec=metric==='vol'||metric==='orm'?0:(metric==='loss'?1:2);
+  const L0=44,R0=24,T0=10,B0=24,X=i=>L0+(w-L0-R0)*(P.length===1?0.5:i/(P.length-1)),Y=v=>T0+(h-T0-B0)*(1-(v-lo)/((hi-lo)||1));
   x.font='11px '+tok('--font-body');x.fillStyle=mut;x.strokeStyle=line;x.lineWidth=1;
-  for(let k=0;k<=3;k++){const v=lo+(hi-lo)*k/3;x.beginPath();x.moveTo(L0,Y(v));x.lineTo(w-R0,Y(v));x.stroke();x.fillText(fmt(v),2,Y(v)+4);}
+  for(let k=0;k<=3;k++){const v=lo+(hi-lo)*k/3;x.beginPath();x.moveTo(L0,Y(v));x.lineTo(w-R0,Y(v));x.stroke();x.fillText(dec?fmt(v,dec):fmtInt(v),2,Y(v)+4);}
   x.textAlign='center';P.forEach((p,i)=>{if(P.length<=8||i%Math.ceil(P.length/8)===0||i===P.length-1){const d=new Date(p.ts);x.fillText(String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.',X(i),h-6);}});
   x.textAlign='left';
-  x.strokeStyle=acc;x.lineWidth=2.5;x.beginPath();P.forEach((p,i)=>i?x.lineTo(X(i),Y(p.avg)):x.moveTo(X(i),Y(p.avg)));x.stroke();
-  P.forEach((p,i)=>{x.fillStyle=acc;x.beginPath();x.arc(X(i),Y(p.avg),3.5,0,7);x.fill();x.fillStyle=ink;x.globalAlpha=.55;x.beginPath();x.arc(X(i),Y(p.best),3,0,7);x.fill();x.globalAlpha=1;});
+  x.strokeStyle=acc;x.lineWidth=2.5;x.beginPath();P.forEach((p,i)=>i?x.lineTo(X(i),Y(p.val)):x.moveTo(X(i),Y(p.val)));x.stroke();
+  P.forEach((p,i)=>{x.fillStyle=acc;x.beginPath();x.arc(X(i),Y(p.val),3.5,0,7);x.fill();if(p.val2!=null){x.fillStyle=ink;x.globalAlpha=.55;x.beginPath();x.arc(X(i),Y(p.val2),3,0,7);x.fill();x.globalAlpha=1;}});
+  renderPBs();
 }
 function kgOf(h){return h.load!=null?h.load:h.mass;}
 function exHistory(){return history.filter(h=>(h.ex||'bench')===S.ex&&athOK(h));}
@@ -2537,7 +2587,151 @@ function imuJump(s,v){
 }
 
 bindExercises(); bindSettings(); applyStatic(); renderExSel(); applySrc();
-renderAth();bindZone();$('lvDays').value=S.lvDays||'90';renderLV();renderPlan();
+/* =====================================================================================
+   STAGE 3: trend metrics + personal bests, Excel / PDF export, backup & restore
+   ===================================================================================== */
+Object.assign(I18N.de,{
+  tmLabel:'Kennzahl',tm_avg:'Ø MCV',tm_best:'Beste Wdh.',tm_loss:'Ø Verlust %',tm_vol:'Volumen (kg × Wdh.)',tm_orm:'1RM geschätzt',
+  tn_avg:'Ø MCV pro Einheit (Linie) und beste Wdh. (Punkte)',tn_best:'Schnellste Wdh. pro Einheit',tn_loss:'Ø Geschwindigkeitsverlust pro Satz',tn_vol:'Gesamtvolumen der Übung pro Einheit',tn_orm:'1RM-Schätzung aus den Sätzen der letzten 90 Tage bis zu dieser Einheit',
+  pbTitle:'Bestwerte',pbRow:'{0} kg: {1} m/s ({2})',pbNone:'Noch keine Bestwerte.',
+  expTitle:'Export',expScope:'Umfang',expAll:'Alles',expLast:'Letzte Einheit',exp30:'Letzte 30 Tage',expXlsx:'Excel-Datei (.xlsx)',expPdf:'PDF-Bericht',
+  expHelp:'Excel: alle Sätze und Wiederholungen des gewählten Athleten. PDF: Bericht mit Einheiten, Verlauf und Profil. Beim PDF „Als PDF speichern“ als Drucker wählen.',expNone:'Keine Daten im gewählten Umfang.',expDone:'Gespeichert: {0}',
+  bkTitle:'Datensicherung',bkSave:'Sicherung speichern',bkLoad:'Sicherung laden',bkHelp:'Speichert alle Sätze, Athleten, Übungen und Einstellungen in einer Datei. Damit kannst du sie aufs neue Handy mitnehmen oder nach dem Löschen der Browserdaten wiederherstellen. Video-Aufnahmen sind nicht enthalten.',
+  bkDone:'Sicherung gespeichert ({0} Sätze).',bkLoaded:'Sicherung geladen: {0} neue Sätze, {1} schon vorhanden.',bkBad:'Diese Datei ist keine VBT-Tracker-Sicherung.',
+  rpTitle:'VBT Tracker – Bericht',rpAth:'Athlet',rpPeriod:'Zeitraum',rpMade:'Erstellt',rpSessions:'Trainingseinheiten',rpProfile:'Last-Geschwindigkeits-Profil',rpTrend:'Verlauf'});
+Object.assign(I18N.es,{
+  tmLabel:'Métrica',tm_avg:'VM media',tm_best:'Mejor rep.',tm_loss:'Pérdida media %',tm_vol:'Volumen (kg × rep.)',tm_orm:'1RM estimado',
+  tn_avg:'VM media por sesión (línea) y mejor rep. (puntos)',tn_best:'Rep. más rápida por sesión',tn_loss:'Pérdida de velocidad media por serie',tn_vol:'Volumen total del ejercicio por sesión',tn_orm:'1RM estimado con las series de los 90 días previos a cada sesión',
+  pbTitle:'Mejores marcas',pbRow:'{0} kg: {1} m/s ({2})',pbNone:'Aún no hay mejores marcas.',
+  expTitle:'Exportar',expScope:'Alcance',expAll:'Todo',expLast:'Última sesión',exp30:'Últimos 30 días',expXlsx:'Archivo Excel (.xlsx)',expPdf:'Informe PDF',
+  expHelp:'Excel: todas las series y repeticiones del atleta elegido. PDF: informe con sesiones, evolución y perfil. En el PDF elige «Guardar como PDF» como impresora.',expNone:'No hay datos en el alcance elegido.',expDone:'Guardado: {0}',
+  bkTitle:'Copia de seguridad',bkSave:'Guardar copia',bkLoad:'Cargar copia',bkHelp:'Guarda todas las series, atletas, ejercicios y ajustes en un archivo. Así puedes pasarlos a un celular nuevo o recuperarlos si se borran los datos del navegador. Las grabaciones de video no se incluyen.',
+  bkDone:'Copia guardada ({0} series).',bkLoaded:'Copia cargada: {0} series nuevas, {1} ya existían.',bkBad:'Este archivo no es una copia del VBT Tracker.',
+  rpTitle:'VBT Tracker – Informe',rpAth:'Atleta',rpPeriod:'Periodo',rpMade:'Creado',rpSessions:'Sesiones',rpProfile:'Perfil carga-velocidad',rpTrend:'Evolución'});
+Object.assign(I18N.en,{
+  tmLabel:'Metric',tm_avg:'Avg MCV',tm_best:'Best rep',tm_loss:'Avg loss %',tm_vol:'Volume (kg × reps)',tm_orm:'Estimated 1RM',
+  tn_avg:'Average MCV per session (line) and best rep (dots)',tn_best:'Fastest rep per session',tn_loss:'Average velocity loss per set',tn_vol:'Total volume of the exercise per session',tn_orm:'1RM estimate from the sets of the 90 days up to each session',
+  pbTitle:'Personal bests',pbRow:'{0} kg: {1} m/s ({2})',pbNone:'No personal bests yet.',
+  expTitle:'Export',expScope:'Scope',expAll:'Everything',expLast:'Last session',exp30:'Last 30 days',expXlsx:'Excel file (.xlsx)',expPdf:'PDF report',
+  expHelp:'Excel: all sets and reps of the selected athlete. PDF: report with sessions, trend and profile. For the PDF, pick “Save as PDF” as the printer.',expNone:'No data in the selected scope.',expDone:'Saved: {0}',
+  bkTitle:'Backup',bkSave:'Save backup',bkLoad:'Load backup',bkHelp:'Saves all sets, athletes, exercises and settings in one file, so you can move them to a new phone or restore them after clearing browser data. Video recordings are not included.',
+  bkDone:'Backup saved ({0} sets).',bkLoaded:'Backup loaded: {0} new sets, {1} already present.',bkBad:'This file is not a VBT Tracker backup.',
+  rpTitle:'VBT Tracker – Report',rpAth:'Athlete',rpPeriod:'Period',rpMade:'Created',rpSessions:'Training sessions',rpProfile:'Load-velocity profile',rpTrend:'Trend'});
+
+/* ---------------- trend helpers ---------------- */
+function lvFitAt(ts){
+  const since=ts-90*86400000;
+  const pts=history.filter(h=>athOK(h)&&(h.ex||'bench')===S.ex&&h.ts<=ts+1&&h.ts>=since&&h.load!=null&&h.load>0&&h.best!=null).map(h=>({kg:h.load,v:h.best}));
+  const loads=[...new Set(pts.map(p=>p.kg))];if(pts.length<2||loads.length<2)return null;
+  const n=pts.length,mx=pts.reduce((a,p)=>a+p.kg,0)/n,my=pts.reduce((a,p)=>a+p.v,0)/n;let sxx=0,sxy=0;pts.forEach(p=>{sxx+=(p.kg-mx)**2;sxy+=(p.kg-mx)*(p.v-my);});
+  const b=sxy/sxx,a=my-b*mx;return b<0?{ok:true,orm:(mvtOf()-a)/b}:null;
+}
+function renderPBs(){
+  const box=$('pbList');if(!box)return;
+  const by={};exHistory().forEach(h=>{const kg=h.load!=null&&h.load>0?h.load:0;if(h.best==null)return;if(!by[kg]||h.best>by[kg].v)by[kg]={v:h.best,ts:h.ts};});
+  const ks=Object.keys(by).map(Number).sort((a,b)=>a-b);
+  box.innerHTML=ks.length?ks.map(k=>'<li>'+t('pbRow',k?fmt(k,k%1?1:0):t('noLoad'),fmt(by[k].v),dayLabel(by[k].ts))+'</li>').join(''):'<li class="muted">'+t('pbNone')+'</li>';
+}
+$('trendMetric').addEventListener('change',e=>{S.trendMetric=e.target.value;store.set('vbt-settings',S);renderSessions();});
+
+/* ---------------- export scope ---------------- */
+function scopeSets(){
+  const sc=$('expScope').value,mine=history.filter(athOK).sort((a,b)=>a.ts-b.ts);
+  if(sc==='last'){const ss=getSessions();const l=ss[ss.length-1];return l?l.sets.slice():[];}
+  if(sc==='30'){const since=Date.now()-30*86400000;return mine.filter(h=>h.ts>=since);}
+  return mine;
+}
+const xesc=v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function colL(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+/* minimal .xlsx writer: inline strings, numbers, bold header row, frozen header */
+function xlsx(sheets){
+  const enc=new TextEncoder();
+  const sheetXml=rows=>{
+    const r=rows.map((row,ri)=>'<row r="'+(ri+1)+'">'+row.map((v,ci)=>{
+      const ref=colL(ci)+(ri+1);
+      if(v==null||v==='')return '';
+      if(typeof v==='number'&&isFinite(v))return '<c r="'+ref+'"'+(ri===0?' s="1"':'')+'><v>'+v+'</v></c>';
+      return '<c r="'+ref+'" t="inlineStr"'+(ri===0?' s="1"':'')+'><is><t xml:space="preserve">'+xesc(v)+'</t></is></c>';}).join('')+'</row>').join('');
+    const widths='<cols>'+rows[0].map((h,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+Math.max(9,Math.min(28,String(h).length+3))+'" customWidth="1"/>').join('')+'</cols>';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+widths+'<sheetData>'+r+'</sheetData></worksheet>';
+  };
+  const files=[
+    {name:'[Content_Types].xml',data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>')},
+    {name:'_rels/.rels',data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')},
+    {name:'xl/workbook.xml',data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map((s,i)=>'<sheet name="'+xesc(s.name.slice(0,31))+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+'</sheets></workbook>')},
+    {name:'xl/_rels/workbook.xml.rels',data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')},
+    {name:'xl/styles.xml',data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>')}
+  ];
+  sheets.forEach((s,i)=>files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:enc.encode(sheetXml(s.rows))}));
+  return new Blob([zip(files)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const H_SETS={de:['Athlet','Datum','Uhrzeit','Übung','Trainingsgewicht kg','Körpergewicht kg','Wdh.','Signal bei Wdh.','Schwelle %','Beste MCV m/s','MCV bei Signal/Ende m/s','Verlust Ende %'],
+  es:['Atleta','Fecha','Hora','Ejercicio','Peso de entrenamiento kg','Peso corporal kg','Rep.','Aviso en rep.','Umbral %','Mejor VM m/s','VM en aviso/final m/s','Pérdida final %'],
+  en:['Athlete','Date','Time','Exercise','Training load kg','Body mass kg','Reps','Signal at rep','Threshold %','Best MCV m/s','MCV at signal/end m/s','Final loss %']};
+const H_REPS={de:['Athlet','Datum','Uhrzeit','Übung','Trainingsgewicht kg','Wdh.','MCV m/s','MPV m/s','Peak m/s','ROM cm','Dauer s','Referenz m/s','Verlust %','gültig','nach Signal','Kraft N','Leistung W','Leistung max W'],
+  es:['Atleta','Fecha','Hora','Ejercicio','Peso de entrenamiento kg','Rep.','VM m/s','VMP m/s','Pico m/s','ROM cm','Duración s','Referencia m/s','Pérdida %','válida','tras aviso','Fuerza N','Potencia W','Potencia máx. W'],
+  en:['Athlete','Date','Time','Exercise','Training load kg','Rep','MCV m/s','MPV m/s','Peak m/s','ROM cm','Time s','Reference m/s','Loss %','valid','after signal','Force N','Power W','Peak power W']};
+function d2(ts){const d=new Date(ts),p=n=>String(n).padStart(2,'0');return [p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear(),p(d.getHours())+':'+p(d.getMinutes())];}
+function athById(id){return S.athletes.find(a=>a.id===(id||'me'))||{name:''};}
+function exportXlsx(){
+  const sets=scopeSets();if(!sets.length){$('expMsg').textContent=t('expNone');return;}
+  const num=v=>v==null||!isFinite(v)?'':+(+v).toFixed(4);
+  const rs=[H_SETS[L]||H_SETS.de],rr=[H_REPS[L]||H_REPS.de];
+  sets.forEach(h=>{const [dt,tm]=d2(h.ts),an=athName(athById(h.ath)),ex=exLabel(h.ex||'bench',h.exName),so=stopOf(h);
+    rs.push([an,dt,tm,ex,num(h.load),num(h.body),h.reps,h.signal||'',h.thr,num(h.best),num(so.mcv),num(so.loss)]);
+    (h.data||[]).forEach(r=>rr.push([an,dt,tm,ex,num(h.load),r.n,num(r.mcv),num(r.mpv),num(r.peak),num(r.rom),num(r.dur),num(r.ref),num(r.loss),r.valid===false?0:1,r.after?1:0,num(r.F),num(r.P),num(r.Pmax)]));});
+  const sheets=[{name:t('setsTitle'),rows:rs},{name:t('repsTitle'),rows:rr}];
+  const f=lvFit();if(f.ok){sheets.push({name:'1RM',rows:[[t('exLabel'),'kg','MCV m/s'],...f.pts.map(p=>[exName(curEx()),p.kg,num(p.v)]),[],['1RM',num(f.orm),num(mvtOf())],['R²',num(f.r2)]]});}
+  const name='vbt_'+(athName(curAth())||'export').toLowerCase().replace(/[^a-z0-9äöüß]+/g,'-')+'_'+stamp(new Date().toISOString()).slice(0,10)+'.xlsx';
+  saveBlob(xlsx(sheets),name);$('expMsg').textContent=t('expDone',name);
+}
+function exportPdf(){
+  const sets=scopeSets();if(!sets.length){$('expMsg').textContent=t('expNone');return;}
+  showTab('tabHist');renderSessions();renderLV();
+  const sess=[];let cur=null;sets.sort((a,b)=>a.ts-b.ts).forEach(h=>{if(!cur||h.ts-cur.end>SESSION_GAP){cur={start:h.ts,end:h.ts,sets:[]};sess.push(cur);}cur.sets.push(h);cur.end=h.ts;});
+  const img=id=>{const c=$(id);try{return c&&!c.hidden&&c.width?'<img src="'+c.toDataURL('image/png')+'" alt="">':'';}catch(e){return '';}};
+  let html='<h1>'+xesc(t('rpTitle'))+'</h1><p class="rpmeta"><b>'+xesc(t('rpAth'))+':</b> '+xesc(athName(curAth()))+' · <b>'+xesc(t('rpPeriod'))+':</b> '+dayLabel(sets[0].ts)+' – '+dayLabel(sets[sets.length-1].ts)+' · <b>'+xesc(t('rpMade'))+':</b> '+dayLabel(Date.now())+'</p>';
+  html+='<h2>'+xesc(t('rpSessions'))+'</h2>';
+  sess.slice().reverse().forEach(se=>{
+    html+='<h3>'+xesc(t('sessHead',dayLabel(se.start),hm(se.start),hm(se.end)))+'</h3><table><thead><tr>'+t('sth').map(x=>'<th>'+xesc(x)+'</th>').join('')+'</tr></thead><tbody>';
+    const by={};se.sets.forEach(h=>{const k=(h.ex||'bench')+'|'+(kgOf(h)||'');(by[k]=by[k]||[]).push(h);});
+    Object.keys(by).forEach(k=>{const g=by[k],m=exSummary(g);html+='<tr><td>'+xesc(exLabel(k.split('|')[0],g[0].exName))+'</td><td>'+m.sets+'</td><td>'+m.reps+'</td><td>'+(m.loads.length?m.loads.map(x=>fmt(x,x%1?1:0)).join(' / '):'–')+'</td><td>'+fmt(m.avg)+'</td><td>'+fmt(m.best)+'</td><td>'+(m.loss!=null?'−'+fmt(m.loss,1)+' %':'–')+'</td><td>'+(m.vol?fmtInt(m.vol):'–')+'</td><td>'+(m.pw!=null?fmtInt(m.pw):'–')+'</td></tr>';});
+    html+='</tbody></table>';
+  });
+  const lv=lvFit();
+  if(lv.ok)html+='<h2>'+xesc(t('rpProfile'))+': '+xesc(exName(curEx()))+'</h2><p><b>'+xesc(t('lvRes',fmt(lv.orm,0)))+'</b> · '+xesc(t('lvSub',fmt(lv.r2,2),lv.pts.length,lv.loads.length,fmt(lv.a,3),fmt(-lv.b,4)))+'</p>'+img('lvChart');
+  const tr=img('trendChart');if(tr)html+='<h2>'+xesc(t('rpTrend'))+': '+xesc(exName(curEx()))+'</h2><p>'+xesc($('trendNote').textContent)+'</p>'+tr;
+  $('report').innerHTML=html;
+  setTimeout(()=>{try{window.print();}catch(e){}},150);
+}
+$('btnXlsx').addEventListener('click',exportXlsx);
+$('btnPdf').addEventListener('click',exportPdf);
+
+/* ---------------- backup / restore ---------------- */
+$('bkSave').addEventListener('click',()=>{
+  const data={app:'VBT Tracker',kind:'backup',version:APP_VERSION,exported:new Date().toISOString(),settings:S,history};
+  const name='vbt_sicherung_'+stamp(new Date().toISOString())+'.json';
+  saveBlob(new Blob([JSON.stringify(data)],{type:'application/json'}),name);$('bkMsg').textContent=t('bkDone',history.length);
+});
+$('bkFile').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  const fr=new FileReader();fr.onload=()=>{
+    let d;try{d=JSON.parse(String(fr.result));}catch(err){d=null;}
+    if(!d||d.kind!=='backup'||!Array.isArray(d.history)){$('bkMsg').textContent=t('bkBad');return;}
+    const have=new Set(history.map(h=>h.id));let added=0,dup=0;
+    d.history.forEach(h=>{if(h&&h.id&&!have.has(h.id)){history.push(h);have.add(h.id);added++;}else dup++;});
+    history.sort((a,b)=>(a.ts||0)-(b.ts||0));store.set(HKEY,history);
+    const s2=d.settings||{};
+    (s2.athletes||[]).forEach(a=>{if(a&&a.id&&!S.athletes.find(x=>x.id===a.id))S.athletes.push(a);});
+    (s2.customEx||[]).forEach(c=>{if(c&&c.id&&!S.customEx.find(x=>x.id===c.id))S.customEx.push(c);});
+    Object.keys(s2.exSet||{}).forEach(k=>{if(!S.exSet[k])S.exSet[k]=s2.exSet[k];});
+    store.set('vbt-settings',S);
+    renderAth();renderExSel();renderHistory();renderSessions();renderLV();updateSetUI();
+    $('bkMsg').textContent=t('bkLoaded',added,dup);
+  };fr.readAsText(f);
+});
+
+renderAth();bindZone();$('lvDays').value=S.lvDays||'90';renderLV();renderPlan();$('trendMetric').value=S.trendMetric||'avg';renderSessions();
 $('theme').value=S.theme||'auto';applyTheme();$('obLang').value=L;$('lang').value=L;infoToggles();showTab(S.tab||'tabTrain');if(!$('startScreen').hidden)obShow(1); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
