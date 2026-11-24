@@ -836,6 +836,28 @@ function updateScale(x,y,dt){
   const a=1-Math.exp(-Math.max(0.005,dt)/tau);scaleK+=a*(k-scaleK);rimR=calib.r0*scaleK;
   return m;
 }
+/* Rim rescue: the template match fails when the plate blurs or turns during a fast pull, and a weak match
+   can then settle on the background. The rim is a circle, so it can still be found where the plate should be
+   (last position + recent velocity). Used right away, without waiting for the slower YOLO check. */
+let susp=0;
+function rimRescue(tm){
+  if(window.__NORIM||!calib||!tracker||trail.length<1)return null;
+  const R=(calib.r0||calib.dpx/2)*scaleK,sign=calib.rimSign||0,L=trail[trail.length-1];
+  let vx=0,vy=0;
+  if(trail.length>=3){const P=trail[trail.length-3],dt=L.t-P.t;if(dt>0){vx=(L.x-P.x)/dt;vy=(L.y-P.y)/dt;}}
+  const dt=Math.min(0.4,tm-L.t),cands=[[L.x+vx*dt,L.y+vy*dt],[L.x+vx*dt*1.5,L.y+vy*dt*1.5],[L.x+vx*dt*0.5,L.y+vy*dt*0.5],[L.x,L.y]];
+  let best=null;
+  for(const [cx,cy] of cands){
+    let m=measureRim2(cx,cy,R,sign);
+    if(!m||m.x==null||Math.abs(m.r/R-1)>0.25)continue;
+    if(!best||m.n>best.n)best=m;
+    if(m.n>=RIM.rays*0.6)break;
+  }
+  if(!best||best.n<RIM.rays*0.45)return null;
+  tracker.x=best.x*tracker.s;tracker.y=best.y*tracker.s;tracker.lost=false;tracker.lostN=0;
+  tracker.vxs=vx*tracker.s;tracker.vys=vy*tracker.s;   /* keep the plate's own speed, not the jump of the rescue */
+  return {ok:true,x:best.x,y:best.y,score:tracker.score,rim:1};
+}
 function curMpp(){return calib?S.diamMM/1000/(calib.dpx*scaleK):null;}
 
 /* ---------- YOLO plate detector (onnxruntime-web, model plate.onnx next to the page) ----------
@@ -1014,7 +1036,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='23';
+const APP_VERSION='24';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -1585,7 +1607,13 @@ function onFrame(now,meta){
   if(tm!==lastT&&tracker&&!tapStage&&(mode==='live'||!video.paused)){
     lastT=tm;
     fpsMon(tm);
-    const r=tracker.update(tm);
+    let r=tracker.update(tm);
+    /* weak match without a visible rim twice in a row: probably on the background, look where the plate should be */
+    if(r.ok&&trail.length>=3){const L=trail[trail.length-1],P=trail[trail.length-3],dd=L.t-P.t,dt=tm-L.t;
+      if(dd>0&&dt<0.3){const px=L.x+(L.x-P.x)/dd*dt,py=L.y+(L.y-P.y)/dd*dt;
+        if(Math.hypot(r.x-px,r.y-py)>0.7*calib.dpx*scaleK){const q=rimRescue(tm);r=q||{ok:false,score:r.score};if(!q)tracker.lost=true;}}}
+    if(r.ok&&!r.rim&&r.score<(window.__SUSP||0.75)&&scaleOK&&calib.r0){const m=measureRim2(r.x,r.y,calib.r0*scaleK,calib.rimSign);susp=(m&&m.x!=null&&m.n>=RIM.rays*0.45&&Math.abs(m.r/(calib.r0*scaleK)-1)<0.25)?0:susp+1;}else susp=0;
+    if(!r.ok||susp>=2){const q=rimRescue(tm);if(q&&(!r.ok||Math.hypot(q.x-r.x,q.y-r.y)>0.3*calib.dpx*scaleK)){r=q;susp=0;}}
     if(r.ok){trail.push({x:r.x,y:r.y,t:tm});while(trail.length&&tm-trail[0].t>3)trail.shift();const rim=updateScale(r.x,r.y,tm-(lastScaleT==null?tm:lastScaleT));lastScaleT=tm;
       if(rim&&rim.x!=null){r.tx=r.x;r.ty=r.y;r.x=rim.x;r.y=rim.y;tracker.x=rim.x*tracker.s;tracker.y=rim.y*tracker.s;} /* rim centre is the better plate centre */
       if(scaleOK)tracker.setScale(scaleK);
@@ -1593,6 +1621,7 @@ function onFrame(now,meta){
       if($('chip').dataset.s!=='alarm')chip('track');}
     else if($('chip').dataset.s!=='alarm'){chip('lost');hint(tracker&&atEdge(tracker.x/tracker.s,tracker.y/tracker.s)?'h_edge':'h_lost');}
     yoloAssist(tm,r);
+    if(window.__TR)window.__TR.push([tm,r.ok?1:0,r.x,r.y,r.rim?1:0]);
     if(!r.ok)recFrame(tm,r);
     if(r.ok&&lastHint&&lastHint[0]==='h_lost')hint(null);
     if(r.ok&&lastHint&&lastHint[0]==='h_edge'&&edgeCount===0&&setState!=='running')hint(null);
