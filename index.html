@@ -136,6 +136,21 @@ td.del button[data-armed="1"]{background:var(--alarm);border-color:var(--alarm);
 .dot[data-s="running"]{background:var(--alarm)}
 
 .controls{display:flex;flex-wrap:wrap;gap:8px}
+body:not(.imu-mode) .imuonly{display:none!important}
+body.imu-mode .camonly{display:none!important}
+body.imu-mode .viewport video,body.imu-mode .viewport canvas,body.imu-mode .placeholder{display:none}
+body.imu-mode .viewport{aspect-ratio:auto;min-height:220px}
+.imuview{position:relative;padding:18px 16px;color:#e6ebf2;display:flex;flex-direction:column;gap:8px}
+.imubig{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.imustat{font-size:14px;color:#b9c3d0}
+.imuhow{margin:0;font-size:13px;color:#9fabba}
+.startscreen{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px}
+.startscreen .sbox{width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px}
+.startscreen h2{margin:0 0 6px;font-size:22px}
+.srcbtn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:18px 16px;border-radius:var(--radius);font-size:15px;line-height:1.35}
+.srcbtn b{font-size:19px}
+.startscreen[hidden]{display:none}
+#btnSrc.small{padding:6px 10px;font-size:13px}
 button,.btn{font:600 15px/1 var(--font-body);padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px}
 button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button:disabled{opacity:.45;cursor:default}
@@ -198,11 +213,19 @@ tr.after td{color:var(--muted)}
 
 </head>
 <body>
+<div class="startscreen" id="startScreen" hidden>
+  <div class="sbox">
+    <h2 data-i18n="srcTitle">Wie willst du messen?</h2>
+    <button type="button" class="srcbtn" id="srcCamBtn"><b data-i18n="srcCam">Kamera</b><span data-i18n="srcCamSub"></span></button>
+    <button type="button" class="srcbtn" id="srcImuBtn"><b data-i18n="srcImu">Sensor (IMU)</b><span data-i18n="srcImuSub"></span></button>
+  </div>
+</div>
 <div class="app">
   <header>
     <h1><span data-i18n="title">VBT Bankdrück-Tracker</span><small data-i18n="subtitle">Hantelgeschwindigkeit per Kamera, Signal bei Geschwindigkeitsverlust</small></h1>
     <div class="hright">
       <select id="lang" aria-label="Sprache / Idioma / Language"><option value="de">Deutsch</option><option value="es">Español</option><option value="en">English</option></select>
+      <button type="button" id="btnSrc" class="small" data-i18n="srcSwitch">Modus wechseln</button>
       <span class="chip" id="chip" data-s="idle">Bereit</span>
     </div>
   </header>
@@ -241,17 +264,22 @@ tr.after td{color:var(--muted)}
           <li data-i18n="how5">Nach dem Ablegen „Satz beenden“ tippen.</li>
         </ol>
       </div>
+      <div class="imuview imuonly" id="imuView"><div class="imubig" id="imuBig">–</div><div class="imustat" id="imuStat"></div><p class="imuhow" data-i18n="imuHow"></p><p class="imuhow" id="imuNote"></p></div>
       <div class="hint" id="hint" hidden></div>
       <div class="alarm" id="alarm" hidden><b class="atitle" data-i18n="alarmTitle">SIGNAL: SATZ BEENDEN</b><span id="alarmSub"></span>
         <div class="abtns"><button class="end" id="alarmEnd" data-i18n="endSet">Satz beenden</button><button class="go" id="alarmGo" data-i18n="goOn">Weiter messen</button></div></div>
     </div>
     <div class="controls">
-      <button class="primary" id="btnCam" data-i18n="startCam">Kamera starten</button>
-      <button id="btnFlip" hidden>Zur Selfie-Kamera</button>
-      <label class="btn" id="btnFileLbl"><span data-i18n="video">Video aufnehmen / wählen</span><input type="file" id="file" accept="video/*"></label>
-      <button id="btnAuto" disabled data-i18n="autoFind">Automatisch finden</button>
-      <button id="btnMark" disabled data-i18n="mark">Platte markieren</button>
-      <button id="btnPlay" hidden disabled data-i18n="play">▶ Auswerten</button>
+      <button class="primary camonly" id="btnCam" data-i18n="startCam">Kamera starten</button>
+      <button id="btnFlip" class="camonly" hidden>Zur Selfie-Kamera</button>
+      <label class="btn camonly" id="btnFileLbl"><span data-i18n="video">Video aufnehmen / wählen</span><input type="file" id="file" accept="video/*"></label>
+      <button id="btnAuto" class="camonly" disabled data-i18n="autoFind">Automatisch finden</button>
+      <button id="btnMark" class="camonly" disabled data-i18n="mark">Platte markieren</button>
+      <button id="btnPlay" class="camonly" hidden disabled data-i18n="play">▶ Auswerten</button>
+      <button class="primary imuonly" id="btnImuPhone" data-i18n="imuPhone">Handy-Sensor verwenden</button>
+      <button class="imuonly" id="btnImuBle" data-i18n="imuBle">Bluetooth-Sensor verbinden</button>
+      <label class="btn imuonly" id="imuFileLbl"><span data-i18n="imuCsv">IMU-Datei (CSV) auswerten</span><input type="file" id="imuFile" accept=".csv,.txt,text/csv,text/plain"></label>
+      <button class="imuonly" id="btnImuDisc" hidden data-i18n="imuDisc">Trennen</button>
     </div>
     <div class="setbar">
       <button class="primary" id="btnSet" data-s="idle" disabled>Satz starten</button>
@@ -323,12 +351,12 @@ tr.after td{color:var(--muted)}
     <p class="muted" id="recMsg" data-i18n="recNote">Aufnahmen liegen nur auf diesem Handy. Nach dem Speichern löschen, um Platz zu sparen.</p>
   </section>
 
-  <details class="guide" id="guide"><summary id="guideSum">Kamera-Aufbau</summary><div class="gbody" id="guideBody"></div></details>
+  <details class="guide camonly" id="guide"><summary id="guideSum">Kamera-Aufbau</summary><div class="gbody" id="guideBody"></div></details>
 
   <section class="panel">
     <h2 data-i18n="settings">Einstellungen</h2>
     <div class="settings">
-      <div class="field">
+      <div class="field camonly">
         <label for="diam" data-i18n="diamLabel">Referenzgröße (mm)</label>
         <input type="number" id="diam" min="20" max="2000" step="1">
         <div class="presets" id="presets"></div>
@@ -357,7 +385,7 @@ tr.after td{color:var(--muted)}
         <input type="number" id="minRom" min="3" max="80" step="1">
         <div class="help" data-i18n="romHelp">Kürzere Bewegungen zählen nicht als Wiederholung. Bankdrücken: ca. 15 cm. Zum Testen mit kleinen Bewegungen niedriger stellen.</div>
       </div>
-      <div class="field">
+      <div class="field camonly">
         <label for="rate" data-i18n="rateLabel">Video-Auswertung</label>
         <select id="rate"><option value="1" data-i18n="rate1">Echtzeit</option><option value="0.5" data-i18n="rate05">Halbe Geschwindigkeit (genauer)</option><option value="0.25" data-i18n="rate025">Viertel (am genauesten)</option></select>
         <div class="help" data-i18n="rateHelp">Nur für Videos. Langsamer abspielen erfasst jedes Bild.</div>
@@ -365,13 +393,14 @@ tr.after td{color:var(--muted)}
       <div class="field">
         <label class="check"><input type="checkbox" id="sound"> <span data-i18n="sound">Töne (Piep pro Wdh., Alarm)</span></label>
         <label class="check"><input type="checkbox" id="voice"> <span data-i18n="voice">Werte ansagen</span></label>
-        <label class="check"><input type="checkbox" id="aiOn"> <span data-i18n="aiLabel">KI-Erkennung der Scheibe (YOLO)</span></label>
+        <div class="camonly"><label class="check"><input type="checkbox" id="aiOn"> <span data-i18n="aiLabel">KI-Erkennung der Scheibe (YOLO)</span></label>
         <div class="help" id="aiStatus">–</div>
         <label class="check"><input type="checkbox" id="autoScale"> <span data-i18n="autoScaleLabel">Abstand automatisch erkennen (Scheibenrand)</span></label>
-        <div class="help" data-i18n="autoScaleHelp">Die App misst in jedem Bild, wie groß die Scheibe erscheint, und gleicht aus, wenn sie näher an die Kamera kommt oder sich entfernt. Ausschalten, falls der grüne Kreis nicht am Rand der Scheibe sitzt.</div>
+        <div class="help" data-i18n="autoScaleHelp">Die App misst in jedem Bild, wie groß die Scheibe erscheint, und gleicht aus, wenn sie näher an die Kamera kommt oder sich entfernt. Ausschalten, falls der grüne Kreis nicht am Rand der Scheibe sitzt.</div></div>
         <label class="check"><input type="checkbox" id="record"> <span data-i18n="recLabel">Video und Rohdaten aufnehmen</span></label>
         <div class="help" data-i18n="recHelp">Für Validierung und spätere Neuauswertung. Jeder Satz wird unter „Aufnahmen“ gespeichert.</div>
       </div>
+      <div class="help imuonly" data-i18n="imuExperimental"></div>
       <div class="help" id="appVer" style="text-align:right">Version</div>
     </div>
   </section>
@@ -1036,7 +1065,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='24';
+const APP_VERSION='25';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -1048,6 +1077,7 @@ function recStart(){
   rec=null; if(!S.record)return;
   rec={frames:[],t0:null,startedAt:new Date(),mime:'',chunks:[],mr:null,mode,
     trackSettings:stream?(stream.getVideoTracks()[0].getSettings()||{}):null};
+  if(isImu()){rec.imu=true;rec.mode='imu';rec.trackSettings=null;rec.cols=['t_s','ax_m_s2','ay_m_s2','az_m_s2','gx_rad_s','gy_rad_s','gz_rad_s','a_vertical_m_s2','v_m_s_raw','still'];return;}
   if(mode==='live'&&stream){
     const mime=pickMime();
     if(mime){try{
@@ -1071,14 +1101,15 @@ function recStop(nr){
     const meta={app:'VBT-Tracker',version:APP_VERSION,ai:{state:YOLO.state,detections:YOLO.nDet||0,meanDetectMs:YOLO.nDet?Math.round(YOLO.msSum/YOLO.nDet):null,restarts:YOLO.nRestart||0,err:YOLO.err?String(YOLO.err).slice(0,200):null},set:nr,started:R.startedAt.toISOString(),mode:R.mode,
       userAgent:navigator.userAgent,videoMime:video?R.mime:null,
       camera:R.trackSettings,frameSize:[videoEl().videoWidth,videoEl().videoHeight],
-      calibration:calib?{centerPx:[+calib.cx.toFixed(2),+calib.cy.toFixed(2)],diameterPx:+calib.dpx.toFixed(2),diameterMm:S.diamMM,metersPerPixel:+(S.diamMM/1000/calib.dpx).toFixed(6),autoScale:!!S.autoScale,rimRadiusAtCalibrationPx:calib.r0?+calib.r0.toFixed(2):null}:null,
+      sensor:R.imu?{source:IMU.src,name:IMU.info||null,sampleRateHz:IMU.rateHz,gyroscope:!!IMU.gyro}:null,
+      calibration:!R.imu&&calib?{centerPx:[+calib.cx.toFixed(2),+calib.cy.toFixed(2)],diameterPx:+calib.dpx.toFixed(2),diameterMm:S.diamMM,metersPerPixel:+(S.diamMM/1000/calib.dpx).toFixed(6),autoScale:!!S.autoScale,rimRadiusAtCalibrationPx:calib.r0?+calib.r0.toFixed(2):null}:null,
       exercise:{id:S.ex,name:exName(curEx()),axisDeg:curEx().axis,order:curEx().order},
       load:{trainingLoadKg:parseNum(S.load),bodyMassKg:S.bodyOn?parseNum(S.bodyKg):null,bodyMassIncluded:!!S.bodyOn,massKg:massKg()},
       settings:{thresholdPct:S.thresh,reference:S.ref,minRomCm:S.minROM,lang:L},
       signalRep:stopAt!=null?stopAt+1:null,
       processedFps:R.frames.length>1?+((R.frames.length-1)/Math.max(1e-6,R.frames[R.frames.length-1][0]-R.frames[0][0])).toFixed(1):null,
       reps:reps.map(r=>({n:r.n,mcv:+r.mcv.toFixed(4),mpv:r.mpv!=null?+r.mpv.toFixed(4):null,meanForceN:massKg()&&r.ga!=null?+(massKg()*r.ga).toFixed(1):null,meanPowerW:massKg()&&r.gav!=null?+(massKg()*r.gav).toFixed(1):null,peakPowerW:massKg()&&r.gavMax!=null?+(massKg()*r.gavMax).toFixed(1):null,peak:+r.peak.toFixed(4),romM:+r.rom.toFixed(4),durS:+r.dur.toFixed(4),ref:r.ref?+r.ref.toFixed(4):null,lossPct:r.loss!=null?+r.loss.toFixed(2):null,valid:r.valid,afterSignal:!!r.after})),
-      framesColumns:['t_s','x_px','y_px','y_m','s_m','v_m_s','match_score','tracked','scale','rim_radius_px']};
+      framesColumns:R.cols||['t_s','x_px','y_px','y_m','s_m','v_m_s','match_score','tracked','scale','rim_radius_px']};
     const item={id:R.startedAt.getTime(),nr,ex:S.ex,exName:exName(curEx()),started:R.startedAt.toISOString(),reps:reps.filter(r=>r.valid).length,mime:video?R.mime:'',size:video?video.size:0,meta,frames:R.frames,video:video||null};
     dbPut(item).then(renderRecs).catch(()=>{$('recMsg').textContent=t('recStoreFail');});
   };
@@ -1187,13 +1218,13 @@ let history=store.get(HKEY,[]); if(!Array.isArray(history))history=[];
 })();
 function updateSetUI(){
   const b=$('btnSet'),run=setState==='running';
-  b.disabled=!tracker; b.dataset.s=setState; b.textContent=t(run?'endSet':'startSet');
+  b.disabled=!srcReady(); b.dataset.s=setState; b.textContent=t(run?'endSet':'startSet');
   $('setDot').dataset.s=setState;
   const nr=exHistory().length+1;
   const title=run?t('setRunning',nr):(setState==='done'?t('setDone',history.length):t('noSet'));
   $('setTitle').innerHTML='<span class="dot" id="setDot" data-s="'+setState+'"></span>'+title+(run&&rec?'<span class="recdot">'+t('recOn')+'</span>':'');
   let sub;
-  if(!tracker)sub=t('subNoTracker');
+  if(!srcReady())sub=t(isImu()?'subNoImu':'subNoTracker');
   else if(run)sub=t('subRunning',reps.length,stopAt!=null?t('subSignalAt',stopAt+1):'');
   else if(setState==='done')sub=t('subDone');
   else sub=t('subIdle');
@@ -1201,12 +1232,12 @@ function updateSetUI(){
 }
 function clearReps(){reps=[];stopAt=null;alarmed=false;$('alarm').hidden=true;kin.reset();renderReadout();renderTable();drawReps();}
 function startSet(){
-  if(!tracker)return;
+  if(!srcReady())return;
   unlockAudio(); clearReps(); trail=[]; setState='running'; setStartedAt=new Date(); idleHintShown=false;
   recStart();
   chip('track'); hint(null); updateSetUI(); keepAwake();
   beep(880,0.07,0);beep(1175,0.09,0.1);
-  if(mode==='file'){
+  if(!isImu()&&mode==='file'){
     const go=()=>{startTracking();video.playbackRate=+S.rate;video.play().catch(()=>{});startLoop();};
     if(Math.abs(video.currentTime-calib.time)>0.2){video.pause();try{video.currentTime=calib.time;}catch(e){}video.addEventListener('seeked',go,{once:true});}
     else go();
@@ -1215,7 +1246,8 @@ function startSet(){
 function endSet(){
   if(setState!=='running')return;
   setState='done'; $('alarm').hidden=true;
-  if(mode==='file')video.pause();
+  if(isImu()&&IMU.seg.length)imuEndSegment();
+  if(!isImu()&&mode==='file')video.pause();
   recStop(exHistory().length+(reps.length?1:0));
   if(reps.length){
     const valid=reps.filter(r=>r.valid), lastV=valid[valid.length-1];
@@ -1567,7 +1599,7 @@ function recomputeLoss(){
 function refMcv(){const l=reps[reps.length-1];return l?l.ref:null;}
 function onRep(r){
   if(setState!=='running'){
-    if(!idleHintShown&&tracker){idleHintShown=true;hint(setState==='done'?'h_doneMove':'h_idleMove');}
+    if(!idleHintShown&&srcReady()&&!isImu()){idleHintShown=true;hint(setState==='done'?'h_doneMove':'h_idleMove');}
     return;
   }
   r.n=reps.length+1; reps.push(r); recomputeLoss();
@@ -1757,7 +1789,275 @@ function setLang(l){
   drawSpark(); drawReps(); renderAI();
 }
 $('lang').addEventListener('change',e=>{setLang(e.target.value);renderRecs();renderExSel();});
-bindExercises(); bindSettings(); applyStatic(); renderExSel(); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
+/* =====================================================================================
+   SENSOR (IMU) MODE
+   The sensor is fixed to the bar. It measures acceleration (incl. gravity) and, if it can,
+   rotation rate. Velocity = integrated vertical acceleration. Integration drifts, so:
+   - while the bar is still, velocity is set to zero and the gravity direction is re-measured;
+   - during a movement the gravity direction is carried along with the gyro (bar may roll);
+   - when the bar stops again, the velocity drift of that movement is removed linearly
+     (end velocity must be zero), then each concentric phase becomes one rep.
+   Sources: the phone's own sensor (DeviceMotion), Bluetooth sensors with a driver
+   (WitMotion BWT901BLE / WT9011 family), or a CSV file exported from any IMU app.
+   ===================================================================================== */
+const G0=9.80665;
+const IMU={src:null,ready:false,dev:null,char:null,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,
+  restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,gyro:false,status:'',info:null,batch:false};
+Object.assign(I18N.de,{
+  srcTitle:'Wie willst du messen?',srcCam:'Kamera',srcCamSub:'Handy seitlich hinstellen, die App verfolgt die Hantelscheibe.',srcImu:'Sensor (IMU)',srcImuSub:'Sensor oder Handy an der Stange befestigen. Kein Bild nötig.',srcSwitch:'Modus wechseln',
+  imuPhone:'Handy-Sensor verwenden',imuBle:'Bluetooth-Sensor verbinden',imuCsv:'IMU-Datei (CSV) auswerten',imuOff:'Kein Sensor verbunden.',
+  imuHow:'Sensor fest an der Stange befestigen (Klettband, Tape), nah an der Hand. Vor jedem Satz 1–2 s ruhig halten, zwischen den Wiederholungen oben kurz stoppen. Die Werte erscheinen, sobald die Stange kurz stillsteht.',
+  imuLive:'{0} · {1} Hz{2}',imuStill:' · ruhig',imuMove:' · Bewegung',imuNeedStill:'Stange kurz ruhig halten …',imuReadyTxt:'Bereit',
+  imuNoMotion:'Dieses Gerät liefert keine Bewegungsdaten (oder der Zugriff wurde verweigert).',imuNoBle:'Bluetooth im Browser gibt es nur in Chrome auf Android, Windows oder Mac (nicht auf dem iPhone).',
+  imuBleFail:'Verbindung fehlgeschlagen: {0}',imuBleUnknown:'Dieser Sensor wird noch nicht unterstützt. Unterstützt: WitMotion (BWT901BLE, WT9011 …). Für andere Sensoren: Rohdaten als CSV exportieren und hier auswerten.',
+  imuPhoneName:'Handy-Sensor',imuCsvDone:'Datei ausgewertet: {0} Wdh. aus {1} Messpunkten ({2} Hz).',imuCsvFail:'Datei nicht lesbar. Erwartet: Spalten für Zeit und Beschleunigung x, y, z (in g oder m/s²).',
+  imuDisc:'Trennen',imuAxisNote:'Im Sensor-Modus wird immer die senkrechte Bewegung gemessen.',subNoImu:'Erst einen Sensor verbinden.',imuGyroNo:' (ohne Gyroskop: Stange möglichst nicht drehen)',
+  imuExperimental:'Bluetooth-Sensoren: noch nicht mit echter Hardware getestet.'});
+Object.assign(I18N.es,{
+  srcTitle:'¿Cómo quieres medir?',srcCam:'Cámara',srcCamSub:'Pon el celular de lado; la app sigue el disco.',srcImu:'Sensor (IMU)',srcImuSub:'Fija un sensor o el celular a la barra. No hace falta imagen.',srcSwitch:'Cambiar modo',
+  imuPhone:'Usar el sensor del celular',imuBle:'Conectar sensor Bluetooth',imuCsv:'Analizar archivo IMU (CSV)',imuOff:'Ningún sensor conectado.',
+  imuHow:'Fija el sensor firmemente a la barra (velcro, cinta), cerca de la mano. Antes de cada serie mantén la barra quieta 1–2 s y entre repeticiones detente un momento arriba. Los valores aparecen cuando la barra se detiene.',
+  imuLive:'{0} · {1} Hz{2}',imuStill:' · quieta',imuMove:' · en movimiento',imuNeedStill:'Mantén la barra quieta un momento …',imuReadyTxt:'Listo',
+  imuNoMotion:'Este dispositivo no entrega datos de movimiento (o se negó el acceso).',imuNoBle:'Bluetooth en el navegador solo funciona en Chrome para Android, Windows o Mac (no en iPhone).',
+  imuBleFail:'No se pudo conectar: {0}',imuBleUnknown:'Este sensor aún no es compatible. Compatibles: WitMotion (BWT901BLE, WT9011 …). Para otros: exporta los datos brutos en CSV y analízalos aquí.',
+  imuPhoneName:'Sensor del celular',imuCsvDone:'Archivo analizado: {0} rep. de {1} muestras ({2} Hz).',imuCsvFail:'No se pudo leer el archivo. Se esperan columnas de tiempo y aceleración x, y, z (en g o m/s²).',
+  imuDisc:'Desconectar',imuAxisNote:'En modo sensor siempre se mide el movimiento vertical.',subNoImu:'Primero conecta un sensor.',imuGyroNo:' (sin giroscopio: intenta no girar la barra)',
+  imuExperimental:'Sensores Bluetooth: aún no probados con hardware real.'});
+Object.assign(I18N.en,{
+  srcTitle:'How do you want to measure?',srcCam:'Camera',srcCamSub:'Place the phone side-on; the app follows the weight plate.',srcImu:'Sensor (IMU)',srcImuSub:'Attach a sensor or the phone to the bar. No video needed.',srcSwitch:'Switch mode',
+  imuPhone:'Use the phone’s sensor',imuBle:'Connect Bluetooth sensor',imuCsv:'Analyse IMU file (CSV)',imuOff:'No sensor connected.',
+  imuHow:'Fix the sensor firmly to the bar (velcro, tape), close to the hand. Hold the bar still for 1–2 s before each set and pause briefly at the top between reps. Values appear as soon as the bar is still.',
+  imuLive:'{0} · {1} Hz{2}',imuStill:' · still',imuMove:' · moving',imuNeedStill:'Hold the bar still for a moment …',imuReadyTxt:'Ready',
+  imuNoMotion:'This device provides no motion data (or access was denied).',imuNoBle:'Bluetooth in the browser only works in Chrome on Android, Windows or Mac (not on iPhone).',
+  imuBleFail:'Connection failed: {0}',imuBleUnknown:'This sensor is not supported yet. Supported: WitMotion (BWT901BLE, WT9011 …). For other sensors, export the raw data as CSV and analyse it here.',
+  imuPhoneName:'Phone sensor',imuCsvDone:'File analysed: {0} reps from {1} samples ({2} Hz).',imuCsvFail:'Could not read the file. Expected columns for time and acceleration x, y, z (in g or m/s²).',
+  imuDisc:'Disconnect',imuAxisNote:'Sensor mode always measures vertical movement.',subNoImu:'Connect a sensor first.',imuGyroNo:' (no gyroscope: try not to rotate the bar)',
+  imuExperimental:'Bluetooth sensors: not yet tested with real hardware.'});
+
+const isImu=()=>S.src==='imu';
+function srcReady(){return isImu()?IMU.ready:!!tracker;}
+const vadd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],vsc=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+  vlen=a=>Math.sqrt(vdot(a,a)),vcross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+
+function imuReset(){Object.assign(IMU,{ready:false,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,qN:0,qS:null});kin.reset();}
+
+/* one sample: t in s, acc in m/s² (incl. gravity, sensor frame), gyro in rad/s (sensor frame) or null */
+function imuSample(t,acc,gyro){
+  if(!acc||!acc.every(isFinite))return;
+  if(IMU.last!=null&&t<=IMU.last)return;
+  const dt=IMU.last==null?0:Math.min(0.1,t-IMU.last);IMU.last=t;IMU.n++;
+  if(IMU.t0==null)IMU.t0=t;
+  if(IMU.n%25===0)IMU.rateHz=Math.round((IMU.n-1)/Math.max(1e-3,t-IMU.t0));
+  if(gyro)IMU.gyro=true;
+  /* light low-pass against sensor noise (tau 12 ms) */
+  if(!IMU.lp)IMU.lp=acc.slice();else{const a=dt>0?1-Math.exp(-dt/0.012):1;IMU.lp=vadd(IMU.lp,vsc(vadd(acc,vsc(IMU.lp,-1)),a));}
+  const a=IMU.lp,am=vlen(a);
+  /* stillness: |a| close to gravity and little rotation */
+  const gyroMag=gyro?vlen(gyro):0;
+  const quiet=Math.abs(am-IMU.gMag)<0.45&&gyroMag<0.5;
+  if(quiet){if(IMU.qS==null)IMU.qS=t;}else IMU.qS=null;
+  /* an accelerometer cannot tell rest from constant speed: while the integrated speed is clearly
+     non-zero, a quiet stretch must last much longer before it counts as rest */
+  const still=IMU.qS!=null&&t-IMU.qS>=(Math.abs(IMU.v)<0.1?0.12:0.6);
+  /* gravity direction: measured while still, carried with the gyro while moving */
+  if(still){
+    if(!IMU.g){IMU.g=a.slice();IMU.gMag=am;}
+    else{const k=dt>0?1-Math.exp(-dt/0.25):0;IMU.g=vadd(IMU.g,vsc(vadd(a,vsc(IMU.g,-1)),k));IMU.gMag=IMU.gMag+(vlen(IMU.g)-IMU.gMag)*k;}
+  }else if(IMU.g&&gyro&&dt>0){IMU.g=vadd(IMU.g,vsc(vcross(IMU.g,gyro),dt));} /* body frame: dg/dt = -ω × g = g × ω */
+  if(!IMU.g){imuView();return;}
+  const gu=vsc(IMU.g,1/vlen(IMU.g));
+  const av=vdot(a,gu)-IMU.gMag;          /* vertical acceleration, up = positive */
+  if(!IMU.ready){IMU.ready=true;updateSetUI();hint(null);}
+  if(still){
+    if(IMU.seg.length)imuEndSegment();
+    IMU.v=0;IMU.rest=true;
+  }else{
+    if(IMU.rest||!IMU.seg.length){IMU.rest=false;IMU.seg=[{t:t-dt,a:0,v:0}];IMU.v=0;}
+    IMU.v+=av*dt;
+    IMU.seg.push({t,a:av,v:IMU.v});
+    if(IMU.seg.length>6000)imuEndSegment();   /* safety: very long movement without a pause */
+  }
+  kin.v=IMU.v;
+  kin.hist.push({t,v:IMU.v,ph:'imu'});while(kin.hist.length&&t-kin.hist[0].t>6)kin.hist.shift();
+  if(rec&&setState==='running'&&rec.imu){if(rec.t0==null)rec.t0=t;rec.frames.push([+(t-rec.t0).toFixed(4),+acc[0].toFixed(4),+acc[1].toFixed(4),+acc[2].toFixed(4),gyro?+gyro[0].toFixed(4):'',gyro?+gyro[1].toFixed(4):'',gyro?+gyro[2].toFixed(4):'',+av.toFixed(4),+IMU.v.toFixed(4),still?1:0]);}
+  if(!IMU.batch&&(IMU.n%6===0))imuView();
+}
+
+/* a movement ended: remove velocity drift, integrate position, cut out concentric phases */
+function imuEndSegment(){
+  const s=IMU.seg;IMU.seg=[];
+  if(window.__SEGLOG)window.__SEGLOG.push([s.length,s[0]&&s[0].t,s.length&&s[s.length-1].t,s.length&&s[s.length-1].v]);
+  if(s.length<6)return;
+  const t0=s[0].t,t1=s[s.length-1].t,vEnd=s[s.length-1].v,T=t1-t0;
+  if(T<0.15)return;
+  const v=s.map(p=>p.v-vEnd*(p.t-t0)/T);
+  const y=[0];for(let i=1;i<s.length;i++)y.push(y[i-1]+(v[i]+v[i-1])/2*(s[i].t-s[i-1].t));
+  /* concentric phases = stretches with upward velocity */
+  const out=[];let i=0;
+  while(i<s.length){
+    if(v[i]<=0.02){i++;continue;}
+    let a=i;while(a>0&&v[a-1]>0)a--;
+    let b=i;while(b<s.length-1&&v[b+1]>0)b++;
+    let pk=0,ip=a;for(let k=a;k<=b;k++)if(v[k]>pk){pk=v[k];ip=k;}
+    /* phase edges where the velocity passes a small threshold (interpolated): the tiny residual
+       velocity at rest must not stretch the duration */
+    const vth=Math.max(0.01,0.02*pk);
+    let ia=ip;while(ia>a&&v[ia-1]>vth)ia--;
+    let ib=ip;while(ib<b&&v[ib+1]>vth)ib++;
+    const at=(k0,k1)=>{const d=v[k1]-v[k0];const f=Math.abs(d)>1e-9?(vth-v[k0])/d:0;return {t:s[k0].t+(s[k1].t-s[k0].t)*f,y:y[k0]+(y[k1]-y[k0])*f};};
+    const pa=ia>a?at(ia-1,ia):{t:s[ia].t,y:y[ia]},pb=ib<b?at(ib,ib+1):{t:s[ib].t,y:y[ib]};
+    const rom=pb.y-pa.y,dur=pb.t-pa.t;
+    if(rom>=S.minROM/100&&dur>0.12&&pk>0.1){
+      /* propulsive phase ends when the bar decelerates faster than gravity (Sánchez-Medina et al. 2010) */
+      let pe=b;for(let k=ip;k<=b;k++)if(s[k].a<-IMU.gMag){pe=k;break;}
+      let sv=0,sa=0,np=0,spow=0,pmax=-1e9;
+      for(let k=a;k<=b;k++){const f=IMU.gMag+s[k].a,pw=f*v[k];spow+=pw;if(pw>pmax)pmax=pw;if(k<=pe){sv+=v[k];sa+=f;np++;}}
+      out.push({mcv:rom/dur,peak:pk,rom,dur,mpv:np?sv/np:null,ga:np?sa/np:null,gav:spow/(b-a+1),gavMax:pmax});
+    }
+    i=b+1;
+  }
+  out.forEach(r=>onRep(r));
+}
+
+function imuView(){
+  const el=$('imuStat');if(!el)return;
+  if(!IMU.src){el.textContent=t('imuOff');$('imuBig').textContent='–';return;}
+  const name=IMU.src==='phone'?t('imuPhoneName'):(IMU.src==='csv'?'CSV':(IMU.info||'Bluetooth'));
+  el.textContent=t('imuLive',name,IMU.rateHz||'–',!IMU.g?'':(IMU.rest?t('imuStill'):t('imuMove')))+(IMU.src!=='csv'&&!IMU.gyro&&IMU.n>50?t('imuGyroNo'):'');
+  $('imuBig').textContent=IMU.ready?(fmt(IMU.v)+' m/s'):t('imuNeedStill');
+  $('liveV').textContent=t('current',fmt(kin.v));
+  const now=performance.now();if(!imuView.d||now-imuView.d>80){imuView.d=now;drawSpark();}
+}
+
+/* ---- source: the phone's own motion sensor ---- */
+function onMotion(e){
+  const g=e.accelerationIncludingGravity;if(!g||g.x==null)return;
+  const r=e.rotationRate,D=Math.PI/180;
+  imuSample(e.timeStamp/1000,[g.x,g.y,g.z],r&&r.alpha!=null?[r.beta*D,r.gamma*D,r.alpha*D]:null);
+}
+async function imuPhone(){
+  await imuStop();
+  try{if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){const p=await DeviceMotionEvent.requestPermission();if(p!=='granted')throw 0;}}
+  catch(e){hint('imuNoMotion');return;}
+  imuReset();IMU.src='phone';IMU.gyro=false;
+  window.addEventListener('devicemotion',onMotion);
+  keepAwake();imuButtons();imuView();hint('imuNeedStill');
+  setTimeout(()=>{if(IMU.src==='phone'&&IMU.n===0){hint('imuNoMotion');}},2500);
+}
+
+/* ---- source: Bluetooth sensors (drivers) ---- */
+const WIT={svc:'0000ffe5-0000-1000-8000-00805f9a34fb',notify:'0000ffe4-0000-1000-8000-00805f9a34fb',write:'0000ffe9-0000-1000-8000-00805f9a34fb'};
+const DRIVERS=[{
+  name:'WitMotion',svc:WIT.svc,
+  async start(server){
+    const sv=await server.getPrimaryService(WIT.svc),nc=await sv.getCharacteristic(WIT.notify);
+    try{const wc=await sv.getCharacteristic(WIT.write);   /* unlock, 100 Hz output, save */
+      for(const cmd of [[0xFF,0xAA,0x69,0x88,0xB5],[0xFF,0xAA,0x03,0x09,0x00],[0xFF,0xAA,0x00,0x00,0x00]]){await wc.writeValue(new Uint8Array(cmd));await new Promise(r=>setTimeout(r,120));}}catch(e){}
+    let buf=[];
+    nc.addEventListener('characteristicvaluechanged',ev=>{
+      const d=ev.target.value;for(let i=0;i<d.byteLength;i++)buf.push(d.getUint8(i));
+      while(buf.length>=20){
+        if(buf[0]!==0x55||buf[1]!==0x61){buf.shift();continue;}
+        const p=buf.splice(0,20),i16=k=>{const v=p[k]|(p[k+1]<<8);return v>32767?v-65536:v;};
+        const acc=[i16(2),i16(4),i16(6)].map(v=>v/32768*16*G0),D=Math.PI/180,gy=[i16(8),i16(10),i16(12)].map(v=>v/32768*2000*D);
+        imuSample(performance.now()/1000,acc,gy);
+      }
+    });
+    await nc.startNotifications();
+    return nc;
+  }
+}];
+async function imuBle(){
+  if(!navigator.bluetooth){hint('imuNoBle');return;}
+  let dev;
+  try{dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:DRIVERS.map(d=>d.svc)});}
+  catch(e){return;}    /* chooser closed */
+  await imuStop();
+  try{
+    const server=await dev.gatt.connect();
+    let drv=null;for(const d of DRIVERS){try{await server.getPrimaryService(d.svc);drv=d;break;}catch(e){}}
+    if(!drv){try{dev.gatt.disconnect();}catch(e){}hint('imuBleUnknown');return;}
+    imuReset();IMU.src='ble';IMU.dev=dev;IMU.info=drv.name+(dev.name?' '+dev.name:'');
+    IMU.char=await drv.start(server);
+    dev.addEventListener('gattserverdisconnected',()=>{if(IMU.dev===dev){IMU.src=null;IMU.ready=false;imuButtons();imuView();updateSetUI();hint('imuOff');}});
+    keepAwake();imuButtons();imuView();hint('imuNeedStill');
+  }catch(e){hint('imuBleFail',String(e&&e.message||e).slice(0,80));}
+}
+async function imuStop(){
+  window.removeEventListener('devicemotion',onMotion);
+  if(IMU.dev){const d=IMU.dev;IMU.dev=null;try{d.gatt.disconnect();}catch(e){}}
+  if(setState==='running')endSet();
+  IMU.src=null;imuReset();imuButtons();imuView();updateSetUI();
+}
+
+/* ---- source: CSV file from any IMU app ---- */
+function parseImuCsv(txt){
+  const lines=txt.split(/\r?\n/).filter(l=>l.trim());if(lines.length<20)return null;
+  const sep=[';','\t',','].find(c=>lines[0].split(c).length>=4)||',';
+  let head=lines[0].split(sep).map(h=>h.trim().toLowerCase().replace(/["']/g,''));
+  const numeric=head.every(h=>h!==''&&!isNaN(parseFloat(h.replace(',','.'))));
+  if(numeric)head=head.map((_,i)=>['t','ax','ay','az','gx','gy','gz'][i]||'c'+i);
+  const find=res=>head.findIndex(h=>res.some(r=>r.test(h)));
+  const it=find([/^t$/,/time/,/zeit/,/^ts$/,/stamp/,/^s$/,/^ms$/,/tiempo/]);
+  const ix=find([/^(acc|accel|acceleration|a)[ _-]?x/,/^ax/,/x.*acc|acc.*x/]),iy=find([/^(acc|accel|acceleration|a)[ _-]?y/,/^ay/,/y.*acc|acc.*y/]),iz=find([/^(acc|accel|acceleration|a)[ _-]?z/,/^az/,/z.*acc|acc.*z/]);
+  const gx=find([/^(gyr|gyro|w|omega|rot)[a-z]*[ _-]?x/,/^gx/]),gy=find([/^(gyr|gyro|w|omega|rot)[a-z]*[ _-]?y/,/^gy/]),gz=find([/^(gyr|gyro|w|omega|rot)[a-z]*[ _-]?z/,/^gz/]);
+  if(it<0||ix<0||iy<0||iz<0)return null;
+  const num=s=>parseFloat(String(s).replace(',','.'));
+  const rows=[];for(let k=numeric?0:1;k<lines.length;k++){const c=lines[k].split(sep);const r=[num(c[it]),num(c[ix]),num(c[iy]),num(c[iz]),gx>=0?num(c[gx]):NaN,gy>=0?num(c[gy]):NaN,gz>=0?num(c[gz]):NaN];if(isFinite(r[0])&&isFinite(r[1]))rows.push(r);}
+  if(rows.length<20)return null;
+  /* units: time in s or ms, acceleration in g or m/s², gyro in deg/s or rad/s */
+  const dts=[];for(let k=1;k<Math.min(rows.length,200);k++)dts.push(rows[k][0]-rows[k-1][0]);
+  const mdt=median(dts.filter(d=>d>0));const tk=mdt>0.5?0.001:1;
+  const mag=median(rows.slice(0,400).map(r=>Math.hypot(r[1],r[2],r[3])));let ak=mag<3?G0:1;
+  const hasG=rows.every(r=>isFinite(r[4])&&isFinite(r[5])&&isFinite(r[6]));
+  const gmax=hasG?Math.max(...rows.slice(0,2000).map(r=>Math.max(Math.abs(r[4]),Math.abs(r[5]),Math.abs(r[6])))):0;const gh=gx>=0?head[gx]+head[gy]+head[gz]:'';const gk=/rad/.test(gh)?1:(/deg|dps|°/.test(gh)||gmax>15?Math.PI/180:1);
+  const ah=head[ix]+head[iy]+head[iz];const ak2=/m\/?s|ms2|m_s/.test(ah)?1:(/(^|[^a-z])g($|[^a-z])|_g$|\(g\)/.test(ah)?G0:null);
+  if(ak2!=null)ak=ak2;
+  return rows.map(r=>[r[0]*tk,[r[1]*ak,r[2]*ak,r[3]*ak],hasG?[r[4]*gk,r[5]*gk,r[6]*gk]:null]);
+}
+function imuCsv(file){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const rows=parseImuCsv(String(fr.result));
+    if(!rows){hint('imuCsvFail');return;}
+    window.removeEventListener('devicemotion',onMotion);
+    imuReset();IMU.src='csv';IMU.batch=true;
+    if(setState==='running')endSet();
+    for(const [tt,a,g] of rows){imuSample(tt,a,g);if(IMU.ready&&setState!=='running')startSet();}
+    if(IMU.seg.length)imuEndSegment();
+    IMU.batch=false;
+    const n=reps.length;endSet();
+    imuButtons();imuView();
+    hint('imuCsvDone',n,rows.length,Math.round((rows.length-1)/Math.max(1e-3,rows[rows.length-1][0]-rows[0][0])));
+  };
+  fr.readAsText(file);
+}
+
+function imuButtons(){
+  $('btnImuDisc').hidden=!IMU.src||IMU.src==='csv';
+}
+/* ---- start screen / mode switch ---- */
+function applySrc(){
+  const imu=isImu();
+  document.body.classList.toggle('imu-mode',imu);
+  $('startScreen').hidden=!!S.src;
+  if(imu){
+    if(stream){try{stream.getTracks().forEach(tr=>tr.stop());}catch(e){}}
+    $('imuNote').textContent=t('imuAxisNote');
+  }else{imuStop();}
+  hint(null);if(setState!=='running')chip('idle');updateSetUI();imuView();
+}
+function chooseSrc(s){S.src=s;store.set('vbt-settings',S);applySrc();}
+$('srcCamBtn').addEventListener('click',()=>chooseSrc('cam'));
+$('srcImuBtn').addEventListener('click',()=>chooseSrc('imu'));
+$('btnSrc').addEventListener('click',()=>{if(setState==='running')endSet();$('startScreen').hidden=false;});
+$('btnImuPhone').addEventListener('click',()=>{unlockAudio();imuPhone();});
+$('btnImuBle').addEventListener('click',()=>{unlockAudio();imuBle();});
+$('btnImuDisc').addEventListener('click',()=>imuStop());
+$('imuFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)imuCsv(f);e.target.value='';});
+window.__vbt.imu={IMU,reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
+
+bindExercises(); bindSettings(); applyStatic(); renderExSel(); applySrc(); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
 })();
 </script>
