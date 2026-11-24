@@ -826,9 +826,14 @@ function updateScale(x,y,dt){
   }
   const k=m.r/calib.r0;
   if(k<0.6||k>1.7)return null;
+  /* only trust the rim while the plate moves slowly: motion blur, a tilting plate and the hand on the rim
+     all make it look smaller during fast movement, which would inflate the speed */
+  const pv=updateScale.p;updateScale.p={x,y};
+  let tau=0.03;
+  if(pv&&dt>0){const sp=Math.hypot(x-pv.x,y-pv.y)/dt/(calib.dpx*scaleK);if(sp>(window.__SPD||1.5))tau=window.__TAU||0.4;}
   if(Math.abs(k/scaleK-1)>0.2){scaleBad++;if(scaleBad<4)return null;}  /* jump: accept only if it persists */
   scaleBad=0;
-  const a=1-Math.exp(-Math.max(0.005,dt)/0.03);scaleK+=a*(k-scaleK);rimR=calib.r0*scaleK;
+  const a=1-Math.exp(-Math.max(0.005,dt)/tau);scaleK+=a*(k-scaleK);rimR=calib.r0*scaleK;
   return m;
 }
 function curMpp(){return calib?S.diamMM/1000/(calib.dpx*scaleK):null;}
@@ -1009,7 +1014,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='21';
+const APP_VERSION='23';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
