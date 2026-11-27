@@ -144,6 +144,7 @@ body.imu-mode .viewport{aspect-ratio:auto;min-height:220px}
 .imubig{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
 .imustat{font-size:14px;color:#b9c3d0}
 .imuhow{margin:0;font-size:13px;color:#9fabba}
+.imuline{font-family:ui-monospace,Menlo,Consolas,monospace;color:#cfe3ff;word-break:break-all}
 .startscreen{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px}
 .startscreen .sbox{width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px}
 .startscreen h2{margin:0 0 6px;font-size:22px}
@@ -395,7 +396,7 @@ tr.after td{color:var(--muted)}
           <li data-i18n="how5">Nach dem Ablegen „Satz beenden“ tippen.</li>
         </ol>
       </div>
-      <div class="imuview imuonly" id="imuView"><div class="imubig" id="imuBig">–</div><div class="imustat" id="imuStat"></div><p class="imuhow" data-i18n="imuHow"></p><p class="imuhow" id="imuNote"></p></div>
+      <div class="imuview imuonly" id="imuView"><div class="imubig" id="imuBig">–</div><div class="imustat" id="imuStat"></div><p class="imuhow" data-i18n="imuHow"></p><p class="imuhow" id="imuNote"></p><p class="imuhow imuline" id="imuLine" hidden></p></div>
       <div class="hint" id="hint" hidden></div>
       <div class="alarm" id="alarm" hidden><b class="atitle" data-i18n="alarmTitle">SIGNAL: SATZ BEENDEN</b><span id="alarmSub"></span>
         <div class="abtns"><button class="end" id="alarmEnd" data-i18n="endSet">Satz beenden</button><button class="go" id="alarmGo" data-i18n="goOn">Weiter messen</button></div></div>
@@ -410,6 +411,7 @@ tr.after td{color:var(--muted)}
       <button class="camonly" id="btnAux" data-i18n="auxBtn">+ Bluetooth-Sensor dazu</button>
       <button class="primary imuonly" id="btnImuPhone" data-i18n="imuPhone">Handy-Sensor verwenden</button>
       <button class="imuonly" id="btnImuBle" data-i18n="imuBle">Bluetooth-Sensor verbinden</button>
+      <button class="imuonly" id="btnImuSerial" data-i18n="imuSerial">Kabel / COM-Anschluss</button>
       <label class="btn imuonly" id="imuFileLbl"><span data-i18n="imuCsv">IMU-Datei (CSV) auswerten</span><input type="file" id="imuFile" accept=".csv,.txt,text/csv,text/plain"></label>
       <button class="imuonly" id="btnImuDisc" hidden data-i18n="imuDisc">Trennen</button>
     </div>
@@ -521,6 +523,12 @@ tr.after td{color:var(--muted)}
       <div class="field">
         <label for="theme" data-i18n="themeLabel">Darstellung</label>
         <select id="theme"><option value="auto" data-i18n="themeAuto">Wie das Handy</option><option value="light" data-i18n="themeLight">Hell</option><option value="dark" data-i18n="themeDark">Dunkel</option></select>
+      </div>
+      <div class="field imuonly">
+        <label for="baud" data-i18n="baudLabel">Übertragungsrate (Baud) für Kabel/COM</label>
+        <select id="baud" class="txtin"><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option selected>115200</option><option>230400</option><option>460800</option><option>921600</option></select>
+        <div class="help" data-i18n="baudHelp"></div>
+        <div class="help" data-i18n="serialHelp"></div>
       </div>
       <div class="field camonly">
         <label for="diam" data-i18n="diamLabel">Referenzgröße (mm)</label>
@@ -1259,7 +1267,7 @@ function fpsMon(tm){
 }
 
 /* ---------- recording: video (MediaRecorder) + per-frame raw data, kept in IndexedDB ---------- */
-const APP_VERSION='29';
+const APP_VERSION='30';
 try{document.getElementById('appVer').textContent='Version '+APP_VERSION;}catch(e){}
 let rec=null;
 function pickMime(){
@@ -2058,7 +2066,7 @@ function srcReady(){return isImu()?IMU.ready:!!tracker;}
 const vadd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],vsc=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
   vlen=a=>Math.sqrt(vdot(a,a)),vcross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 
-function imuReset(){Object.assign(IMU,{ready:false,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,qN:0,qS:null});if(!(IMU.aux&&!isImu()))kin.reset();}
+function imuReset(){Object.assign(IMU,{ready:false,last:null,n:0,t0:null,rateHz:0,rest:false,g:null,gMag:G0,restSince:null,moveSince:null,seg:[],v:0,y:0,lp:null,qN:0,qS:null,gb:null});if(!(IMU.aux&&!isImu()))kin.reset();}
 
 /* one sample: t in s, acc in m/s² (incl. gravity, sensor frame), gyro in rad/s (sensor frame) or null */
 function imuSample(t,acc,gyro){
@@ -2067,19 +2075,21 @@ function imuSample(t,acc,gyro){
   const dt=IMU.last==null?0:Math.min(0.1,t-IMU.last);IMU.last=t;IMU.n++;
   if(IMU.t0==null)IMU.t0=t;
   if(IMU.n%25===0)IMU.rateHz=Math.round((IMU.n-1)/Math.max(1e-3,t-IMU.t0));
-  if(gyro)IMU.gyro=true;
+  if(gyro){IMU.gyro=true;if(!IMU.gb)IMU.gb=[0,0,0];gyro=[gyro[0]-IMU.gb[0],gyro[1]-IMU.gb[1],gyro[2]-IMU.gb[2]];}
   /* light low-pass against sensor noise (tau 12 ms) */
   if(!IMU.lp)IMU.lp=acc.slice();else{const a=dt>0?1-Math.exp(-dt/0.012):1;IMU.lp=vadd(IMU.lp,vsc(vadd(acc,vsc(IMU.lp,-1)),a));}
   const a=IMU.lp,am=vlen(a);
   /* stillness: |a| close to gravity and little rotation */
   const gyroMag=gyro?vlen(gyro):0;
-  const quiet=Math.abs(am-IMU.gMag)<0.45&&gyroMag<0.5;
+  const quiet=Math.abs(am-IMU.gMag)<0.45&&(gyroMag<0.5||IMU.n<300);
   if(quiet){if(IMU.qS==null)IMU.qS=t;}else IMU.qS=null;
   /* an accelerometer cannot tell rest from constant speed: while the integrated speed is clearly
      non-zero, a quiet stretch must last much longer before it counts as rest */
   const still=IMU.qS!=null&&t-IMU.qS>=(Math.abs(IMU.v)<0.1?0.12:0.6);
   /* gravity direction: measured while still, carried with the gyro while moving */
   if(still){
+    /* sensors drift: learn the gyro offset while the bar is still */
+    if(gyro&&dt>0){const k=1-Math.exp(-dt/0.8);IMU.gb=vadd(IMU.gb,vsc(gyro,k));}
     if(!IMU.g){IMU.g=a.slice();IMU.gMag=am;}
     else{const k=dt>0?1-Math.exp(-dt/0.25):0;IMU.g=vadd(IMU.g,vsc(vadd(a,vsc(IMU.g,-1)),k));IMU.gMag=IMU.gMag+(vlen(IMU.g)-IMU.gMag)*k;}
   }else if(IMU.g&&gyro&&dt>0){IMU.g=vadd(IMU.g,vsc(vcross(IMU.g,gyro),dt));} /* body frame: dg/dt = -ω × g = g × ω */
@@ -2143,7 +2153,7 @@ function imuEndSegment(){
 function imuView(){
   const el=$('imuStat');if(!el)return;
   if(!IMU.src){el.textContent=t('imuOff');$('imuBig').textContent='–';return;}
-  const name=IMU.src==='phone'?t('imuPhoneName'):(IMU.src==='csv'?'CSV':(IMU.info||'Bluetooth'));
+  const name=IMU.src==='phone'?t('imuPhoneName'):(IMU.src==='csv'?'CSV':(IMU.src==='serial'?'COM / '+(S.baud||115200)+' Baud':(IMU.info||'Bluetooth')));
   el.textContent=t('imuLive',name,IMU.rateHz||'–',!IMU.g?'':(IMU.rest?t('imuStill'):t('imuMove')))+(IMU.src!=='csv'&&!IMU.gyro&&IMU.n>50?t('imuGyroNo'):'');
   $('imuBig').textContent=IMU.ready?(fmt(IMU.v)+' m/s'):t('imuNeedStill');
   $('liveV').textContent=t('current',fmt(kin.v));
@@ -2206,6 +2216,8 @@ async function imuBle(){
 }
 async function imuStop(){
   window.removeEventListener('devicemotion',onMotion);
+  if(typeof serialClose==='function')await serialClose();
+  if($('imuLine'))$('imuLine').hidden=true;
   if(IMU.dev){const d=IMU.dev;IMU.dev=null;try{d.gatt.disconnect();}catch(e){}}
   if(setState==='running')endSet();
   IMU.src=null;imuReset();imuButtons();imuView();updateSetUI();
@@ -2276,7 +2288,7 @@ $('btnImuPhone').addEventListener('click',()=>{unlockAudio();imuPhone();});
 $('btnImuBle').addEventListener('click',()=>{unlockAudio();imuBle();});
 $('btnImuDisc').addEventListener('click',()=>imuStop());
 $('imuFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)imuCsv(f);e.target.value='';});
-window.__vbt.imu={IMU,DRIVERS,pmdDelta:(...a)=>pmdDelta(...a),auxRep:r=>auxRep(r),onRep:r=>onRep(r),reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
+window.__vbt.imu={lpFeed:x=>lpFeed(x),lpReset:()=>lpReset(),LP:()=>LP,IMU,DRIVERS,pmdDelta:(...a)=>pmdDelta(...a),auxRep:r=>auxRep(r),onRep:r=>onRep(r),reset:imuReset,imuSample,imuEndSegment,reps:()=>reps,startSet:()=>startSet(),endSet:()=>endSet(),parseImuCsv,history:()=>history};
 
 /* =====================================================================================
    UI SHELL: tabs, focus screen, onboarding, info toggles, theme, stronger signal
@@ -2834,6 +2846,118 @@ function renderAux(){
 }
 setInterval(()=>{if(IMU.aux)renderAux();},1000);
 
+/* =====================================================================================
+   DIY SENSORS: text lines over USB / classic Bluetooth (COM port, Web Serial) or over
+   Bluetooth LE UART (Nordic UART, HM-10/HM-19). Any sensor that prints numbers per line
+   works: "ax,ay,az", "ax ay az gx gy gz", "t;ax;ay;az;...", "ax:0.1 ay:...", raw counts …
+   ===================================================================================== */
+Object.assign(I18N.de,{imuSerial:'Kabel / COM-Anschluss',baudLabel:'Übertragungsrate (Baud) für Kabel/COM',baudHelp:'Muss zum Sensor passen. Steht im Code des Sensors, z. B. Serial.begin(115200).',
+  imuNoSerial:'Kabel/COM-Anschluss geht nur in Chrome oder Edge auf dem Laptop/PC.',imuSerialFail:'Anschluss konnte nicht geöffnet werden: {0}',imuLastLine:'Letzte Zeile vom Sensor: {0}',imuFmt:'Erkannt: {0}',
+  imuFmtUnknown:'Noch kein brauchbares Format erkannt. Der Sensor sollte pro Zeile mindestens drei Zahlen senden (Beschleunigung x, y, z).',
+  serialHelp:'Für selbstgebaute Sensoren: per USB-Kabel anstecken oder (bei klassischem Bluetooth wie HC-05) erst in den Bluetooth-Einstellungen des Laptops koppeln. Dann hier den passenden COM-Anschluss wählen.'});
+Object.assign(I18N.es,{imuSerial:'Cable / puerto COM',baudLabel:'Velocidad (baudios) para cable/COM',baudHelp:'Debe coincidir con el sensor. Aparece en su código, p. ej. Serial.begin(115200).',
+  imuNoSerial:'El cable/puerto COM solo funciona en Chrome o Edge en laptop/PC.',imuSerialFail:'No se pudo abrir el puerto: {0}',imuLastLine:'Última línea del sensor: {0}',imuFmt:'Detectado: {0}',
+  imuFmtUnknown:'Aún no se reconoce un formato útil. El sensor debe enviar por línea al menos tres números (aceleración x, y, z).',
+  serialHelp:'Para sensores caseros: conéctalo por cable USB o (con Bluetooth clásico como HC-05) emparéjalo primero en los ajustes Bluetooth de la laptop. Luego elige aquí el puerto COM.'});
+Object.assign(I18N.en,{imuSerial:'Cable / COM port',baudLabel:'Baud rate for cable/COM',baudHelp:'Must match the sensor. It is in the sensor’s code, e.g. Serial.begin(115200).',
+  imuNoSerial:'Cable/COM port only works in Chrome or Edge on a laptop/PC.',imuSerialFail:'Could not open the port: {0}',imuLastLine:'Last line from the sensor: {0}',imuFmt:'Detected: {0}',
+  imuFmtUnknown:'No usable format detected yet. The sensor should send at least three numbers per line (acceleration x, y, z).',
+  serialHelp:'For home-made sensors: plug in by USB cable or (with classic Bluetooth such as HC-05) pair it first in the laptop’s Bluetooth settings. Then pick the COM port here.'});
+
+/* ---- line parser with format auto-detection ---- */
+const LP={buf:'',rows:[],fmt:null,last:'',tCol:-1,aIdx:null,gIdx:null,aK:1,gK:1,t0:null,tk:1,desc:''};
+function lpReset(){Object.assign(LP,{buf:'',rows:[],fmt:null,last:'',tCol:-1,aIdx:null,gIdx:null,aK:1,gK:1,t0:null,tk:1,desc:''});}
+function lpNums(line){
+  /* "ax:0.1 ay:0.2" or "0.1,0.2,0.3" → {keys,vals} */
+  const kv=[...line.matchAll(/([A-Za-z_]+[A-Za-z0-9_]*)\s*[:=]\s*(-?\d+(?:[.,]\d+)?(?:e-?\d+)?)/g)];
+  if(kv.length>=3)return {keys:kv.map(m=>m[1].toLowerCase()),vals:kv.map(m=>parseFloat(m[2].replace(',','.')))};
+  const sep=line.includes(';')?/;/:(line.includes('\t')?/\t/:/[\s,]+/);
+  const vals=line.trim().split(sep).map(s=>parseFloat(s.trim().replace(',','.'))).filter(v=>isFinite(v));
+  return {keys:null,vals};
+}
+function lpDetect(){
+  const R=LP.rows;const n=Math.min(...R.map(r=>r.vals.length));if(n<3)return false;
+  const keys=R[R.length-1].keys;
+  let tCol=-1,aIdx=null,gIdx=null;
+  if(keys){
+    const f=re=>keys.findIndex(k=>re.test(k));
+    tCol=f(/^(t|time|ms|millis|ts|timestamp)$/);
+    const ax=f(/^(ax|accx|acc_x|x)$/),ay=f(/^(ay|accy|acc_y|y)$/),az=f(/^(az|accz|acc_z|z)$/);
+    if(ax>=0&&ay>=0&&az>=0)aIdx=[ax,ay,az];
+    const gx=f(/^(gx|gyrx|gyrox|gyro_x|wx)$/),gy=f(/^(gy|gyry|gyroy|gyro_y|wy)$/),gz=f(/^(gz|gyrz|gyroz|gyro_z|wz)$/);
+    if(gx>=0&&gy>=0&&gz>=0)gIdx=[gx,gy,gz];
+  }
+  if(!aIdx){
+    /* a first column that only grows is a clock */
+    const c0=R.map(r=>r.vals[0]);let inc=true;for(let i=1;i<c0.length;i++)if(!(c0[i]>c0[i-1]))inc=false;
+    if(inc&&n>=4&&c0[c0.length-1]-c0[0]>0)tCol=0;
+    const st=tCol===0?1:0;aIdx=[st,st+1,st+2];if(n-st>=6)gIdx=[st+3,st+4,st+5];
+  }
+  /* acceleration scale from the magnitude at rest: whatever the unit, |a| at rest is 1 g */
+  const mags=R.map(r=>Math.hypot(...aIdx.map(i=>r.vals[i]))).sort((a,b)=>a-b);const mag=mags[mags.length>>1];
+  if(!(mag>0))return false;
+  LP.aK=G0/mag;
+  const unitA=mag<3?'g':(mag<30?'m/s²':'Rohwerte');
+  /* gyro: deg/s unless values clearly in rad/s; raw counts assumed ±250 dps (131 LSB per deg/s, MPU-6050 default) */
+  let unitG='';
+  if(gIdx){const gm=Math.max(...R.map(r=>Math.max(...gIdx.map(i=>Math.abs(r.vals[i])))));
+    if(unitA==='Rohwerte'){LP.gK=Math.PI/180/131;unitG='Rohwerte';}else if(gm<0.06){LP.gK=1;unitG='rad/s';}else{LP.gK=Math.PI/180;unitG='°/s';}}
+  if(tCol>=0){const c=R.map(r=>r.vals[tCol]);const d=(c[c.length-1]-c[0])/(c.length-1);LP.tk=d>0.5?(d>500?1e-6:1e-3):1;}
+  Object.assign(LP,{tCol,aIdx,gIdx,fmt:true});
+  LP.desc=(tCol>=0?'Zeit + ':'')+'Beschleunigung ('+unitA+')'+(gIdx?' + Gyroskop ('+unitG+')':'');
+  return true;
+}
+function lpFeed(text){
+  LP.buf+=text;const lines=LP.buf.split(/\r?\n/);LP.buf=lines.pop();
+  for(const raw of lines){
+    const line=raw.trim();if(!line)continue;LP.last=line.slice(0,80);
+    const p=lpNums(line);if(p.vals.length<3)continue;
+    if(!LP.fmt){LP.rows.push(p);if(LP.rows.length>=40){if(!lpDetect())LP.rows.shift();}continue;}
+    const v=p.vals;if(v.length<=Math.max(...LP.aIdx))continue;
+    const now=performance.now()/1000;
+    let t=now;if(LP.tCol>=0){const tv=v[LP.tCol]*LP.tk;if(LP.t0==null)LP.t0=tv-now;t=tv-LP.t0;}
+    const acc=LP.aIdx.map(i=>v[i]*LP.aK),gy=LP.gIdx&&v.length>Math.max(...LP.gIdx)?LP.gIdx.map(i=>v[i]*LP.gK):null;
+    imuSample(t,acc,gy);
+  }
+  if(!IMU.batch&&$('imuLine')){$('imuLine').hidden=false;$('imuLine').textContent=t('imuLastLine',LP.last||'–')+' · '+(LP.fmt?t('imuFmt',LP.desc):(LP.rows.length>=40?t('imuFmtUnknown'):'…'));}
+}
+
+/* ---- source: serial port (USB cable or paired classic Bluetooth / COM) ---- */
+var serialPort=null,serialReader=null;
+async function imuSerial(){
+  if(!('serial' in navigator)){hint('imuNoSerial');return;}
+  let port;try{port=await navigator.serial.requestPort();}catch(e){return;}
+  await imuStop();
+  try{await port.open({baudRate:+(S.baud||115200)});}catch(e){hint('imuSerialFail',String(e&&e.message||e).slice(0,80));return;}
+  imuReset();lpReset();IMU.src='serial';IMU.info='COM';serialPort=port;
+  keepAwake();imuButtons();imuView();hint('imuNeedStill');
+  const dec=new TextDecoder();
+  (async()=>{
+    try{serialReader=port.readable.getReader();
+      while(true){const {value,done}=await serialReader.read();if(done)break;if(value)lpFeed(dec.decode(value,{stream:true}));}
+    }catch(e){}
+    finally{try{serialReader&&serialReader.releaseLock();}catch(e){}}
+    if(serialPort===port){IMU.src=null;IMU.ready=false;imuButtons();imuView();updateSetUI();}
+  })();
+}
+async function serialClose(){
+  const p=serialPort;serialPort=null;
+  try{serialReader&&await serialReader.cancel();}catch(e){}
+  try{p&&await p.close();}catch(e){}
+}
+
+/* ---- Bluetooth LE UART (text lines): Nordic UART Service, HM-10/HM-19 ---- */
+const UARTS=[{name:'BLE-UART',svc:'6e400001-b5a3-f393-e0a9-e50e24dcca9e',ch:'6e400003-b5a3-f393-e0a9-e50e24dcca9e'},
+             {name:'HM-10',svc:'0000ffe0-0000-1000-8000-00805f9b34fb',ch:'0000ffe1-0000-1000-8000-00805f9b34fb'}];
+UARTS.forEach(u=>DRIVERS.push({name:u.name,svc:u.svc,async start(server){
+  const sv=await server.getPrimaryService(u.svc),nc=await sv.getCharacteristic(u.ch);lpReset();const dec=new TextDecoder();
+  nc.addEventListener('characteristicvaluechanged',ev=>{const d=ev.target.value;lpFeed(dec.decode(new Uint8Array(d.buffer,d.byteOffset,d.byteLength),{stream:true}));});
+  await nc.startNotifications();return nc;}}));
+
+$('btnImuSerial').addEventListener('click',()=>{unlockAudio();imuSerial();});
+$('baud').addEventListener('change',e=>{S.baud=e.target.value;store.set('vbt-settings',S);});
+
+$('baud').value=S.baud||'115200';
 renderAth();bindZone();$('lvDays').value=S.lvDays||'90';renderLV();renderPlan();$('trendMetric').value=S.trendMetric||'avg';renderSessions();
 $('theme').value=S.theme||'auto';applyTheme();$('obLang').value=L;$('lang').value=L;infoToggles();showTab(S.tab||'tabTrain');if(!$('startScreen').hidden)obShow(1); chip('idle'); renderAI(); renderReadout(); renderTable(); renderHistory(); renderSessions(); updateSetUI(); renderRecs();
 requestAnimationFrame(()=>{sizeOverlay();drawSpark();drawReps();});
